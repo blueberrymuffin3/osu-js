@@ -1,6 +1,6 @@
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
 tasks:
-  - init: yarn
+  - init: git submodule init && git submodule update && yarn
     command: yarn dev
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/

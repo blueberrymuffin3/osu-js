@@ -1,20 +1,37 @@
 import "./style.css";
 import * as PIXI from "pixi.js";
+///<reference path="../node_modules/adaptive-scale/lib-esm/index.d.ts"/>
+import * as AdaptiveScale from "adaptive-scale/lib-esm";
+import { SCREEN_SIZE } from "./constants";
+import { MenuScreen } from "./screens/menu";
 
 const app = new PIXI.Application();
-document.body.appendChild(app.view);
+const container = document.getElementById("container") as HTMLElement;
+app.resizeTo = container;
+container.appendChild(app.view);
 
-let sprite = PIXI.Sprite.from("/res/sample.png");
-app.stage.addChild(sprite);
+app.ticker.add(function adaptiveScaling() {
+  const rect = AdaptiveScale.getScaledRect({
+    container: {
+      width: container.clientWidth,
+      height: container.clientHeight,
+    },
+    target: SCREEN_SIZE,
+    policy: AdaptiveScale.POLICY.ShowAll,
+  });
 
-// Add a variable to count up the seconds our demo has been running
-let elapsed = 0.0;
-// Tell our application's ticker to run a new callback every frame, passing
-// in the amount of time that has passed since the last tick
-app.ticker.add((delta) => {
-  // Add the time to our total elapsed time
-  elapsed += delta;
-  // Update the sprite's X position based on the cosine of our elapsed time.  We divide
-  // by 50 to slow the animation down a bit...
-  sprite.x = 100.0 + Math.cos(elapsed / 20.0) * 100.0;
+  app.stage.x = rect.x;
+  app.stage.y = rect.y;
+  app.stage.scale.set(
+    rect.width / SCREEN_SIZE.width,
+    rect.height / SCREEN_SIZE.height
+  );
 });
+
+if (import.meta.env.DEV) {
+  import("spectorjs").then((SPECTOR) => {
+    new SPECTOR.Spector().displayUI();
+  });
+}
+
+new MenuScreen(app);

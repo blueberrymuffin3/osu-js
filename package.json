@@ -8,10 +8,14 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "spectorjs": "^0.9.27",
     "typescript": "^4.5.4",
     "vite": "^2.9.9"
   },
   "dependencies": {
+    "@pixi/sound": "^4.2.0",
+    "adaptive-scale": "^1.0.0",
+    "bezier-easing": "^2.1.0",
     "pixi.js": "^6.3.2"
   }
 }

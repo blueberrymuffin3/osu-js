@@ -144,6 +144,11 @@
   dependencies:
     ismobilejs "^1.1.0"
 
+"@pixi/sound@^4.2.0":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@pixi/sound/-/sound-4.2.0.tgz#fbf3786e099caafd5d888b29401109f387eaf984"
+  integrity sha512-l7pbmLQa5soahfssyJjs/nkXMND8QwxqB3dA/zGr+87sVebOqohbJ5dLleBUWdPsAV+VeaQHi/4ohZR8fRt3og==
+
 "@pixi/sprite-animated@6.3.2":
   version "6.3.2"
   resolved "https://registry.yarnpkg.com/@pixi/sprite-animated/-/sprite-animated-6.3.2.tgz#ab96cf991abfc19004e3835638beec6b404ce0e6"
@@ -198,6 +203,16 @@
   version "2019.6.4"
   resolved "https://registry.yarnpkg.com/@types/offscreencanvas/-/offscreencanvas-2019.6.4.tgz#64f6d120b53925028299c744fcdd32d2cd525963"
   integrity sha512-u8SAgdZ8ROtkTF+mfZGOscl0or6BSj9A4g37e6nvxDc+YB/oDut0wHkK2PBBiC2bNR8TS0CPV+1gAk4fNisr1Q==
+
+adaptive-scale@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/adaptive-scale/-/adaptive-scale-1.0.0.tgz#cf90fa7b3ac21caf141b15a418c9abf35630f443"
+  integrity sha512-CWbR51cgG5ChPKyI7Oe/wQFglX/l8w9ec36wCP5Ubbu4E1yW1SFsXy14MYwA5pHYACw+h/zDBrUulTP2VUcrmg==
+
+bezier-easing@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/bezier-easing/-/bezier-easing-2.1.0.tgz#c04dfe8b926d6ecaca1813d69ff179b7c2025d86"
+  integrity sha512-gbIqZ/eslnUFC1tjEvtz0sgx+xTK20wDnYMIA27VA04R7w6xxXQPZDbibjA9DTWZRA2CXtwHykkVzlCaAJAZig==
 
 earcut@^2.2.2:
   version "2.2.3"
@@ -469,6 +484,11 @@ source-map-js@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.0.2.tgz#adbc361d9c62df380125e7f161f71c826f1e490c"
   integrity sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==
+
+spectorjs@^0.9.27:
+  version "0.9.27"
+  resolved "https://registry.yarnpkg.com/spectorjs/-/spectorjs-0.9.27.tgz#9b3893e90da124a9db1d9d1c5ab695bd0af0dcd5"
+  integrity sha512-eujFAuFWdW9S5wT++ks2o1zShN5Vd8Zple2NB6oM5G5tXqNtGbk6Yg3mfCpL03Bbq0djqGJAeswYk0VfpuPfIQ==
 
 supports-preserve-symlinks-flag@^1.0.0:
   version "1.0.0"
