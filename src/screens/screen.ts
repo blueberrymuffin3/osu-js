@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { Application } from "pixi.js";
 
 export abstract class AbstractScreen {
   protected app: PIXI.Application;
@@ -17,4 +18,20 @@ export abstract class AbstractScreen {
   }
 
   protected abstract tick(): void;
+}
+
+export class ScreenManager {
+  private app: Application;
+  private current: AbstractScreen | null = null;
+
+  constructor(app: Application) {
+    this.app = app;
+  }
+
+  public loadScreen(constructor: new (app: Application) => AbstractScreen){
+    if(this.current){
+      this.current.destroy();
+    }
+    this.current = new constructor(this.app);
+  }
 }

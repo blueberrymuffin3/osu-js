@@ -9,3 +9,5 @@ sound.add(
 );
 
 export { SOUND_TRACK_TRIANGLES, SOUND_INTRO_SEEYA };
+
+export const preloadSounds = [SOUND_TRACK_TRIANGLES, SOUND_INTRO_SEEYA];

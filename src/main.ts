@@ -4,13 +4,19 @@ import * as PIXI from "pixi.js";
 import * as AdaptiveScale from "adaptive-scale/lib-esm";
 import { SCREEN_SIZE } from "./constants";
 import { MenuScreen } from "./screens/menu";
+import { ScreenManager } from "./screens/screen";
+import { LoadingScreen } from "./screens/loading";
+import { preloadTextures } from "./resources/textures";
+import { preloadSounds } from "./resources/sounds";
+import { Loader } from "pixi.js";
+import { SoundLoader } from "@pixi/sound";
 
 const app = new PIXI.Application();
 const container = document.getElementById("container") as HTMLElement;
 app.resizeTo = container;
 container.appendChild(app.view);
 
-app.ticker.add(function adaptiveScaling() {
+app.ticker.add(() => {
   const rect = AdaptiveScale.getScaledRect({
     container: {
       width: container.clientWidth,
@@ -34,4 +40,11 @@ if (import.meta.env.DEV) {
   });
 }
 
-new MenuScreen(app);
+Loader.registerPlugin(SoundLoader);
+app.loader.add(preloadTextures);
+app.loader.add(preloadSounds);
+
+const screenManager = new ScreenManager(app);
+screenManager.loadScreen(LoadingScreen);
+
+app.loader.load(() => screenManager.loadScreen(MenuScreen))

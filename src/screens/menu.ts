@@ -39,16 +39,15 @@ export class MenuScreen extends AbstractScreen {
     this.logo.anchor.set(0.5);
     this.logo.x = SCREEN_SIZE.width / 2;
     this.logo.y = SCREEN_SIZE.height / 2;
-    console.log(this);
-    console.log(minScale);
     this.logo.scale.set(minScale);
     this.contianer.addChild(this.logo);
 
     this.contianer.alpha = 0;
 
-    sound.play(SOUND_TRACK_TRIANGLES, {
-      loaded: () => (this.msElapsed = 0),
-    });
+    (async () => {
+      await sound.play(SOUND_TRACK_TRIANGLES);
+      this.msElapsed = 0;
+    })()
   }
 
   protected tick() {

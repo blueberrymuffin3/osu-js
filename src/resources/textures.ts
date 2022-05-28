@@ -18,3 +18,5 @@ const TEXTURES_MENU_BACKGROUND = [
 ];
 
 export { TEXTURE_LOGO, TEXTURES_MENU_BACKGROUND };
+
+export const preloadTextures = [TEXTURE_LOGO, ...TEXTURES_MENU_BACKGROUND];
