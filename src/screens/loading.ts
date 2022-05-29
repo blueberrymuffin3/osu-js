@@ -1,6 +1,9 @@
 import { Application, Graphics } from "pixi.js";
 import { SCREEN_SIZE } from "../constants";
-import { AbstractScreen } from "./screen";
+import { preloadSounds } from "../resources/sounds";
+import { preloadTextures } from "../resources/textures";
+import { MenuScreen } from "./menu";
+import { AbstractScreen, ScreenManager } from "./screen";
 
 const barWidth = 800;
 const barHeight = 50;
@@ -17,12 +20,16 @@ const outerRadius = innerRadius + borderThickness;
 export class LoadingScreen extends AbstractScreen {
   private loadingBar: Graphics;
 
-  constructor(app: Application) {
-    super(app);
+  constructor(app: Application, manager: ScreenManager) {
+    super(app, manager);
     this.loadingBar = new Graphics();
     this.loadingBar.x = SCREEN_SIZE.width / 2;
     this.loadingBar.y = SCREEN_SIZE.height / 2;
     this.contianer.addChild(this.loadingBar);
+
+    app.loader.add(preloadTextures);
+    app.loader.add(preloadSounds);
+    app.loader.load(() => manager.loadScreen(MenuScreen));
   }
 
   protected tick(): void {

@@ -1,15 +1,15 @@
 import "./style.css";
 import * as PIXI from "pixi.js";
-///<reference path="../node_modules/adaptive-scale/lib-esm/index.d.ts"/>
 import * as AdaptiveScale from "adaptive-scale/lib-esm";
 import { SCREEN_SIZE } from "./constants";
-import { MenuScreen } from "./screens/menu";
 import { ScreenManager } from "./screens/screen";
 import { LoadingScreen } from "./screens/loading";
-import { preloadTextures } from "./resources/textures";
-import { preloadSounds } from "./resources/sounds";
 import { Loader } from "pixi.js";
 import { SoundLoader } from "@pixi/sound";
+import { BeatmapLoader } from "./api/beatmap-loader";
+
+Loader.registerPlugin(SoundLoader);
+Loader.registerPlugin(BeatmapLoader);
 
 const app = new PIXI.Application();
 const container = document.getElementById("container") as HTMLElement;
@@ -40,11 +40,5 @@ if (import.meta.env.DEV) {
   });
 }
 
-Loader.registerPlugin(SoundLoader);
-app.loader.add(preloadTextures);
-app.loader.add(preloadSounds);
-
 const screenManager = new ScreenManager(app);
 screenManager.loadScreen(LoadingScreen);
-
-app.loader.load(() => screenManager.loadScreen(MenuScreen))

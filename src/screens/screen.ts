@@ -3,10 +3,12 @@ import { Application } from "pixi.js";
 
 export abstract class AbstractScreen {
   protected app: PIXI.Application;
+  protected manager: ScreenManager;
   protected contianer: PIXI.Container;
 
-  constructor(app: PIXI.Application) {
+  constructor(app: Application, manager: ScreenManager) {
     this.app = app;
+    this.manager = manager;
     this.app.ticker.add(this.tick, this);
     this.contianer = new PIXI.Container();
     this.app.stage.addChild(this.contianer);
@@ -28,10 +30,12 @@ export class ScreenManager {
     this.app = app;
   }
 
-  public loadScreen(constructor: new (app: Application) => AbstractScreen){
-    if(this.current){
+  public loadScreen(
+    constructor: new (app: Application, manager: ScreenManager) => AbstractScreen
+  ) {
+    if (this.current) {
       this.current.destroy();
     }
-    this.current = new constructor(this.app);
+    this.current = new constructor(this.app, this);
   }
 }

@@ -1,11 +1,12 @@
-import { AbstractScreen } from "./screen";
+import { AbstractScreen, ScreenManager } from "./screen";
 import { TEXTURE_LOGO, TEXTURES_MENU_BACKGROUND } from "../resources/textures";
 import { Application, Sprite } from "pixi.js";
 import { SCREEN_SIZE } from "../constants";
 import bezier from "bezier-easing";
-import { sound } from "@pixi/sound";
-import { SOUND_TRACK_TRIANGLES } from "../resources/sounds";
+import { IMediaInstance, Sound } from "@pixi/sound";
 import { lerp } from "../anim";
+import { BEATMAP_TRIANGES } from "../resources/sounds";
+import { LoadedBeatmap, loadedBeatmaps } from "../api/beatmap-loader";
 
 const crashCurve = bezier(0.9, 0, 1, 0.5);
 const fadeCurve = bezier(0.4, 0.95, 1, -0.08);
@@ -13,17 +14,19 @@ const beatCurve = bezier(0, 0, 0.53, 1);
 const initialScale = 1.8;
 const minScale = 0.7;
 const maxScale = 0.75;
-const fadeInTime = 3000;
-const BPM = 160;
-const beatInterval = (60 * 1000) / BPM;
+const fadeInTime = 3;
 
 export class MenuScreen extends AbstractScreen {
   private background: Sprite;
   private logo: Sprite;
-  private msElapsed: number | null = null;
+  private beatmap: LoadedBeatmap = loadedBeatmaps.get(BEATMAP_TRIANGES)!;
+  private BPM = this.beatmap.data.bpmMax;
+  private beatInterval = 60 / this.BPM;
+  private sound: Sound | null = null;
+  private mediaInstance: IMediaInstance | null = null;
 
-  constructor(app: Application) {
-    super(app);
+  constructor(app: Application, manager: ScreenManager) {
+    super(app, manager);
 
     const backgroundTexture =
       TEXTURES_MENU_BACKGROUND[
@@ -45,25 +48,25 @@ export class MenuScreen extends AbstractScreen {
     this.contianer.alpha = 0;
 
     (async () => {
-      await sound.play(SOUND_TRACK_TRIANGLES);
-      this.msElapsed = 0;
-    })()
+      this.sound = Sound.from(this.beatmap.audioData);
+      this.mediaInstance = await this.sound.play();
+    })();
   }
 
   protected tick() {
-    if (this.msElapsed === null) {
+    if (!this.mediaInstance || !this.sound) {
       return;
     }
 
-    this.msElapsed += this.app.ticker.elapsedMS;
+    const msElapsed = this.mediaInstance.progress * this.sound.duration;
 
-    const fadeProgress = Math.min(this.msElapsed / fadeInTime, 1);
+    const fadeProgress = Math.min(msElapsed / fadeInTime, 1);
 
     this.contianer.alpha = fadeCurve(fadeProgress);
 
     if (fadeProgress == 1) {
       const bounceProgress =
-        ((this.msElapsed - fadeInTime) % beatInterval) / beatInterval;
+        (msElapsed % this.beatInterval) / this.beatInterval;
       this.logo.scale.set(lerp(beatCurve(bounceProgress), minScale, maxScale));
     } else {
       this.logo.scale.set(
