@@ -1,9 +1,10 @@
 import { Application, Graphics } from "pixi.js";
+import { loadBeatmap } from "../api/beatmap-loader";
 import { SCREEN_SIZE } from "../constants";
 import { preloadSounds } from "../resources/sounds";
 import { preloadTextures } from "../resources/textures";
-import { MenuScreen } from "./menu";
 import { AbstractScreen, ScreenManager } from "./screen";
+import { StandardGameScreen } from "./standard_game";
 
 const barWidth = 800;
 const barHeight = 50;
@@ -20,7 +21,7 @@ const outerRadius = innerRadius + borderThickness;
 export class LoadingScreen extends AbstractScreen {
   private loadingBar: Graphics;
 
-  constructor(app: Application, manager: ScreenManager) {
+  constructor(app: Application, manager: ScreenManager, setId: number, mapId: number) {
     super(app, manager);
     this.loadingBar = new Graphics();
     this.loadingBar.x = SCREEN_SIZE.width / 2;
@@ -29,7 +30,17 @@ export class LoadingScreen extends AbstractScreen {
 
     app.loader.add(preloadTextures);
     app.loader.add(preloadSounds);
-    app.loader.load(() => manager.loadScreen(MenuScreen));
+
+    const loadedPromise = new Promise<void>((resolve) =>
+      app.loader.load(() => resolve())
+    );
+    const beatmapPromise = loadBeatmap(setId, mapId);
+
+    (async () => {
+      await loadedPromise;
+      // manager.loadScreen(new MenuScreen(app, manager, await beatmapPromise));
+      manager.loadScreen(new StandardGameScreen(app, manager, await beatmapPromise));
+    })();
   }
 
   protected tick(): void {

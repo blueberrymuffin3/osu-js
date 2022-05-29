@@ -6,10 +6,8 @@ import { ScreenManager } from "./screens/screen";
 import { LoadingScreen } from "./screens/loading";
 import { Loader } from "pixi.js";
 import { SoundLoader } from "@pixi/sound";
-import { BeatmapLoader } from "./api/beatmap-loader";
 
 Loader.registerPlugin(SoundLoader);
-Loader.registerPlugin(BeatmapLoader);
 
 const app = new PIXI.Application();
 const container = document.getElementById("container") as HTMLElement;
@@ -41,4 +39,12 @@ if (import.meta.env.DEV) {
 }
 
 const screenManager = new ScreenManager(app);
-screenManager.loadScreen(LoadingScreen);
+
+// Test Songs
+
+// screenManager.loadScreen(new LoadingScreen(app, screenManager, 1020313, 2134868)); // Triangles (No elements, one .osu)
+// screenManager.loadScreen(new LoadingScreen(app, screenManager, 606998, 1315750)); // Stars Align (Simple)
+// screenManager.loadScreen(new LoadingScreen(app, screenManager, 11122, 1315750)); // Night Flight [Breeze] (no IDs in MetaData), unique bg per difficulty
+screenManager.loadScreen(new LoadingScreen(app, screenManager, 1416017, 2921425)); // After School (mp4 video)
+// screenManager.loadScreen(new LoadingScreen(app, screenManager, 36858, 120893)); // Senbonzakura (flv video)
+// screenManager.loadScreen(new LoadingScreen(app, screenManager, 1041786, 2195668)); // Feel Special (avi video)

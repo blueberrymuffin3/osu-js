@@ -1,59 +1,90 @@
 import JSZip from "jszip";
 import { BeatmapDecoder } from "osu-parsers-web";
 import { Beatmap } from "osu-classes";
-import { ILoaderPlugin, LoaderResource } from "pixi.js";
+
+// CORS Blocked
+// const getBeatmapRequest = (setId: number) =>
+//   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
+
+const getBeatmapRequest = (setId: number) =>
+  new Request(`https://catboy.best/d/${setId}`);
+
+async function blobUrlFromFile(file: JSZip.JSZipObject | null) {
+  if (!file) return undefined;
+  const blob = await file.async("blob");
+  return URL.createObjectURL(blob);
+}
+
+const _cache = caches.open("beatmap-v1");
 
 export interface LoadedBeatmap {
   data: Beatmap;
   audioData: ArrayBuffer;
+  backgroundUrl?: string;
+  videoUrl?: string;
 }
 
-export const loadedBeatmaps = new Map<string, LoadedBeatmap>();
+export async function loadBeatmap(
+  setId: number,
+  mapId: number
+): Promise<LoadedBeatmap> {
+  const cache = await _cache;
+  const request = getBeatmapRequest(setId);
 
-export class BeatmapLoader implements ILoaderPlugin {
-  static async pre(resource: LoaderResource, next: (...args: any[]) => void) {
-    if (resource.extension != "osz") {
-      next();
-      return;
-    }
-
-    resource.xhrType = LoaderResource.XHR_RESPONSE_TYPE.BLOB;
-    next();
+  let response = await cache.match(request);
+  if (!response) {
+    await cache.add(request);
+    response = await cache.match(request);
+  }
+  if (!response) {
+    throw new Error("Error occurred fetching beatmap");
   }
 
-  static async use(resource: LoaderResource, next: (...args: any[]) => void) {
-    if (resource.extension != "osz") {
-      next();
-      return;
-    }
+  const blob = await response.blob();
+  const zip = new JSZip();
+  await zip.loadAsync(blob);
 
-    const zip = new JSZip();
-    await zip.loadAsync(resource.data as Blob);
+  // TODO: Select Difficulty
+  const osuFiles = zip.filter((path) => path.endsWith(".osu"));
 
-    const osuFile = zip.filter((path) => path.endsWith(".osu"))[0];
-    if (!osuFile) {
-      next();
-      console.error("No .osu file found in archive");
-      return;
-    }
-
+  const decoder = new BeatmapDecoder();
+  let data: Beatmap | null = null;
+  let _data: Beatmap;
+  for (const osuFile of osuFiles) {
     const beatmapString = await osuFile.async("string");
-    const decoder = new BeatmapDecoder();
-    const data = decoder.decodeFromString(beatmapString);
-
-    const audioFile = zip.file(data.general.audioFilename);
-    if (!audioFile) {
-      next();
-      console.error("Audo file not found in archive");
-      return;
+    _data = decoder.decodeFromString(beatmapString);
+    if (_data.metadata.beatmapId == mapId) {
+      data = _data;
+      break;
     }
-
-    const audioData = await audioFile.async("arraybuffer");
-
-    loadedBeatmaps.set(resource.name, {
-      data,
-      audioData,
-    });
-    next();
   }
+
+  if (!data) {
+    console.error(
+      "No .osu files matching mapId found in archive, choosing last one"
+    );
+    data = _data;
+  }
+
+  const audioFile = zip.file(data.general.audioFilename);
+  if (!audioFile) {
+    throw new Error("Audo file not found in archive");
+  }
+
+  const audioData = await audioFile.async("arraybuffer");
+
+  const backgroundFilename = data.events.background;
+  const backgroundUrl =
+    backgroundFilename && (await blobUrlFromFile(zip.file(backgroundFilename)));
+
+  const videoFilename = data.events.video;
+  const videoUrl =
+    videoFilename && (await blobUrlFromFile(zip.file(videoFilename)));
+
+  return {
+    data,
+    audioData,
+    backgroundUrl,
+    videoUrl,
+  };
 }

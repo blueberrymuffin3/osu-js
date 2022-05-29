@@ -437,9 +437,9 @@ osu-classes@^0.7.0, osu-classes@^0.7.1:
   integrity sha512-36ICt5E/05HNmBZQha3muXGK1DXNoJtu5v9EzV0yh3plXLwl6s14u1Esclvz9Uu5WSS12XK8Mca123b9+ckSDQ==
 
 osu-parsers-web@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/osu-parsers-web/-/osu-parsers-web-3.0.0.tgz#b0bdbf927af02b0ddc10d923bf967f915311ca69"
-  integrity sha512-mHR3B+bRXvgQLUIjx1AQrv8L3E+X4eFs3NJIqVMfdqNdC/ybybakdro9ZqKE0uhgM6iAMSxRWFLPodzQBxSBfA==
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/osu-parsers-web/-/osu-parsers-web-3.0.1.tgz#d473741994279467ddac2a74d80eef5b428d4157"
+  integrity sha512-tD9WS2kwv2jbWgKSgWMQwGbb3t+yhNgHF6oikLCjLu5lY2rHYKQeVNYeVvfNuXGOic+bm76UroCaFVkB3LjzYA==
   dependencies:
     osu-classes "^0.7.0"
 

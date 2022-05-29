@@ -5,28 +5,33 @@ import { SCREEN_SIZE } from "../constants";
 import bezier from "bezier-easing";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { lerp } from "../anim";
-import { BEATMAP_TRIANGES } from "../resources/sounds";
-import { LoadedBeatmap, loadedBeatmaps } from "../api/beatmap-loader";
+import { LoadedBeatmap } from "../api/beatmap-loader";
 
 const crashCurve = bezier(0.9, 0, 1, 0.5);
 const fadeCurve = bezier(0.4, 0.95, 1, -0.08);
 const beatCurve = bezier(0, 0, 0.53, 1);
 const initialScale = 1.8;
 const minScale = 0.7;
-const maxScale = 0.75;
+const maxScale = 0.72;
 const fadeInTime = 3;
 
 export class MenuScreen extends AbstractScreen {
   private background: Sprite;
   private logo: Sprite;
-  private beatmap: LoadedBeatmap = loadedBeatmaps.get(BEATMAP_TRIANGES)!;
-  private BPM = this.beatmap.data.bpmMax;
-  private beatInterval = 60 / this.BPM;
+  private BPM: number;
+  private beatInterval: number;
   private sound: Sound | null = null;
   private mediaInstance: IMediaInstance | null = null;
 
-  constructor(app: Application, manager: ScreenManager) {
+  constructor(
+    app: Application,
+    manager: ScreenManager,
+    beatmap: LoadedBeatmap
+  ) {
     super(app, manager);
+
+    this.BPM = beatmap.data.bpmMax;
+    this.beatInterval = 60 / this.BPM;
 
     const backgroundTexture =
       TEXTURES_MENU_BACKGROUND[
@@ -48,7 +53,7 @@ export class MenuScreen extends AbstractScreen {
     this.contianer.alpha = 0;
 
     (async () => {
-      this.sound = Sound.from(this.beatmap.audioData);
+      this.sound = Sound.from(beatmap.audioData);
       this.mediaInstance = await this.sound.play();
     })();
   }
