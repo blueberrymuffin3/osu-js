@@ -27,6 +27,8 @@ export class StandardGameScreen extends AbstractScreen {
 
     this.beatmap = beatmap;
 
+    console.log(beatmap.data.hitObjects);
+
     (async () => {
       this.sound = Sound.from(beatmap.audioData);
 

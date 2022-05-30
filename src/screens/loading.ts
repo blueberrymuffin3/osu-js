@@ -39,7 +39,8 @@ export class LoadingScreen extends AbstractScreen {
     (async () => {
       await loadedPromise;
       // manager.loadScreen(new MenuScreen(app, manager, await beatmapPromise));
-      manager.loadScreen(new StandardGameScreen(app, manager, await beatmapPromise));
+      const beatmap = await beatmapPromise;
+      manager.loadScreen(() => new StandardGameScreen(app, manager, beatmap));
     })();
   }
 

@@ -31,11 +31,11 @@ export class ScreenManager {
   }
 
   public loadScreen(
-    screen: AbstractScreen
+    builder: () => AbstractScreen
   ) {
     if (this.current) {
       this.current.destroy();
     }
-    this.current = screen;
+    this.current = builder();
   }
 }
