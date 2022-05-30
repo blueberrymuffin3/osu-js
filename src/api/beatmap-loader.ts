@@ -46,6 +46,9 @@ export async function loadBeatmap(
 
   // TODO: Select Difficulty
   const osuFiles = zip.filter((path) => path.endsWith(".osu"));
+  if (osuFiles.length == 0) {
+    throw new Error("No .osu files found in archive");
+  }
 
   const decoder = new BeatmapDecoder();
   let data: Beatmap | null = null;
@@ -63,7 +66,7 @@ export async function loadBeatmap(
     console.error(
       "No .osu files matching mapId found in archive, choosing last one"
     );
-    data = _data;
+    data = _data!;
   }
 
   const audioFile = zip.file(data.general.audioFilename);

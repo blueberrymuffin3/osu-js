@@ -23,16 +23,9 @@ export abstract class AbstractScreen {
 }
 
 export class ScreenManager {
-  private app: Application;
   private current: AbstractScreen | null = null;
 
-  constructor(app: Application) {
-    this.app = app;
-  }
-
-  public loadScreen(
-    builder: () => AbstractScreen
-  ) {
+  public loadScreen(builder: () => AbstractScreen) {
     if (this.current) {
       this.current.destroy();
     }

@@ -1,6 +1,4 @@
-import { Container, Graphics, Sprite, Application } from "pixi.js";
-import { OSU_HIT_OBJECT_RADIUS } from "../constants";
-import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../resources/textures";
+import { Container, Graphics, Application } from "pixi.js";
 import { CircleTriangles } from "./circle_triangles";
 
 const circleMask = new Graphics();

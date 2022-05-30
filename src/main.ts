@@ -3,7 +3,7 @@ import { Application, Loader } from "pixi.js";
 import * as AdaptiveScale from "adaptive-scale/lib-esm";
 import { SCREEN_SIZE } from "./constants";
 import { ScreenManager } from "./screens/screen";
-import { LoadingScreen } from "./screens/loading";
+// import { LoadingScreen } from "./screens/loading";
 import { SoundLoader } from "@pixi/sound";
 import { RenderTestScreen } from "./screens/render_test";
 
@@ -38,7 +38,7 @@ if (import.meta.env.DEV) {
   });
 }
 
-const screenManager = new ScreenManager(app);
+const screenManager = new ScreenManager();
 
 // Test Songs
 
@@ -50,4 +50,8 @@ const screenManager = new ScreenManager(app);
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 1041786, 2195668)); // Feel Special (avi video)
 
 screenManager.loadScreen(() => new RenderTestScreen(app, screenManager));
-setTimeout(() => screenManager.loadScreen(() => new RenderTestScreen(app, screenManager)), 1000);
+setTimeout(
+  () =>
+    screenManager.loadScreen(() => new RenderTestScreen(app, screenManager)),
+  1000
+);

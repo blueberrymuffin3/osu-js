@@ -20,7 +20,7 @@ export class RenderTestScreen extends AbstractScreen {
 
       circle1.x = (SCREEN_SIZE.width / 11) * i + Math.random() * 50;
       circle1.y = SCREEN_SIZE.height / 3 + Math.random() * 200;
-      circle1.scale.set(CS(4) / CS(2));
+      circle1.scale.set(scale);
 
       circle2.x = (SCREEN_SIZE.width / 11) * i + Math.random() * 50;
       circle2.y = (SCREEN_SIZE.height / 3) * 2 + Math.random() * 200;
