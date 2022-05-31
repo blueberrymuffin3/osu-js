@@ -1,7 +1,6 @@
 import { BeatmapDifficultySection } from "osu-classes";
 import {
   Container,
-  Graphics,
   Application,
   Sprite,
   IDestroyOptions,
@@ -15,6 +14,7 @@ import {
   TimeMsProvider,
 } from "../constants";
 import {
+  TEXTURE_OSU_RING,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
 } from "../resources/textures";
@@ -56,13 +56,8 @@ export class MainCirclePiece extends Container {
 
     this.addChild(new CircleTriangles(app, color));
 
-    const ring = new Graphics();
-    ring.beginFill(0xffffff);
-    ring.drawCircle(0, 0, OSU_HIT_OBJECT_RADIUS * 2);
-    ring.endFill();
-    ring.beginHole();
-    ring.drawCircle(0, 0, OSU_HIT_OBJECT_RADIUS * 2 - 16);
-    ring.endHole();
+    const ring = Sprite.from(TEXTURE_OSU_RING);
+    ring.anchor.set(0.5);
     this.addChild(ring);
 
     this.approachCircle = Sprite.from(
