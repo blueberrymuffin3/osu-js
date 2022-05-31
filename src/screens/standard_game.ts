@@ -112,7 +112,7 @@ export class StandardGameScreen extends AbstractScreen {
         this.app,
         this.clock,
         hitObject.startTime,
-        0x4fe90d,
+        0x4fe90d, // TODO: Where are these colors stored???
         this.beatmap.data.difficulty
       );
       object.x = hitObject.startPosition.x;

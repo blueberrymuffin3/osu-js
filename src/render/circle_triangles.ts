@@ -4,8 +4,6 @@ import { lerp } from "../anim";
 import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../resources/textures";
 import TRIANGLES_FS_RAW from "./circle_triangles.frag?raw";
 
-// TODO: Either render to an intermediate RenderTexture to reduce draw calls, or randomize each circle individually
-
 const TRIANGLE_COUNT = 15;
 const TRIANGLES_FS = TRIANGLES_FS_RAW.replace(
   "__TRIANGLE_COUNT",
