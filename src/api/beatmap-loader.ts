@@ -57,6 +57,7 @@ export async function loadBeatmap(
     const beatmapString = await osuFile.async("string");
     _data = decoder.decodeFromString(beatmapString);
     if (_data.metadata.beatmapId == mapId) {
+      console.log("Loading", osuFile.name)
       data = _data;
       break;
     }

@@ -1,7 +1,7 @@
 import { AbstractScreen, ScreenManager } from "./screen";
 import { TEXTURE_LOGO, TEXTURES_MENU_BACKGROUND } from "../resources/textures";
 import { Application, Sprite } from "pixi.js";
-import { SCREEN_SIZE } from "../constants";
+import { TEXTURE_PIXELS_SCREEN_SIZE } from "../constants";
 import bezier from "bezier-easing";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { lerp } from "../anim";
@@ -39,14 +39,14 @@ export class MenuScreen extends AbstractScreen {
       ];
 
     this.background = Sprite.from(backgroundTexture);
-    this.background.width = SCREEN_SIZE.width;
-    this.background.height = SCREEN_SIZE.height;
+    this.background.width = TEXTURE_PIXELS_SCREEN_SIZE.width;
+    this.background.height = TEXTURE_PIXELS_SCREEN_SIZE.height;
     this.contianer.addChild(this.background);
 
     this.logo = Sprite.from(TEXTURE_LOGO);
     this.logo.anchor.set(0.5);
-    this.logo.x = SCREEN_SIZE.width / 2;
-    this.logo.y = SCREEN_SIZE.height / 2;
+    this.logo.x = TEXTURE_PIXELS_SCREEN_SIZE.width / 2;
+    this.logo.y = TEXTURE_PIXELS_SCREEN_SIZE.height / 2;
     this.logo.scale.set(minScale);
     this.contianer.addChild(this.logo);
 

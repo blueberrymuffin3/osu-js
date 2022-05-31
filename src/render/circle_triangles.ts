@@ -1,7 +1,6 @@
 import { Filter, Application, Sprite, Texture, IDestroyOptions } from "pixi.js";
 import { hex2rgb } from "@pixi/utils";
 import { lerp } from "../anim";
-import { OSU_HIT_OBJECT_RADIUS } from "../constants";
 import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../resources/textures";
 import TRIANGLES_FS_RAW from "./circle_triangles.frag?raw";
 
@@ -37,8 +36,8 @@ export class CircleTriangles extends Sprite {
       }
     );
     this.filters = [filter];
-    this.width = OSU_HIT_OBJECT_RADIUS * 2;
-    this.height = OSU_HIT_OBJECT_RADIUS * 2;
+    // this.width = OSU_HIT_OBJECT_RADIUS * 2;
+    // this.height = OSU_HIT_OBJECT_RADIUS * 2;
     this.anchor.set(0.5);
 
     for (let i = 0; i < TRIANGLE_COUNT; i += 3) {

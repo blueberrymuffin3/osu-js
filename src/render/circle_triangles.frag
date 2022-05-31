@@ -32,9 +32,6 @@ void main() {
   }
 
   value = clamp(value, 0.0, 1.0);
-  vec2 distV = (pos - vec2(0.5, 0.5));
-  float dist = length(distV);
 
-  vec4 color_premult = vec4(vec3(value, value, value) * color, 1.0) * sample.a;
-  gl_FragColor = dist > 0.5 ? vec4(0.0) : (dist > innerRadiusCutoff ? vec4(1.0, 1.0, 1.0, 1.0) : color_premult);
+  gl_FragColor = vec4(vec3(value, value, value) * color, 1.0) * sample.a;
 }

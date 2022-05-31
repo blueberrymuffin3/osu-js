@@ -1,6 +1,6 @@
 import { Application, Graphics } from "pixi.js";
 import { loadBeatmap } from "../api/beatmap-loader";
-import { SCREEN_SIZE } from "../constants";
+import { adaptiveScaleDisplayObject, TEXTURE_PIXELS_SCREEN_SIZE } from "../constants";
 import { preloadSounds } from "../resources/sounds";
 import { preloadTextures } from "../resources/textures";
 import { AbstractScreen, ScreenManager } from "./screen";
@@ -24,8 +24,8 @@ export class LoadingScreen extends AbstractScreen {
   constructor(app: Application, manager: ScreenManager, setId: number, mapId: number) {
     super(app, manager);
     this.loadingBar = new Graphics();
-    this.loadingBar.x = SCREEN_SIZE.width / 2;
-    this.loadingBar.y = SCREEN_SIZE.height / 2;
+    this.loadingBar.x = TEXTURE_PIXELS_SCREEN_SIZE.width / 2;
+    this.loadingBar.y = TEXTURE_PIXELS_SCREEN_SIZE.height / 2;
     this.contianer.addChild(this.loadingBar);
 
     app.loader.add(preloadTextures);
@@ -45,6 +45,12 @@ export class LoadingScreen extends AbstractScreen {
   }
 
   protected tick(): void {
+    adaptiveScaleDisplayObject(
+      this.app.screen,
+      TEXTURE_PIXELS_SCREEN_SIZE,
+      this.contianer
+    );
+
     const progress = this.app.loader.progress / 100;
 
     this.loadingBar.clear();

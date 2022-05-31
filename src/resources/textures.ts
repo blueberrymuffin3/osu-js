@@ -7,7 +7,8 @@ import TEXTURE_MENU_BACKGROUND_5 from "./osu/osu.Game.Resources/Textures/Menu/me
 import TEXTURE_MENU_BACKGROUND_6 from "./osu/osu.Game.Resources/Textures/Menu/menu-background-6.jpg";
 import TEXTURE_MENU_BACKGROUND_7 from "./osu/osu.Game.Resources/Textures/Menu/menu-background-7.jpg";
 
-import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC from "./osu/osu.Game.Resources/Textures/Gameplay/osu/disc.png"
+import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC from "./osu/osu.Game.Resources/Textures/Gameplay/osu/disc.png";
+import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW from "./osu/osu.Game.Resources/Textures/Gameplay/osu/ring-glow.png";
 
 const TEXTURES_MENU_BACKGROUND = [
   TEXTURE_MENU_BACKGROUND_1,
@@ -19,7 +20,16 @@ const TEXTURES_MENU_BACKGROUND = [
   TEXTURE_MENU_BACKGROUND_7,
 ];
 
-export { TEXTURE_LOGO, TEXTURES_MENU_BACKGROUND, TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC };
+export {
+  TEXTURE_LOGO,
+  TEXTURES_MENU_BACKGROUND,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
+};
 
 // export const preloadTextures = [TEXTURE_LOGO, ...TEXTURES_MENU_BACKGROUND];
-export const preloadTextures = [TEXTURE_LOGO, TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC];
+export const preloadTextures = [
+  TEXTURE_LOGO,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
+];

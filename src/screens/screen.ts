@@ -17,6 +17,7 @@ export abstract class AbstractScreen {
   public destroy() {
     this.app.ticker.remove(this.tick, this);
     this.app.stage.removeChild(this.contianer);
+    this.contianer.destroy({ children: true, });
   }
 
   protected abstract tick(): void;
