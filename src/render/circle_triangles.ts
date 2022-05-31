@@ -6,7 +6,7 @@ import TRIANGLES_FS_RAW from "./circle_triangles.frag?raw";
 
 // TODO: Either render to an intermediate RenderTexture to reduce draw calls, or randomize each circle individually
 
-const TRIANGLE_COUNT = 20;
+const TRIANGLE_COUNT = 15;
 const TRIANGLES_FS = TRIANGLES_FS_RAW.replace(
   "__TRIANGLE_COUNT",
   TRIANGLE_COUNT.toString()
@@ -62,15 +62,15 @@ export class CircleTriangles extends Sprite {
       let x = this.triangles[j];
       let y = this.triangles[j + 1];
       let size = this.triangles[j + 2];
-      y += this.app.ticker.deltaMS * this.triangleSpeeds[i];
-      if (y > 1 + size * 2) {
+      y -= this.app.ticker.deltaMS * this.triangleSpeeds[i];
+      if (y < -size * 2) {
         this.triangleSpeeds[i] = lerp(
           Math.random(),
           TRIANGLE_SPEED_MIN,
           TRIANGLE_SPEED_MAX
         );
         size = lerp(Math.random(), TRIANGLE_SIZE_MIN, TRIANGLE_SIZE_MAX);
-        y = -size * 2;
+        y = 1 + size * 2;
         x = lerp(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
       }
       this.triangles[j] = x;
