@@ -10,6 +10,7 @@ import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
+  preemtTimeFromAr,
 } from "../constants";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { LoadedBeatmap } from "../api/beatmap-loader";
@@ -35,6 +36,12 @@ export class StandardGameScreen extends AbstractScreen {
   private playAreaContainer: Container;
   private beatmap: LoadedBeatmap;
   private nextHitObjectIndex: number = 0;
+  private instanciatedHitObjects: Container[] = [];
+
+  private timeElapsed = 0;
+  private clock = () => this.timeElapsed * 1000;
+
+  private preemtTime: number;
 
   constructor(
     app: Application,
@@ -45,11 +52,7 @@ export class StandardGameScreen extends AbstractScreen {
 
     this.beatmap = beatmap;
 
-    console.log(
-      beatmap.data.hitObjects
-        .filter((ho) => ho.hitType & HitType.Normal)
-        .map((ho) => ho.startPosition)
-    );
+    this.preemtTime = preemtTimeFromAr(beatmap.data.difficulty.approachRate);
 
     this.sound = Sound.from(beatmap.audioData);
 
@@ -107,16 +110,15 @@ export class StandardGameScreen extends AbstractScreen {
     if (hitObject.hitType & HitType.Normal) {
       const object = new MainCirclePiece(
         this.app,
+        this.clock,
+        hitObject.startTime,
         0x4fe90d,
-        this.beatmap.data.difficulty.circleSize
+        this.beatmap.data.difficulty
       );
       object.x = hitObject.startPosition.x;
       object.y = hitObject.startPosition.y;
       this.playAreaContainer.addChild(object);
-      // setTimeout(() => {
-      //   this.gameContainer.removeChild(object);
-      //   object.destroy();
-      // }, 100);
+      this.instanciatedHitObjects.push(object);
     }
   }
 
@@ -144,7 +146,7 @@ export class StandardGameScreen extends AbstractScreen {
       return;
     }
 
-    const timeElapsed = this.mediaInstance.progress * this.sound.duration;
+    this.timeElapsed = this.mediaInstance.progress * this.sound.duration;
 
     for (
       ;
@@ -152,7 +154,8 @@ export class StandardGameScreen extends AbstractScreen {
       this.nextHitObjectIndex++
     ) {
       const hitObject = this.beatmap.data.hitObjects[this.nextHitObjectIndex];
-      if (hitObject.startTime > timeElapsed * 1000) break; // We're in the future
+      if (hitObject.startTime > this.timeElapsed * 1000 + this.preemtTime)
+        break; // We're in the future
 
       this.instantiateHitObject(hitObject);
     }
@@ -160,7 +163,7 @@ export class StandardGameScreen extends AbstractScreen {
     if (this.video) {
       if (
         this.videoError ||
-        timeElapsed < this.beatmap.data.events.videoOffset!
+        this.timeElapsed < this.beatmap.data.events.videoOffset!
       ) {
         this.videoSprite!.visible = false;
         this.background && (this.background.visible = true);
@@ -174,7 +177,7 @@ export class StandardGameScreen extends AbstractScreen {
         }
 
         const targetVideoTime =
-          timeElapsed - this.beatmap.data.events.videoOffset!;
+          this.timeElapsed - this.beatmap.data.events.videoOffset!;
         const skew = this.video.currentTime - targetVideoTime;
 
         if (Math.abs(skew) > maxVideoSkewSeek) {

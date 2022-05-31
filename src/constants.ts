@@ -1,5 +1,8 @@
 import { getScaledRect, POLICY } from "adaptive-scale/lib-esm";
+import { BeatmapDifficultySection } from "osu-classes";
 import type { DisplayObject } from "pixi.js";
+
+export type TimeMsProvider = () => number;
 
 export interface Size {
   width: number;
@@ -29,6 +32,11 @@ export const OSU_PIXELS_PLAY_AREA_OFFSET = {
 export const OSU_HIT_OBJECT_RADIUS = 64;
 
 export const diameterFromCs = (CS: number) => 54.4 - 4.48 * CS;
+
+export const preemtTimeFromAr = (AR: number) =>
+  BeatmapDifficultySection.range(AR, 450, 1200, 1800);
+export const fadeInTimeFromAr = (AR: number) =>
+  BeatmapDifficultySection.range(AR, 300, 800, 1200);
 
 export function adaptiveScaleDisplayObject(
   containerSize: Size,

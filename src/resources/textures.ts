@@ -6,9 +6,9 @@ import TEXTURE_MENU_BACKGROUND_4 from "./osu/osu.Game.Resources/Textures/Menu/me
 import TEXTURE_MENU_BACKGROUND_5 from "./osu/osu.Game.Resources/Textures/Menu/menu-background-5.jpg";
 import TEXTURE_MENU_BACKGROUND_6 from "./osu/osu.Game.Resources/Textures/Menu/menu-background-6.jpg";
 import TEXTURE_MENU_BACKGROUND_7 from "./osu/osu.Game.Resources/Textures/Menu/menu-background-7.jpg";
-
 import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC from "./osu/osu.Game.Resources/Textures/Gameplay/osu/disc.png";
 import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW from "./osu/osu.Game.Resources/Textures/Gameplay/osu/ring-glow.png";
+import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE from "./osu/osu.Game.Resources/Textures/Gameplay/osu/approachcircle.png";
 
 const TEXTURES_MENU_BACKGROUND = [
   TEXTURE_MENU_BACKGROUND_1,
@@ -25,11 +25,12 @@ export {
   TEXTURES_MENU_BACKGROUND,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
 };
 
-// export const preloadTextures = [TEXTURE_LOGO, ...TEXTURES_MENU_BACKGROUND];
 export const preloadTextures = [
   TEXTURE_LOGO,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
 ];
