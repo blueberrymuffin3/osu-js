@@ -1,5 +1,5 @@
 import { getScaledRect, POLICY } from "adaptive-scale/lib-esm";
-import { BeatmapDifficultySection } from "osu-classes";
+import { BeatmapDifficultySection, Vector2 } from "osu-classes";
 import type { DisplayObject } from "pixi.js";
 
 export type TimeMsProvider = () => number;
@@ -55,4 +55,23 @@ export function adaptiveScaleDisplayObject(
   );
   object.x = scaled.x;
   object.y = scaled.y;
+}
+
+export function minMax(points: Vector2[]): [Vector2, Vector2] {
+  return [
+    points.reduce(
+      (a, b) =>
+        new Vector2(
+          Math.min(a.x, b.x),
+          Math.min(a.y, b.y)
+        )
+    ),
+    points.reduce(
+      (a, b) =>
+        new Vector2(
+          Math.max(a.x, b.x),
+          Math.max(a.y, b.y)
+        )
+    ),
+  ];
 }
