@@ -5,7 +5,7 @@ import {
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
-import { SignedDistanceField } from "../render/sdf/signed_distance_field";
+import { renderSliderPath } from "../render/sdf/signed_distance_field";
 import { AbstractScreen, ScreenManager } from "./screen";
 
 export class SDFTestScreen extends AbstractScreen {
@@ -38,19 +38,12 @@ export class SDFTestScreen extends AbstractScreen {
     //   700
     // ).path;
 
-
-    const sdf = new SignedDistanceField(path);
-
-    for (let i = 0; i < path.length - 1; i++) {
-      sdf.addLine(path[i], path[i + 1]);
-    }
-
     const playArea = new Container();
     playArea.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
     playArea.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
     this.contianer.addChild(playArea);
 
-    const canvas = sdf.render();
+    const canvas = renderSliderPath(path);
     setTimeout(() => {
       const sprite2 = Sprite.from(canvas);
       playArea.addChild(sprite2);
