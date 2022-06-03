@@ -1,5 +1,5 @@
 import { PathPoint, PathType, SliderPath, Vector2 } from "osu-classes";
-import { Application, Container, Sprite } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
@@ -9,10 +9,13 @@ import { renderSliderPath } from "../render/sdf/signed_distance_field";
 import { AbstractScreen, ScreenManager } from "./screen";
 
 export class SDFTestScreen extends AbstractScreen {
+  private refresh: any;
+
   constructor(app: Application, manager: ScreenManager) {
     super(app, manager);
 
     // app.renderer.backgroundColor = 0x550055;
+    app.renderer.clearBeforeRender = false;
 
     const path = new SliderPath(
       undefined,
@@ -43,14 +46,12 @@ export class SDFTestScreen extends AbstractScreen {
     playArea.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
     this.contianer.addChild(playArea);
 
-    const canvas = renderSliderPath(path);
-    setTimeout(() => {
-      const sprite2 = Sprite.from(canvas);
-      playArea.addChild(sprite2);
-    }, 3000);
+    const refresh = renderSliderPath(app, path);
+    this.refresh = refresh;
   }
 
   protected tick(): void {
+    this.refresh();
     adaptiveScaleDisplayObject(
       this.app.screen,
       OSU_PIXELS_SCREEN_SIZE,

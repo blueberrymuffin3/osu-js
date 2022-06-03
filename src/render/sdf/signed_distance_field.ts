@@ -1,6 +1,14 @@
 import { Vector2 } from "osu-classes";
-import { Rectangle } from "pixi.js";
-import * as twgl from "twgl.js";
+import {
+  Application,
+  DRAW_MODES,
+  Geometry,
+  Matrix,
+  Rectangle,
+  Renderer,
+  Shader,
+  State,
+} from "pixi.js";
 
 import SDF_LINE_VERT from "./sdf_line.vert?raw";
 import SDF_LINE_FRAG from "./sdf_line.frag?raw";
@@ -11,20 +19,53 @@ import { minMax, OSU_HIT_OBJECT_RADIUS } from "../../constants";
 
 const BORDER_PROP = 0.125;
 const EXTRA_PADDING = 5;
+const GL_STATE = new State();
+GL_STATE.blend = false;
+GL_STATE.depthTest = true;
+GL_STATE.depthMask = true;
 
-const canvas = document.createElement("canvas");
-document.body.appendChild(canvas);
-const gl = canvas.getContext("webgl2")!;
-if (!gl) {
-  throw new Error("WebGL 2.0 is not supported");
+interface GlobalState {
+  renderer: Renderer;
+  gl: WebGL2RenderingContext;
+  shader: Shader;
 }
 
-twgl.setDefaults({ attribPrefix: "a_" });
-const program = twgl.createProgramFromSources(gl, [
-  SDF_LINE_VERT,
-  SDF_LINE_FRAG,
-]);
-const programInfo = twgl.createProgramInfoFromProgram(gl, program);
+interface Uniforms {
+  // Vertex Shader
+  projectionMatrix: Matrix;
+
+  // Fragment Shader
+  radius: number;
+  borderProp: number;
+  colorFill: Float32Array;
+  colorBorder: Float32Array;
+}
+
+function _setupGlobalState(app: Application): GlobalState {
+  const renderer = app.renderer as Renderer;
+  const gl = renderer.gl;
+
+  const uniforms: Uniforms = {
+    projectionMatrix: new Matrix(),
+    radius: OSU_HIT_OBJECT_RADIUS,
+    borderProp: BORDER_PROP,
+    colorFill: new Float32Array([0.6, 0.8, 1, 1]),
+    colorBorder: new Float32Array([1, 1, 1, 1]),
+  };
+
+  const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniforms);
+
+  return { renderer, gl, shader, };
+}
+
+let _globalState: GlobalState | null = null;
+
+function getGlobalState(app: Application): GlobalState {
+  if (!_globalState) {
+    _globalState = _setupGlobalState(app);
+  }
+  return _globalState;
+}
 
 function boundingBox(points: Vector2[]) {
   const [min, max] = minMax(points);
@@ -43,8 +84,7 @@ function projectionMatrix(aabb: Rectangle) {
   const tx = -2 * (aabb.x / aabb.width) - 1;
   const ty = 2 * (aabb.y / aabb.height) + 1;
 
-  // NOTE: Stored column-major for an OpenGL mat3
-  return new Float32Array([sx, 0, 0, 0, sy, 0, tx, ty, 1]);
+  return new Matrix(sx, 0, 0, sy, tx, ty);
 }
 
 function boundingBoxAngled(
@@ -64,7 +104,9 @@ function boundingBoxAngled(
   ];
 }
 
-export function renderSliderPath(points: Vector2[]) {
+export function renderSliderPath(app: Application, points: Vector2[]) {
+  const { renderer, gl,  shader } = getGlobalState(app);
+
   const overallBoundingBox = boundingBox(points);
 
   interface LineData {
@@ -119,38 +161,23 @@ export function renderSliderPath(points: Vector2[]) {
     }
   }
 
-  // TODO: Stop memory leak with https://twgljs.org/docs/module-twgl_attributes.html#.setAttribInfoBufferFromArray
-  const bufferInfo = twgl.createBufferInfoFromArrays(gl, {
-    position: {
-      numComponents: 2,
-      data: position,
-    },
-    data: {
-      numComponents: 4,
-      data: data,
-    },
-    indices,
-  });
+  const geometry = new Geometry();
+  geometry.addAttribute("a_position", position);
+  geometry.addAttribute("a_data", data);
+  geometry.addIndex(indices);
 
-  const uniforms = {
-    projectionMatrix: projectionMatrix(overallBoundingBox),
-    radius: OSU_HIT_OBJECT_RADIUS,
-    borderProp: BORDER_PROP,
-    colorFill: [0.6, 0.8, 1, 1],
-    colorBorder: [1, 1, 1, 1],
-  };
+  const uniforms = shader.uniforms as Uniforms;
+  uniforms.projectionMatrix = projectionMatrix(overallBoundingBox);
 
-  canvas.width = overallBoundingBox.width;
-  canvas.height = overallBoundingBox.height;
   gl.viewport(0, 0, overallBoundingBox.width, overallBoundingBox.height);
 
-  gl.enable(gl.DEPTH_TEST);
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.useProgram(programInfo.program);
-  twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-  twgl.setUniforms(programInfo, uniforms);
-  twgl.drawBufferInfo(gl, bufferInfo);
+  renderer.state.set(GL_STATE);
+  console.log(renderer.renderingToScreen);
 
-  return canvas;
+  return () => {
+    uniforms.colorFill[1] = Math.random();
+    renderer.geometry.bind(geometry, shader)
+    renderer.shader.bind(shader);
+    renderer.geometry.draw(DRAW_MODES.TRIANGLES);
+  };
 }
