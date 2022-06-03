@@ -1,16 +1,21 @@
-import { PathPoint, PathType, SliderPath, Vector2 } from "osu-classes";
+import {
+  BeatmapDifficultySection,
+  PathPoint,
+  PathType,
+  SliderPath,
+  Vector2,
+} from "osu-classes";
 import { Application, Container } from "pixi.js";
 import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
-import { renderSliderPath } from "../render/sdf/signed_distance_field";
+import { MainCirclePiece } from "../render/circle";
+import { SliderPathSprite } from "../render/sdf/signed_distance_field";
 import { AbstractScreen, ScreenManager } from "./screen";
 
 export class SDFTestScreen extends AbstractScreen {
-  private refresh: any;
-
   constructor(app: Application, manager: ScreenManager) {
     super(app, manager);
 
@@ -21,24 +26,24 @@ export class SDFTestScreen extends AbstractScreen {
       undefined,
       [
         new PathPoint(new Vector2(0, 0), PathType.Bezier),
-        new PathPoint(new Vector2(100, 0), undefined),
-        new PathPoint(new Vector2(100, 100), PathType.Linear),
-        new PathPoint(new Vector2(250, 100), PathType.Bezier),
-        new PathPoint(new Vector2(300, 400), undefined),
-        new PathPoint(new Vector2(200, 400), undefined),
-        new PathPoint(new Vector2(0, 400), undefined),
+        new PathPoint(new Vector2(50, 0), undefined),
+        new PathPoint(new Vector2(50, 50), PathType.Linear),
+        new PathPoint(new Vector2(125, 50), PathType.Bezier),
+        new PathPoint(new Vector2(150, 200), undefined),
+        new PathPoint(new Vector2(100, 200), undefined),
+        new PathPoint(new Vector2(0, 200), undefined),
       ],
-      700
+      350
     ).path;
 
     // const path = new SliderPath(
     //   undefined,
     //   [
     //     new PathPoint(new Vector2(0, 0), PathType.Linear),
-    //     new PathPoint(new Vector2(300, 100), PathType.Linear),
-    //     new PathPoint(new Vector2(200, 300), PathType.Linear),
+    //     new PathPoint(new Vector2(100, 50), PathType.Linear),
+    //     new PathPoint(new Vector2(50, 100), PathType.Linear),
     //   ],
-    //   700
+    //   200
     // ).path;
 
     const playArea = new Container();
@@ -46,12 +51,14 @@ export class SDFTestScreen extends AbstractScreen {
     playArea.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
     this.contianer.addChild(playArea);
 
-    const refresh = renderSliderPath(app, path);
-    this.refresh = refresh;
+    const difficulty = new BeatmapDifficultySection();
+
+    console.log(playArea.worldTransform);
+    playArea.addChild(new SliderPathSprite(path, difficulty.circleSize));
+    playArea.addChild(new MainCirclePiece(app, () => 100, 500, 0xffffff, difficulty));
   }
 
   protected tick(): void {
-    this.refresh();
     adaptiveScaleDisplayObject(
       this.app.screen,
       OSU_PIXELS_SCREEN_SIZE,
