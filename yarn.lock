@@ -200,9 +200,9 @@
   integrity sha512-w8oigUCDjElRHRRrMvn/spybSMyX8MTkKA5Dv+tS1IE/TgmNZPqUYtvYBXGY8cieSE66gm+szeK+bnbxC2xHTQ==
 
 "@types/node@^17.0.35":
-  version "17.0.38"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.38.tgz#f8bb07c371ccb1903f3752872c89f44006132947"
-  integrity sha512-5jY9RhV7c0Z4Jy09G+NIDTsCZ5G0L5n+Z+p+Y7t5VJHM30bgwzSjVtlcBxqAj+6L/swIlvtOSzr8rBk/aNyV2g==
+  version "17.0.39"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.39.tgz#3652d82e2a16b4ea679d5ea3143b816c91b7e113"
+  integrity sha512-JDU3YLlnPK3WDao6/DlXLOgSNpG13ct+CwIO17V8q0/9fWJyeMJJ/VyZ1lv8kDprihvZMydzVwf0tQOqGiY2Nw==
 
 "@types/offscreencanvas@^2019.6.4":
   version "2019.7.0"
@@ -431,10 +431,10 @@ object-assign@^4.1.1:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==
 
-osu-classes@^0.7.0, osu-classes@^0.7.1:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.7.2.tgz#c6b34dd30cb5bab3f36ac8dcfe6e84d4d811b2dd"
-  integrity sha512-NtolwIySN+DNi9e34tr2TDtfx2vFFa3PN0jQjNqAdBWuxz0oYSJZBKCJ4LjDS7uQSQ4PTUB0f8pIFMrnfggTwQ==
+osu-classes@0.8.0, osu-classes@^0.7.0, osu-classes@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.8.0.tgz#8b59eeb28e90ed6711e522650abeb082a2df5365"
+  integrity sha512-f+hI0S6NnqIamQAafd33GuUEPXFxIgkupSrcoENUpAazl9R1h28LX5mHzRH5r+JGcKO+f7G0CMlPT0alsxzxRA==
 
 osu-parsers-web@^3.0.0:
   version "3.0.1"
@@ -590,9 +590,9 @@ supports-preserve-symlinks-flag@^1.0.0:
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
 typescript@^4.5.4:
-  version "4.7.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.7.2.tgz#1f9aa2ceb9af87cca227813b4310fff0b51593c4"
-  integrity sha512-Mamb1iX2FDUpcTRzltPxgWMKy3fhg0TN378ylbktPGPK/99KbDtMQ4W1hwgsbPAsG3a0xKa1vmw4VKZQbkvz5A==
+  version "4.7.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.7.3.tgz#8364b502d5257b540f9de4c40be84c98e23a129d"
+  integrity sha512-WOkT3XYvrpXx4vMMqlD+8R8R37fZkjyLGlxavMc4iB8lrl8L0DeTcHbYgw/v0N/z9wAFsgBhcsF0ruoySS22mA==
 
 url@^0.11.0:
   version "0.11.0"
