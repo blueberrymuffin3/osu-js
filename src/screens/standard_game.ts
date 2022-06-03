@@ -119,7 +119,7 @@ export class StandardGameScreen extends AbstractScreen {
       );
       object.x = hitObject.startPosition.x;
       object.y = hitObject.startPosition.y;
-      this.playAreaContainer.addChild(object);
+      this.playAreaContainer.addChildAt(object, 0);
       this.instanciatedHitObjects.push(object);
     } else if (_hitObject.hitType & HitType.Slider) {
       const hitObject = _hitObject as SlidableObject;
@@ -130,7 +130,7 @@ export class StandardGameScreen extends AbstractScreen {
       );
       object.x = hitObject.startPosition.x;
       object.y = hitObject.startPosition.y;
-      this.playAreaContainer.addChild(object);
+      this.playAreaContainer.addChildAt(object, 0);
       this.instanciatedHitObjects.push(object);
     }
   }
