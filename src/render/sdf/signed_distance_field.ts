@@ -1,5 +1,6 @@
-import { Vector2 } from "osu-classes";
+import { SliderPath, Vector2 } from "osu-classes";
 import {
+  Application,
   Container,
   DRAW_MODES,
   Geometry,
@@ -38,6 +39,7 @@ const uniformGroup = new UniformGroup({
 const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG);
 
 export class SliderPathSprite extends Container {
+  private app: Application;
   private unscaledPoints: Vector2[];
   private points!: Vector2[];
   private renderScale: number = NaN;
@@ -47,26 +49,29 @@ export class SliderPathSprite extends Container {
   private radius!: number;
   private padding!: number;
 
-  constructor(points: Vector2[], CS: number) {
+  constructor(app: Application, sliderPath: SliderPath, CS: number) {
     super();
-    this.unscaledPoints = points;
-
+    this.app = app;
+    this.unscaledPoints = sliderPath.path;
     this.CS = CS;
 
     this.addChild(this.sprite);
+    app.ticker.add(this.tick, this)
   }
 
-  protected _render(renderer: Renderer): void {
-    const start = performance.now()
+  tick(): void {
+    const start = performance.now();
     const renderScale = (this.worldTransform.a + this.worldTransform.d) / 2;
     if (!this.texture || renderScale != this.renderScale) {
       this.renderScale = renderScale;
       this.points = this.unscaledPoints.map((p) => p.scale(renderScale));
       this.radius = diameterFromCs(this.CS) * renderScale;
       this.padding = this.radius + PADDING;
-      this.updateSpriteRender(renderer);
+      this.updateSpriteRender(this.app.renderer as Renderer);
       console.log(
-        `Rendered slider path (${this.points.length} points, ${this.texture?.width}x${this.texture?.height}) in ${performance.now() - start} ms`
+        `Rendered slider path (${this.points.length} points, ${
+          this.texture?.width
+        }x${this.texture?.height}) in ${performance.now() - start} ms`
       );
     }
   }
@@ -74,7 +79,7 @@ export class SliderPathSprite extends Container {
   updateSpriteRender(renderer: Renderer) {
     const overallBounds = this.boundingBox(this.points);
     uniformGroup.uniforms.radius = this.radius;
-    uniformGroup.uniforms.colorFill = [0.6, 0.8, Math.random(), 1];
+    uniformGroup.uniforms.colorFill = [0.6, 0.8, 1, 1];
     renderer.state.set(GL_STATE);
     renderer.shader.bind(shader);
     renderer.shader.syncUniformGroup(uniformGroup);
@@ -187,5 +192,6 @@ export class SliderPathSprite extends Container {
   destroy(options?: boolean | IDestroyOptions): void {
     super.destroy(options);
     this.texture?.destroy(true);
+    this.app.ticker.remove(this.tick, this);
   }
 }

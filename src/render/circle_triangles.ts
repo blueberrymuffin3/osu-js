@@ -64,7 +64,6 @@ export class CircleTriangles extends Sprite {
   }
 
   tick() {
-    console.log(this.worldTransform.a, this.width)
     for (let i = 0; i < TRIANGLE_COUNT; i++) {
       const j = i * 3;
       let x = this.triangles[j];

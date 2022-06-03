@@ -34,7 +34,7 @@ export class SDFTestScreen extends AbstractScreen {
         new PathPoint(new Vector2(0, 200), undefined),
       ],
       350
-    ).path;
+    );
 
     // const path = new SliderPath(
     //   undefined,
@@ -44,7 +44,7 @@ export class SDFTestScreen extends AbstractScreen {
     //     new PathPoint(new Vector2(50, 100), PathType.Linear),
     //   ],
     //   200
-    // ).path;
+    // );
 
     const playArea = new Container();
     playArea.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
@@ -53,8 +53,7 @@ export class SDFTestScreen extends AbstractScreen {
 
     const difficulty = new BeatmapDifficultySection();
 
-    console.log(playArea.worldTransform);
-    playArea.addChild(new SliderPathSprite(path, difficulty.circleSize));
+    playArea.addChild(new SliderPathSprite(app, path, difficulty.circleSize));
     playArea.addChild(new MainCirclePiece(app, () => 100, 500, 0xffffff, difficulty));
   }
 
