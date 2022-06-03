@@ -48,6 +48,7 @@ export class SliderPathSprite extends Container {
   private CS: number;
   private radius!: number;
   private padding!: number;
+  private matricesValid = false;
 
   constructor(app: Application, sliderPath: SliderPath, CS: number) {
     super();
@@ -56,10 +57,19 @@ export class SliderPathSprite extends Container {
     this.CS = CS;
 
     this.addChild(this.sprite);
-    app.ticker.add(this.tick, this)
+    app.ticker.add(this.tick, this);
+  }
+
+  updateTransform(): void {
+    super.updateTransform();
+    this.matricesValid = true;
   }
 
   tick(): void {
+    if (!this.matricesValid) {
+      console.warn("Matrixes not yet initialized");
+      return;
+    }
     const start = performance.now();
     const renderScale = (this.worldTransform.a + this.worldTransform.d) / 2;
     if (!this.texture || renderScale != this.renderScale) {
@@ -71,7 +81,9 @@ export class SliderPathSprite extends Container {
       console.log(
         `Rendered slider path (${this.points.length} points, ${
           this.texture?.width
-        }x${this.texture?.height}) in ${performance.now() - start} ms`
+        }x${this.texture?.height}, scale=${renderScale}) in ${
+          performance.now() - start
+        } ms`
       );
     }
   }
