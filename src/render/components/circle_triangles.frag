@@ -5,9 +5,10 @@ uniform sampler2D uSampler;
 const int triangleCount = __TRIANGLE_COUNT;
 const float triangleHalfBase = 2.0 / sqrt(3.0);
 const float slope = 2.0 / triangleHalfBase;
-const float opacity = 4.0 / float(triangleCount);
+const float opacity = 6.0 / float(triangleCount);
 const float ringSize = 9.0 / 128.0;
 const float innerRadiusCutoff = (1.0 - ringSize) * (1.0 - ringSize) * 0.5;
+const float overexposeFactor = 2.0;
 
 uniform float AA;
 uniform vec3 color;
@@ -34,10 +35,11 @@ void main() {
   vec2 pos = vTextureCoord / inputClamp.zw;
 
   for(int i = 0; i < triangleCount; i += 1) {
-    value = mix(value, value + opacity, testTriangle(triangles[i], pos));
+    value += opacity * testTriangle(triangles[i], pos);
   }
 
-  value = clamp(value, 0.0, 1.0);
+  value = clamp(value, 0.0, overexposeFactor);
+  vec3 newColor = clamp(value * color, vec3(0.0), vec3(1.0));
 
-  gl_FragColor = vec4(vec3(value, value, value) * color, 1.0) * sample.a;
+  gl_FragColor = vec4(newColor, 1.0) * sample.a;
 }
