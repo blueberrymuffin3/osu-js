@@ -67,7 +67,6 @@ export class SliderPathSprite extends Container {
 
   tick(): void {
     if (!this.matricesValid) {
-      console.warn("Matrixes not yet initialized");
       return;
     }
     const start = performance.now();
@@ -78,7 +77,7 @@ export class SliderPathSprite extends Container {
       this.radius = diameterFromCs(this.CS) * renderScale;
       this.padding = this.radius + PADDING;
       this.updateSpriteRender(this.app.renderer as Renderer);
-      console.log(
+      console.info(
         `Rendered slider path (${this.points.length} points, ${
           this.texture?.width
         }x${this.texture?.height}, scale=${renderScale}) in ${
