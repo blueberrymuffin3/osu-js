@@ -14,8 +14,8 @@ import {
   UniformGroup,
 } from "pixi.js";
 
-import SDF_LINE_VERT from "./sdf_line.vert?raw";
-import SDF_LINE_FRAG from "./sdf_line.frag?raw";
+import SDF_LINE_VERT from "./slider_path.vert?raw";
+import SDF_LINE_FRAG from "./slider_path.frag?raw";
 import { diameterFromCs, minMax } from "../../constants";
 
 // https://www.shadertoy.com/view/lsdBDS Quadratic Bezier SDF

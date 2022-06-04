@@ -4,7 +4,6 @@ import * as PIXI from "pixi.js";
 import { ScreenManager } from "./screens/screen";
 import { LoadingScreen } from "./screens/loading";
 import { SoundLoader } from "@pixi/sound";
-import { SDFTestScreen } from "./screens/sdf_test";
 
 Loader.registerPlugin(SoundLoader);
 (window as any).PIXI = PIXI;

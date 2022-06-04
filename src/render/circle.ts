@@ -18,7 +18,7 @@ import {
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
 } from "../resources/textures";
-import { CircleTriangles } from "./circle_triangles";
+import { CircleTriangles } from "./components/circle_triangles";
 
 export class MainCirclePiece extends Container {
   private app: Application;

@@ -12,7 +12,7 @@ import {
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
 import { MainCirclePiece } from "../render/circle";
-import { SliderPathSprite } from "../render/sdf/signed_distance_field";
+import { SliderPathSprite } from "../render/sdf/slider_path";
 import { AbstractScreen, ScreenManager } from "./screen";
 
 export class SDFTestScreen extends AbstractScreen {

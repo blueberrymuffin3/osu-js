@@ -1,6 +1,6 @@
 import { EasingFunction } from "bezier-easing";
 import { Application, Container, IDestroyOptions, Sprite } from "pixi.js";
-import { lerp, lerpUnclamped, outElasticHalf, outQuad } from "../anim";
+import { lerpUnclamped, outElasticHalf, outQuad } from "../anim";
 import {
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,

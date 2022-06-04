@@ -17,11 +17,10 @@ import { LoadedBeatmap } from "../api/beatmap-loader";
 import { HitType, IHitObject } from "osu-classes";
 import { POLICY } from "adaptive-scale/lib-esm";
 import { MainCirclePiece } from "../render/circle";
-import { SliderPathSprite } from "../render/sdf/signed_distance_field";
+import { SliderPathSprite } from "../render/components/slider_path";
 import {
   HittableObject,
   SlidableObject,
-  SpinnableObject,
 } from "osu-parsers-web";
 import { Cursor } from "../render/cursor";
 
