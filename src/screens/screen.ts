@@ -4,20 +4,20 @@ import { Application } from "pixi.js";
 export abstract class AbstractScreen {
   protected app: PIXI.Application;
   protected manager: ScreenManager;
-  protected contianer: PIXI.Container;
+  protected container: PIXI.Container;
 
   constructor(app: Application, manager: ScreenManager) {
     this.app = app;
     this.manager = manager;
     this.app.ticker.add(this.tick, this);
-    this.contianer = new PIXI.Container();
-    this.app.stage.addChild(this.contianer);
+    this.container = new PIXI.Container();
+    this.app.stage.addChild(this.container);
   }
 
   public destroy() {
     this.app.ticker.remove(this.tick, this);
-    this.app.stage.removeChild(this.contianer);
-    this.contianer.destroy({ children: true, });
+    this.app.stage.removeChild(this.container);
+    this.container.destroy({ children: true, });
   }
 
   protected abstract tick(): void;

@@ -83,13 +83,13 @@ export class StandardGameScreen extends AbstractScreen {
         })
       );
       this.videoSprite.visible = false;
-      this.contianer.addChild(this.videoSprite);
+      this.container.addChild(this.videoSprite);
     }
 
     if (beatmap.backgroundUrl) {
       app.loader.add(beatmap.backgroundUrl);
       this.background = Sprite.from(beatmap.backgroundUrl);
-      this.contianer.addChild(this.background);
+      this.container.addChild(this.background);
     }
 
     (async () => {
@@ -99,7 +99,7 @@ export class StandardGameScreen extends AbstractScreen {
     this.gameContainer = new Container();
     // TODO: Fix black artifacts around the edges of the circles
     // this.gameContainer.filters = [new filters.FXAAFilter()];
-    this.contianer.addChild(this.gameContainer);
+    this.container.addChild(this.gameContainer);
 
     this.playAreaContainer = new Container();
     this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;

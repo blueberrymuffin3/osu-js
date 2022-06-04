@@ -49,7 +49,7 @@ export class SDFTestScreen extends AbstractScreen {
     const playArea = new Container();
     playArea.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
     playArea.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
-    this.contianer.addChild(playArea);
+    this.container.addChild(playArea);
 
     const difficulty = new BeatmapDifficultySection();
 
@@ -61,7 +61,7 @@ export class SDFTestScreen extends AbstractScreen {
     adaptiveScaleDisplayObject(
       this.app.screen,
       OSU_PIXELS_SCREEN_SIZE,
-      this.contianer
+      this.container
     );
   }
 }

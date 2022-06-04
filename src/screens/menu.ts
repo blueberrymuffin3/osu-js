@@ -41,16 +41,16 @@ export class MenuScreen extends AbstractScreen {
     this.background = Sprite.from(backgroundTexture);
     this.background.width = TEXTURE_PIXELS_SCREEN_SIZE.width;
     this.background.height = TEXTURE_PIXELS_SCREEN_SIZE.height;
-    this.contianer.addChild(this.background);
+    this.container.addChild(this.background);
 
     this.logo = Sprite.from(TEXTURE_LOGO);
     this.logo.anchor.set(0.5);
     this.logo.x = TEXTURE_PIXELS_SCREEN_SIZE.width / 2;
     this.logo.y = TEXTURE_PIXELS_SCREEN_SIZE.height / 2;
     this.logo.scale.set(minScale);
-    this.contianer.addChild(this.logo);
+    this.container.addChild(this.logo);
 
-    this.contianer.alpha = 0;
+    this.container.alpha = 0;
 
     (async () => {
       this.sound = Sound.from(beatmap.audioData);
@@ -67,7 +67,7 @@ export class MenuScreen extends AbstractScreen {
 
     const fadeProgress = Math.min(msElapsed / fadeInTime, 1);
 
-    this.contianer.alpha = fadeCurve(fadeProgress);
+    this.container.alpha = fadeCurve(fadeProgress);
 
     if (fadeProgress == 1) {
       const bounceProgress =

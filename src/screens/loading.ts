@@ -26,7 +26,7 @@ export class LoadingScreen extends AbstractScreen {
     this.loadingBar = new Graphics();
     this.loadingBar.x = TEXTURE_PIXELS_SCREEN_SIZE.width / 2;
     this.loadingBar.y = TEXTURE_PIXELS_SCREEN_SIZE.height / 2;
-    this.contianer.addChild(this.loadingBar);
+    this.container.addChild(this.loadingBar);
 
     app.loader.add(preloadTextures);
     app.loader.add(preloadSounds);
@@ -48,7 +48,7 @@ export class LoadingScreen extends AbstractScreen {
     adaptiveScaleDisplayObject(
       this.app.screen,
       TEXTURE_PIXELS_SCREEN_SIZE,
-      this.contianer
+      this.container
     );
 
     const progress = this.app.loader.progress / 100;
