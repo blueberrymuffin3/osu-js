@@ -20,7 +20,7 @@ import {
 } from "../resources/textures";
 import { CircleTriangles } from "./components/circle_triangles";
 
-export class MainCirclePiece extends Container {
+export class CirclePiece extends Container {
   private app: Application;
   private clock: TimeMsProvider;
   private startTime: number;
@@ -78,7 +78,7 @@ export class MainCirclePiece extends Container {
   }
 
   destroy(options?: boolean | IDestroyOptions): void {
-    this.app.ticker.remove(this.tick, this);
     super.destroy(options);
+    this.app.ticker.remove(this.tick, this);
   }
 }

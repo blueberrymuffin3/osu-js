@@ -16,13 +16,14 @@ import { IMediaInstance, Sound } from "@pixi/sound";
 import { LoadedBeatmap } from "../api/beatmap-loader";
 import { HitType, IHitObject } from "osu-classes";
 import { POLICY } from "adaptive-scale/lib-esm";
-import { MainCirclePiece } from "../render/circle";
+import { CirclePiece } from "../render/circle";
 import { SliderPathSprite } from "../render/components/slider_path";
 import {
   HittableObject,
   SlidableObject,
 } from "osu-parsers-web";
 import { Cursor } from "../render/cursor";
+import { SliderPiece } from "../render/slider";
 
 const maxVideoSkewSpeed = 0.05;
 const maxVideoSkewSeek = 2;
@@ -112,7 +113,7 @@ export class StandardGameScreen extends AbstractScreen {
   private instantiateHitObject(_hitObject: IHitObject) {
     if (_hitObject.hitType & HitType.Normal) {
       const hitObject = _hitObject as HittableObject;
-      const object = new MainCirclePiece(
+      const object = new CirclePiece(
         this.app,
         this.clock,
         hitObject.startTime,
@@ -125,10 +126,13 @@ export class StandardGameScreen extends AbstractScreen {
       this.instanciatedHitObjects.push(object);
     } else if (_hitObject.hitType & HitType.Slider) {
       const hitObject = _hitObject as SlidableObject;
-      const object = new SliderPathSprite(
+      const object = new SliderPiece(
         this.app,
+        this.clock,
+        hitObject.startTime,
+        0x4fe90d, // TODO: Where are these colors stored???
         hitObject.path,
-        this.beatmap.data.difficulty.circleSize
+        this.beatmap.data.difficulty
       );
       object.x = hitObject.startPosition.x;
       object.y = hitObject.startPosition.y;

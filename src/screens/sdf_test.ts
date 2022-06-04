@@ -11,7 +11,7 @@ import {
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
-import { MainCirclePiece } from "../render/circle";
+import { CirclePiece } from "../render/circle";
 import { SliderPathSprite } from "../render/sdf/slider_path";
 import { AbstractScreen, ScreenManager } from "./screen";
 
@@ -54,7 +54,7 @@ export class SDFTestScreen extends AbstractScreen {
     const difficulty = new BeatmapDifficultySection();
 
     playArea.addChild(new SliderPathSprite(app, path, difficulty.circleSize));
-    playArea.addChild(new MainCirclePiece(app, () => 100, 500, 0xffffff, difficulty));
+    playArea.addChild(new CirclePiece(app, () => 100, 500, 0xffffff, difficulty));
   }
 
   protected tick(): void {

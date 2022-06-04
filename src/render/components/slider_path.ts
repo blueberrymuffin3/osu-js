@@ -1,4 +1,4 @@
-import { SliderPath, Vector2 } from "osu-classes";
+import { BeatmapDifficultySection, SliderPath, Vector2 } from "osu-classes";
 import {
   Application,
   Container,
@@ -12,6 +12,7 @@ import {
   Sprite,
   State,
   UniformGroup,
+  utils,
 } from "pixi.js";
 
 import SDF_LINE_VERT from "./slider_path.vert?raw";
@@ -46,15 +47,18 @@ export class SliderPathSprite extends Container {
   private texture: RenderTexture | null = null;
   private sprite: Sprite = new Sprite();
   private CS: number;
+  private color: number[];
+
   private radius!: number;
   private padding!: number;
   private matricesValid = false;
 
-  constructor(app: Application, sliderPath: SliderPath, CS: number) {
+  constructor(app: Application, sliderPath: SliderPath, color: number, difficulty: BeatmapDifficultySection) {
     super();
     this.app = app;
     this.unscaledPoints = sliderPath.path;
-    this.CS = CS;
+    this.CS = difficulty.circleSize;
+    this.color = [...utils.hex2rgb(color), 1]
 
     this.addChild(this.sprite);
     app.ticker.add(this.tick, this);
@@ -90,7 +94,7 @@ export class SliderPathSprite extends Container {
   updateSpriteRender(renderer: Renderer) {
     const overallBounds = this.boundingBox(this.points);
     uniformGroup.uniforms.radius = this.radius;
-    uniformGroup.uniforms.colorFill = [0.6, 0.8, 1, 1];
+    uniformGroup.uniforms.colorFill = this.color;
     renderer.state.set(GL_STATE);
     renderer.shader.bind(shader);
     renderer.shader.syncUniformGroup(uniformGroup);
