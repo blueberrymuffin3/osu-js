@@ -23,6 +23,7 @@ import {
   SlidableObject,
   SpinnableObject,
 } from "osu-parsers-web";
+import { Cursor } from "../render/cursor";
 
 const maxVideoSkewSpeed = 0.05;
 const maxVideoSkewSeek = 2;
@@ -97,14 +98,16 @@ export class StandardGameScreen extends AbstractScreen {
     })();
 
     this.gameContainer = new Container();
-    // TODO: Fix black artifacts around the edges of the circles
-    // this.gameContainer.filters = [new filters.FXAAFilter()];
     this.container.addChild(this.gameContainer);
-
+    
     this.playAreaContainer = new Container();
     this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
     this.playAreaContainer.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
     this.gameContainer.addChild(this.playAreaContainer);
+    this.gameContainer.addChild(new Cursor(app));
+
+    this.container.interactive = true;
+    this.container.interactiveChildren = false;
   }
 
   private instantiateHitObject(_hitObject: IHitObject) {
