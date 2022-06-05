@@ -1,6 +1,6 @@
 import { BeatmapDifficultySection, SliderPath } from "osu-classes";
 import { Application, Container, IDestroyOptions } from "pixi.js";
-import { lerp } from "../anim";
+import { clamp01, lerp } from "../anim";
 import {
   fadeInTimeFromAr,
   preemtTimeFromAr,
@@ -35,8 +35,19 @@ export class SliderPiece extends Container {
     this.preempt = preemtTimeFromAr(difficulty.approachRate);
     this.fadeIn = fadeInTimeFromAr(difficulty.approachRate);
 
-    this.sliderPathSprite = new SliderPathSprite(app, sliderPath, color, difficulty);
-    this.circlePiece = new CirclePiece(app, clock, startTime, color, difficulty)
+    this.sliderPathSprite = new SliderPathSprite(
+      app,
+      sliderPath,
+      color,
+      difficulty
+    );
+    this.circlePiece = new CirclePiece(
+      app,
+      clock,
+      startTime,
+      color,
+      difficulty
+    );
     this.addChild(this.sliderPathSprite, this.circlePiece);
 
     app.ticker.add(this.tick, this);
@@ -46,6 +57,7 @@ export class SliderPiece extends Container {
     const progress = this.clock() - (this.startTime - this.preempt);
 
     this.alpha = lerp(progress / this.fadeIn, 0, 1);
+    this.sliderPathSprite.endProp = clamp01(progress / this.fadeIn);
   }
 
   destroy(options?: boolean | IDestroyOptions): void {

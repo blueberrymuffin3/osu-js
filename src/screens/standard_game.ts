@@ -17,16 +17,17 @@ import { LoadedBeatmap } from "../api/beatmap-loader";
 import { HitType, IHitObject } from "osu-classes";
 import { POLICY } from "adaptive-scale/lib-esm";
 import { CirclePiece } from "../render/circle";
-import { SliderPathSprite } from "../render/components/slider_path";
-import {
-  HittableObject,
-  SlidableObject,
-} from "osu-parsers-web";
+import { HittableObject, SlidableObject } from "osu-parsers-web";
 import { Cursor } from "../render/cursor";
 import { SliderPiece } from "../render/slider";
 
 const maxVideoSkewSpeed = 0.05;
 const maxVideoSkewSeek = 2;
+
+interface InstantiatedHitObject {
+  object: Container;
+  data: HittableObject;
+}
 
 export class StandardGameScreen extends AbstractScreen {
   private background: Sprite | null = null;
@@ -43,7 +44,7 @@ export class StandardGameScreen extends AbstractScreen {
   private playAreaContainer: Container;
   private beatmap: LoadedBeatmap;
   private nextHitObjectIndex: number = 0;
-  private instanciatedHitObjects: Container[] = [];
+  private instantiatedHitObjects: InstantiatedHitObject[] = [];
 
   private timeElapsed = 0;
   private clock = () => this.timeElapsed * 1000;
@@ -99,7 +100,7 @@ export class StandardGameScreen extends AbstractScreen {
 
     this.gameContainer = new Container();
     this.container.addChild(this.gameContainer);
-    
+
     this.playAreaContainer = new Container();
     this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
     this.playAreaContainer.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
@@ -123,7 +124,7 @@ export class StandardGameScreen extends AbstractScreen {
       object.x = hitObject.startPosition.x;
       object.y = hitObject.startPosition.y;
       this.playAreaContainer.addChildAt(object, 0);
-      this.instanciatedHitObjects.push(object);
+      this.instantiatedHitObjects.push({ object, data: hitObject });
     } else if (_hitObject.hitType & HitType.Slider) {
       const hitObject = _hitObject as SlidableObject;
       const object = new SliderPiece(
@@ -137,7 +138,7 @@ export class StandardGameScreen extends AbstractScreen {
       object.x = hitObject.startPosition.x;
       object.y = hitObject.startPosition.y;
       this.playAreaContainer.addChildAt(object, 0);
-      this.instanciatedHitObjects.push(object);
+      this.instantiatedHitObjects.push({ object, data: hitObject });
     }
   }
 
@@ -177,6 +178,17 @@ export class StandardGameScreen extends AbstractScreen {
         break; // We're in the future
 
       this.instantiateHitObject(hitObject);
+    }
+
+    while (
+      this.instantiatedHitObjects.length > 0 &&
+      this.instantiatedHitObjects[0].data.startTime < this.timeElapsed * 1000
+    ) {
+      const { object } = this.instantiatedHitObjects.shift()!;
+      this.playAreaContainer.removeChild(object);
+      object.destroy({
+        children: true,
+      });
     }
 
     if (this.video) {
