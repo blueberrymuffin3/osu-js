@@ -4,6 +4,7 @@ import * as PIXI from "pixi.js";
 import { ScreenManager } from "./screens/screen";
 import { LoadingScreen } from "./screens/loading";
 import { SoundLoader } from "@pixi/sound";
+import { SDFTestScreen } from "./screens/sdf_test";
 
 Loader.registerPlugin(SoundLoader);
 (window as any).PIXI = PIXI;
@@ -28,10 +29,10 @@ const screenManager = new ScreenManager();
 
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 1011011, 2116202)); // new beginnings
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 1020313, 2134868)); // Triangles (No elements, one .osu)
-screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 606998, 1315750)); // Stars Align (Simple)
+// screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 606998, 1315750)); // Stars Align (Simple)
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 11122, 1315750)); // Night Flight [Breeze] (no IDs in MetaData), unique bg per difficulty
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 1416017, 2921425)); // After School (mp4 video)
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 36858, 120893)); // Senbonzakura (flv video)
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 1041786, 2195668)); // Feel Special (avi video)
 
-// screenManager.loadScreen(() => new SDFTestScreen(app, screenManager));
+screenManager.loadScreen(() => new SDFTestScreen(app, screenManager));

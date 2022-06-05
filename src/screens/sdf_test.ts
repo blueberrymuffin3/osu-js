@@ -11,11 +11,13 @@ import {
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
-import { CirclePiece } from "../render/circle";
-import { SliderPathSprite } from "../render/sdf/slider_path";
+import { SliderPathSprite } from "../render/components/slider_path";
 import { AbstractScreen, ScreenManager } from "./screen";
 
 export class SDFTestScreen extends AbstractScreen {
+  private timer = 0;
+  private pathSprite: SliderPathSprite;
+
   constructor(app: Application, manager: ScreenManager) {
     super(app, manager);
 
@@ -53,8 +55,9 @@ export class SDFTestScreen extends AbstractScreen {
 
     const difficulty = new BeatmapDifficultySection();
 
-    playArea.addChild(new SliderPathSprite(app, path, difficulty.circleSize));
-    playArea.addChild(new CirclePiece(app, () => 100, 500, 0xffffff, difficulty));
+    this.pathSprite = new SliderPathSprite(app, path, 0xffffff, difficulty);
+    playArea.addChild(this.pathSprite);
+    // playArea.addChild(new CirclePiece(app, () => 100, 500, 0xffffff, difficulty));
   }
 
   protected tick(): void {
@@ -63,5 +66,15 @@ export class SDFTestScreen extends AbstractScreen {
       OSU_PIXELS_SCREEN_SIZE,
       this.container
     );
+
+    this.timer += this.app.ticker.deltaTime * 0.1;
+    let val = Math.sin(this.timer / 10);
+    if (val > 0) {
+      this.pathSprite.startProp = val;
+      this.pathSprite.endProp = 1;
+    } else {
+      this.pathSprite.startProp = 0;
+      this.pathSprite.endProp = 1+val;
+    }
   }
 }
