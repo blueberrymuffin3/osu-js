@@ -12,6 +12,7 @@ import TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE from "./osu/osu.Game.Re
 import TEXTURE_OSU_RING from "./custom/ring.png";
 import TEXTURE_CURSOR_INNER from "./custom/cursor_inner.png";
 import TEXTURE_CURSOR_OUTER from "./custom/cursor_outer.png";
+import TEXTURE_NUMBER_GLOW from "./custom/number_glow.png";
 
 const TEXTURES_MENU_BACKGROUND = [
   TEXTURE_MENU_BACKGROUND_1,
@@ -32,6 +33,7 @@ export {
   TEXTURE_OSU_RING,
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
+  TEXTURE_NUMBER_GLOW,
 };
 
 export const preloadTextures = [
@@ -42,4 +44,5 @@ export const preloadTextures = [
   TEXTURE_OSU_RING,
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
+  TEXTURE_NUMBER_GLOW,
 ];

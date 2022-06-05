@@ -1,6 +1,10 @@
 import { Application, Graphics } from "pixi.js";
 import { loadBeatmap } from "../api/beatmap-loader";
-import { adaptiveScaleDisplayObject, TEXTURE_PIXELS_SCREEN_SIZE } from "../constants";
+import {
+  adaptiveScaleDisplayObject,
+  TEXTURE_PIXELS_SCREEN_SIZE,
+} from "../constants";
+import { preloadFonts } from "../resources/fonts";
 import { preloadSounds } from "../resources/sounds";
 import { preloadTextures } from "../resources/textures";
 import { AbstractScreen, ScreenManager } from "./screen";
@@ -21,7 +25,12 @@ const outerRadius = innerRadius + borderThickness;
 export class LoadingScreen extends AbstractScreen {
   private loadingBar: Graphics;
 
-  constructor(app: Application, manager: ScreenManager, setId: number, mapId: number) {
+  constructor(
+    app: Application,
+    manager: ScreenManager,
+    setId: number,
+    mapId: number
+  ) {
     super(app, manager);
     this.loadingBar = new Graphics();
     this.loadingBar.x = TEXTURE_PIXELS_SCREEN_SIZE.width / 2;
@@ -30,6 +39,7 @@ export class LoadingScreen extends AbstractScreen {
 
     app.loader.add(preloadTextures);
     app.loader.add(preloadSounds);
+    app.loader.add(preloadFonts);
 
     const loadedPromise = new Promise<void>((resolve) =>
       app.loader.load(() => resolve())

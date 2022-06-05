@@ -4,6 +4,8 @@ import {
   Application,
   Sprite,
   IDestroyOptions,
+  BitmapText,
+  IBitmapTextStyle,
 } from "pixi.js";
 import { lerp } from "../anim";
 import {
@@ -13,12 +15,20 @@ import {
   preemtTimeFromAr,
   TimeMsProvider,
 } from "../constants";
+import { FONT_VENERA_FACE } from "../resources/fonts";
 import {
+  TEXTURE_NUMBER_GLOW,
   TEXTURE_OSU_RING,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
 } from "../resources/textures";
 import { CircleTriangles } from "./components/circle_triangles";
+
+const NUMBER_STYLE: Partial<IBitmapTextStyle> = {
+  fontName: FONT_VENERA_FACE,
+  fontSize: 80,
+  align: "center",
+};
 
 export class CirclePiece extends Container {
   private app: Application;
@@ -55,6 +65,20 @@ export class CirclePiece extends Container {
     this.addChild(glow);
 
     this.addChild(new CircleTriangles(app, color));
+
+    const numberGlow = Sprite.from(TEXTURE_NUMBER_GLOW);
+    numberGlow.scale.set(0.5);
+    numberGlow.alpha = 0.5;
+    numberGlow.anchor.set(0.5);
+    this.addChild(numberGlow);
+
+    const number = new BitmapText(
+      Math.floor(Math.random() * 15).toString(),
+      NUMBER_STYLE
+    );
+    number.anchor.set(0.5);
+    number.y = 8;
+    this.addChild(number);
 
     const ring = Sprite.from(TEXTURE_OSU_RING);
     ring.anchor.set(0.5);
