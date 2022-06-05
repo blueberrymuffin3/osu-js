@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@jacekpietal/gstats@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@jacekpietal/gstats/-/gstats-0.1.0.tgz#b61fd6cc6f7ed0fd27e92484ee418ea55f62c3a1"
+  integrity sha512-52ILOmtGRZdunCFXE/wxNaGs/CsP0mF7QbNKvpviSI8cnznognB65zWG2r+k+2SNhYPCDg+FTi3/pj5JSxeh3A==
+
 "@pixi/accessibility@6.4.2":
   version "6.4.2"
   resolved "https://registry.yarnpkg.com/@pixi/accessibility/-/accessibility-6.4.2.tgz#612d64d14b1eee4314fead64c7916c96953b2f39"
@@ -431,7 +436,7 @@ object-assign@^4.1.1:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==
 
-osu-classes@0.8.0, osu-classes@^0.7.0, osu-classes@^0.8.0:
+osu-classes@^0.7.0, osu-classes@^0.8.0:
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.8.0.tgz#8b59eeb28e90ed6711e522650abeb082a2df5365"
   integrity sha512-f+hI0S6NnqIamQAafd33GuUEPXFxIgkupSrcoENUpAazl9R1h28LX5mHzRH5r+JGcKO+f7G0CMlPT0alsxzxRA==
@@ -458,7 +463,15 @@ picocolors@^1.0.0:
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.0.tgz#cb5bdc74ff3f51892236eaf79d68bc44564ab81c"
   integrity sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==
 
-pixi.js@^6.3.2:
+pixi-stats@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/pixi-stats/-/pixi-stats-1.0.7.tgz#e7762b0b4e53cca2814cdc1b8d3beb860817abf9"
+  integrity sha512-7bSEH46KpvJ9pv00b6zfPT74lvarpOKM8wk/unI3OlFt8KA8YmY8lq1C/pViDYM59xaJdUPzedrbmo2lvER8Iw==
+  dependencies:
+    "@jacekpietal/gstats" "^0.1.0"
+    pixi.js "*"
+
+pixi.js@*, pixi.js@^6.3.2:
   version "6.4.2"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-6.4.2.tgz#1cbac71a6535568f59a8684274792aa1bd271646"
   integrity sha512-8fjWgBfuSinIz0J5qXdsz10KAeDYyaa8XOcp4E1f+ug5ckE5rTPCcrSwQ8LNWA/YpdJ5irGOjv0rEA4sOcWVeQ==
