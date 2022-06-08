@@ -3,16 +3,14 @@
  */
 const config = {
   server: {
-    headers: {
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp",
-    },
+    hmr: {},
   },
 };
 
 if (process.env.GITPOD_WORKSPACE_URL) {
   config.server.hmr = {
     clientPort: 443,
+    host: `3000-${process.env.GITPOD_WORKSPACE_ID}.${process.env.GITPOD_WORKSPACE_CLUSTER_HOST}`,
   };
 }
 

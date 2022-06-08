@@ -22,7 +22,7 @@ import { Cursor } from "../render/cursor";
 import { SliderPiece } from "../render/slider";
 
 const maxVideoSkewSpeed = 0.05;
-const maxVideoSkewSeek = 2;
+const maxVideoSkewSeek = 0.5;
 
 interface InstantiatedHitObject {
   object: Container;
@@ -194,7 +194,7 @@ export class StandardGameScreen extends AbstractScreen {
     if (this.video) {
       if (
         this.videoError ||
-        this.timeElapsed < this.beatmap.data.events.videoOffset!
+        this.timeElapsed < this.beatmap.data.events.videoOffset! / 1000
       ) {
         this.videoSprite!.visible = false;
         this.background && (this.background.visible = true);
@@ -208,10 +208,13 @@ export class StandardGameScreen extends AbstractScreen {
         }
 
         const targetVideoTime =
-          this.timeElapsed - this.beatmap.data.events.videoOffset!;
+          this.timeElapsed - this.beatmap.data.events.videoOffset! / 1000;
         const skew = this.video.currentTime - targetVideoTime;
 
-        if (Math.abs(skew) > maxVideoSkewSeek) {
+        if (targetVideoTime > this.video.duration) {
+          console.warn("Video ended");
+          this.video = null;
+        } else if (Math.abs(skew) > maxVideoSkewSeek) {
           this.video.currentTime = targetVideoTime;
           this.video.playbackRate = 1;
           console.warn("Video skew high, seeking");

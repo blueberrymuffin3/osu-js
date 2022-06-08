@@ -12,7 +12,7 @@ const ffmpeg = createFFmpeg({
 //   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
 
 const getBeatmapRequest = (setId: number) =>
-  new Request(`https://catboy.best/d/${setId}`);
+  new Request(`/api/beatmapset/download/${setId}`);
 
 async function blobUrlFromFile(file: JSZip.JSZipObject | null) {
   if (!file) return undefined;
@@ -55,14 +55,6 @@ export async function loadBeatmap(
     console.warn("Error fetching using cache API, falling back to fetch");
 
     response = await fetch(request);
-  }
-
-
-  if(response && response.headers.get('content-type') && response.headers.get('content-type')!.indexOf("json") >= 0){
-    let error = await response.text()
-    await cache?.delete(request);
-    response = undefined;
-    throw new Error("Error fetching beatmap: " + error);
   }
 
   const blob = await response.blob();
@@ -109,15 +101,13 @@ export async function loadBeatmap(
   const videoFilename = data.events.video;
   let videoUrl: string | undefined = undefined;
   if (videoFilename) {
-    // if (videoFilename?.endsWith(".mp4")) {
-    //   videoUrl =
-    //     videoFilename && (await blobUrlFromFile(zip.file(videoFilename)));
-    // } else {
-    console.warn(`Attempting to remux "${videoFilename}" with FFmpeg`);
     const videoFile = zip.file(videoFilename);
     if (!videoFile) {
       console.error(`Video file "${videoFile}" not found in archivbe`);
+    } else if (videoFilename.endsWith(".mp4")) {
+      videoUrl = await blobUrlFromFile(videoFile);
     } else {
+      console.warn(`Attempting to remux "${videoFilename}" with FFmpeg`);
       await ffmpeg.load();
       const ffmpegInputFilename = "input_" + videoFile.name;
 
@@ -143,17 +133,17 @@ export async function loadBeatmap(
         );
         console.groupEnd();
 
+        ffmpeg.FS("unlink", ffmpegInputFilename);
         const output = ffmpeg.FS("readFile", "output.mp4");
-        // ffmpeg.FS("unlink", "output.mp4");
+        ffmpeg.FS("unlink", "output.mp4");
         videoUrl = URL.createObjectURL(new Blob([output]));
         console.log(videoUrl);
-        ffmpeg.exit();
+        // ffmpeg.exit();
       } catch (e) {
         console.error("Error remuxing video", e);
         videoUrl = undefined;
       }
     }
-    // }
   }
 
   return {
