@@ -45,6 +45,12 @@ export class Cursor extends Container {
   private onMouseUp = () => {
     this.expanded = false;
   };
+  private onMouseOver = () => {
+    this.visible = true;
+  };
+  private onMouseOut = () => {
+    this.visible = false;
+  };
 
   constructor(app: Application) {
     super();
@@ -60,6 +66,8 @@ export class Cursor extends Container {
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("mousedown", this.onMouseDown);
     document.addEventListener("mouseup", this.onMouseUp);
+    document.addEventListener("mouseover", this.onMouseOver);
+    document.addEventListener("mouseout", this.onMouseOut);
     app.ticker.add(this.tick, this);
   }
 
@@ -85,6 +93,8 @@ export class Cursor extends Container {
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mousedown", this.onMouseDown);
     document.removeEventListener("mouseup", this.onMouseUp);
+    document.removeEventListener("mouseover", this.onMouseOver);
+    document.removeEventListener("mouseout", this.onMouseOut);
     this.app.ticker.remove(this.tick, this);
   }
 }
