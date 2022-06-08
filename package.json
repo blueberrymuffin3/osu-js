@@ -23,12 +23,9 @@
     "buffer": "^6.0.3",
     "jszip": "^3.10.0",
     "osu-classes": "^0.8.0",
-    "osu-parsers-web": "^3.0.0",
+    "osu-parsers-web": "^3.0.2",
     "parse-bmfont-binary": "^1.0.6",
     "pixi-stats": "^1.0.7",
     "pixi.js": "^6.3.2"
-  },
-  "resolutions": {
-    "osu-classes": "^0.8.0"
   }
 }

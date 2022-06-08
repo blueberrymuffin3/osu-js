@@ -872,17 +872,17 @@ object-assign@^4.1.1:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==
 
-osu-classes@^0.7.0, osu-classes@^0.8.0:
+osu-classes@^0.8.0:
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.8.0.tgz#8b59eeb28e90ed6711e522650abeb082a2df5365"
   integrity sha512-f+hI0S6NnqIamQAafd33GuUEPXFxIgkupSrcoENUpAazl9R1h28LX5mHzRH5r+JGcKO+f7G0CMlPT0alsxzxRA==
 
-osu-parsers-web@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/osu-parsers-web/-/osu-parsers-web-3.0.1.tgz#d473741994279467ddac2a74d80eef5b428d4157"
-  integrity sha512-tD9WS2kwv2jbWgKSgWMQwGbb3t+yhNgHF6oikLCjLu5lY2rHYKQeVNYeVvfNuXGOic+bm76UroCaFVkB3LjzYA==
+osu-parsers-web@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/osu-parsers-web/-/osu-parsers-web-3.0.2.tgz#055c255718865b8da754e839bb468bc2138c9003"
+  integrity sha512-wA8Iy/zM0W7+qw70vWezUKlbqKqKYeVGHP3Qe28hNRG7/ZOtovAc1t4jcBxmUWJqkcduSqnSuNTJsLpWoIGICg==
   dependencies:
-    osu-classes "^0.7.0"
+    osu-classes "^0.8.0"
 
 pako@~1.0.2:
   version "1.0.11"
