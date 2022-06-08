@@ -185,10 +185,14 @@ export class StandardGameScreen extends AbstractScreen {
       this.instantiatedHitObjects[0].data.startTime < this.timeElapsed * 1000
     ) {
       const { object } = this.instantiatedHitObjects.shift()!;
-      this.playAreaContainer.removeChild(object);
-      object.destroy({
-        children: true,
-      });
+      if (object instanceof CirclePiece) {
+        object.explode();
+      } else {
+        this.playAreaContainer.removeChild(object);
+        object.destroy({
+          children: true,
+        });
+      }
     }
 
     if (this.video) {

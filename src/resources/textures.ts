@@ -13,6 +13,7 @@ import TEXTURE_OSU_RING from "./custom/ring.png";
 import TEXTURE_CURSOR_INNER from "./custom/cursor_inner.png";
 import TEXTURE_CURSOR_OUTER from "./custom/cursor_outer.png";
 import TEXTURE_NUMBER_GLOW from "./custom/number_glow.png";
+import TEXTURE_FLASH from "./custom/flash.png";
 
 const TEXTURES_MENU_BACKGROUND = [
   TEXTURE_MENU_BACKGROUND_1,
@@ -34,6 +35,7 @@ export {
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
   TEXTURE_NUMBER_GLOW,
+  TEXTURE_FLASH,
 };
 
 export const preloadTextures = [
@@ -45,4 +47,5 @@ export const preloadTextures = [
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
   TEXTURE_NUMBER_GLOW,
+  TEXTURE_FLASH
 ];
