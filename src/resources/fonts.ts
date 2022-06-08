@@ -79,8 +79,6 @@ export class BinaryFontLoader implements ILoaderPlugin {
       )
     );
 
-    console.log(data);
-
     resource.bitmapFont = BitmapFont.install(data, textures, true);
     next();
   }

@@ -1,6 +1,11 @@
 import JSZip from "jszip";
 import { BeatmapDecoder } from "osu-parsers-web";
 import { Beatmap } from "osu-classes";
+import { createFFmpeg } from "@ffmpeg/ffmpeg";
+
+const ffmpeg = createFFmpeg({
+  logger: ({ type, message }) => console.debug(`[${type}]`, message),
+});
 
 // CORS Blocked
 // const getBeatmapRequest = (setId: number) =>
@@ -28,16 +33,36 @@ export async function loadBeatmap(
   setId: number,
   mapId: number
 ): Promise<LoadedBeatmap> {
-  const cache = await _cache;
+  let cache: Cache | null = null;
+
+  try {
+    cache = await _cache;
+  } catch (error) {}
+
   const request = getBeatmapRequest(setId);
 
-  let response = await cache.match(request);
-  if (!response) {
-    await cache.add(request);
+  let response: Response | undefined;
+
+  if (cache) {
     response = await cache.match(request);
+    if (!response) {
+      await cache.add(request);
+      response = await cache.match(request);
+    }
   }
+
   if (!response) {
-    throw new Error("Error occurred fetching beatmap");
+    console.warn("Error fetching using cache API, falling back to fetch");
+
+    response = await fetch(request);
+  }
+
+
+  if(response && response.headers.get('content-type') && response.headers.get('content-type')!.indexOf("json") >= 0){
+    let error = await response.text()
+    await cache?.delete(request);
+    response = undefined;
+    throw new Error("Error fetching beatmap: " + error);
   }
 
   const blob = await response.blob();
@@ -57,14 +82,14 @@ export async function loadBeatmap(
     const beatmapString = await osuFile.async("string");
     _data = decoder.decodeFromString(beatmapString);
     if (_data.metadata.beatmapId == mapId) {
-      console.log("Loading", osuFile.name)
+      console.log("Loading", osuFile.name);
       data = _data;
       break;
     }
   }
 
   if (!data) {
-    console.error(
+    console.warn(
       "No .osu files matching mapId found in archive, choosing last one"
     );
     data = _data!;
@@ -82,8 +107,54 @@ export async function loadBeatmap(
     backgroundFilename && (await blobUrlFromFile(zip.file(backgroundFilename)));
 
   const videoFilename = data.events.video;
-  const videoUrl =
-    videoFilename && (await blobUrlFromFile(zip.file(videoFilename)));
+  let videoUrl: string | undefined = undefined;
+  if (videoFilename) {
+    // if (videoFilename?.endsWith(".mp4")) {
+    //   videoUrl =
+    //     videoFilename && (await blobUrlFromFile(zip.file(videoFilename)));
+    // } else {
+    console.warn(`Attempting to remux "${videoFilename}" with FFmpeg`);
+    const videoFile = zip.file(videoFilename);
+    if (!videoFile) {
+      console.error(`Video file "${videoFile}" not found in archivbe`);
+    } else {
+      await ffmpeg.load();
+      const ffmpegInputFilename = "input_" + videoFile.name;
+
+      ffmpeg.FS(
+        "writeFile",
+        ffmpegInputFilename,
+        await videoFile.async("uint8array")
+      );
+      try {
+        console.group("ffmpeg output");
+        ffmpeg.setProgress(({ ratio }) => console.log("Progress:", ratio));
+        await ffmpeg.run(
+          "-fflags",
+          "+genpts+igndts",
+          // "-loglevel",
+          // "error",
+          "-i",
+          ffmpegInputFilename,
+          "-vcodec",
+          "copy",
+          "-an",
+          "output.mp4"
+        );
+        console.groupEnd();
+
+        const output = ffmpeg.FS("readFile", "output.mp4");
+        // ffmpeg.FS("unlink", "output.mp4");
+        videoUrl = URL.createObjectURL(new Blob([output]));
+        console.log(videoUrl);
+        ffmpeg.exit();
+      } catch (e) {
+        console.error("Error remuxing video", e);
+        videoUrl = undefined;
+      }
+    }
+    // }
+  }
 
   return {
     data,
