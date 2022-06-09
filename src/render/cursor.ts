@@ -1,6 +1,6 @@
 import { EasingFunction } from "bezier-easing";
 import { Application, Container, IDestroyOptions, Sprite } from "pixi.js";
-import { lerpUnclamped, outElasticHalf, outQuad } from "../anim";
+import { EasingFunctions, lerpUnclamped } from "../anim";
 import {
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
@@ -22,7 +22,9 @@ export class Cursor extends Container {
   public set expanded(value) {
     if (value != this._expanded) {
       this._expanded = value;
-      this.scaleFn = value ? outElasticHalf : outQuad;
+      this.scaleFn = value
+        ? EasingFunctions.OutElasticHalf
+        : EasingFunctions.OutQuad;
       this.scaleStart = this.scaleCurrent;
       this.scaleEnd = value ? SCALE_EXPANDED : SCALE_DEFAULT;
       this.scaleProgress = 0;
