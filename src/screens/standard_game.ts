@@ -92,7 +92,6 @@ export class StandardGameScreen extends AbstractScreen {
     }
 
     this.gameContainer = new Container();
-    this.container.addChild(this.gameContainer);
 
     if (beatmap.storyboard) {
       this.storyboardRenderer = new StoryboardRenderer(
@@ -107,6 +106,8 @@ export class StandardGameScreen extends AbstractScreen {
       this.background = Sprite.from(beatmap.backgroundUrl);
       this.container.addChild(this.background);
     }
+    
+    this.container.addChild(this.gameContainer);
 
     this.playAreaContainer = new Container();
     this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
@@ -143,9 +144,8 @@ export class StandardGameScreen extends AbstractScreen {
       const object = new SliderPiece(
         this.app,
         this.clock,
-        hitObject.startTime,
         0x4fe90d, // TODO: Where are these colors stored???
-        hitObject.path,
+        hitObject,
         this.beatmap.data.difficulty
       );
       object.x = hitObject.startPosition.x;
@@ -201,10 +201,10 @@ export class StandardGameScreen extends AbstractScreen {
       if (object instanceof CirclePiece) {
         object.explode();
       } else {
-        this.playAreaContainer.removeChild(object);
-        object.destroy({
-          children: true,
-        });
+        // this.playAreaContainer.removeChild(object);
+        // object.destroy({
+        //   children: true,
+        // });
       }
     }
 
