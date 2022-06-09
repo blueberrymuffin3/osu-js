@@ -69,6 +69,6 @@ const screenManager = new ScreenManager();
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 36858, 120893)); // Senbonzakura (flv video)
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 1041786, 2195668)); // Feel Special (avi video)
 // screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 921889, 1936122)); // Chikatto Chika Chika (TV Size) (mp4 video)
-screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 469434, 1004360)); // Oedo Controller(feat. TORIENA)[Batsu Remix] (Complex storyboard)
+screenManager.loadScreen(() => new LoadingScreen(app, screenManager, 759903, 1610972)); // Oedo Controller (feat. TORIENA) (Complex storyboard)
 
 // screenManager.loadScreen(() => new SDFTestScreen(app, screenManager));

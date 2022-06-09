@@ -1,6 +1,6 @@
 import JSZip from "jszip";
-import { BeatmapDecoder } from "osu-parsers-web";
-import { Beatmap } from "osu-classes";
+import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers-web";
+import { Beatmap, Storyboard } from "osu-classes";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
 const ffmpeg = createFFmpeg({
@@ -24,9 +24,11 @@ const _cache = caches.open("beatmap-v1");
 
 export interface LoadedBeatmap {
   data: Beatmap;
+  storyboard?: Storyboard;
   audioData: ArrayBuffer;
   backgroundUrl?: string;
   videoUrl?: string;
+  zip: JSZip;
 }
 
 export async function loadBeatmap(
@@ -61,18 +63,24 @@ export async function loadBeatmap(
   const zip = new JSZip();
   await zip.loadAsync(blob);
 
-  // TODO: Select Difficulty
+  let storyboard: Storyboard | undefined = undefined;
+  const osbFile = zip.filter((path) => path.endsWith(".osb"))[0];
+  if (osbFile) {
+    const storyboardString = await osbFile.async("string");
+    storyboard = new StoryboardDecoder().decodeFromString(storyboardString);
+  }
+
+  // TODO: Select Difficulty with MD5 hash
   const osuFiles = zip.filter((path) => path.endsWith(".osu"));
   if (osuFiles.length == 0) {
     throw new Error("No .osu files found in archive");
   }
 
-  const decoder = new BeatmapDecoder();
   let data: Beatmap | null = null;
   let _data: Beatmap;
   for (const osuFile of osuFiles) {
     const beatmapString = await osuFile.async("string");
-    _data = decoder.decodeFromString(beatmapString);
+    _data = new BeatmapDecoder().decodeFromString(beatmapString);
     if (_data.metadata.beatmapId == mapId) {
       console.log("Loading", osuFile.name);
       data = _data;
@@ -137,7 +145,6 @@ export async function loadBeatmap(
         const output = ffmpeg.FS("readFile", "output.mp4");
         ffmpeg.FS("unlink", "output.mp4");
         videoUrl = URL.createObjectURL(new Blob([output]));
-        console.log(videoUrl);
         // ffmpeg.exit();
       } catch (e) {
         console.error("Error remuxing video", e);
@@ -148,8 +155,10 @@ export async function loadBeatmap(
 
   return {
     data,
+    storyboard,
     audioData,
     backgroundUrl,
     videoUrl,
+    zip,
   };
 }
