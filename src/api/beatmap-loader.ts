@@ -1,6 +1,6 @@
 import JSZip from "jszip";
-import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers-web";
-import { Beatmap, Storyboard } from "osu-classes";
+import { BeatmapDecoder } from "osu-parsers-web";
+import { Beatmap } from "osu-classes";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
 const ffmpeg = createFFmpeg({
@@ -24,7 +24,6 @@ const _cache = caches.open("beatmap-v1");
 
 export interface LoadedBeatmap {
   data: Beatmap;
-  storyboard?: Storyboard;
   audioData: ArrayBuffer;
   backgroundUrl?: string;
   videoUrl?: string;
@@ -63,12 +62,12 @@ export async function loadBeatmap(
   const zip = new JSZip();
   await zip.loadAsync(blob);
 
-  let storyboard: Storyboard | undefined = undefined;
-  const osbFile = zip.filter((path) => path.endsWith(".osb"))[0];
-  if (osbFile) {
-    const storyboardString = await osbFile.async("string");
-    storyboard = new StoryboardDecoder().decodeFromString(storyboardString);
-  }
+  // let storyboard: Storyboard | undefined = undefined;
+  // const osbFile = zip.filter((path) => path.endsWith(".osb"))[0];
+  // if (osbFile) {
+  //   const storyboardString = await osbFile.async("string");
+  //   storyboard = new StoryboardDecoder().decodeFromString(storyboardString);
+  // }
 
   // TODO: Select Difficulty with MD5 hash
   const osuFiles = zip.filter((path) => path.endsWith(".osu"));
@@ -155,7 +154,6 @@ export async function loadBeatmap(
 
   return {
     data,
-    storyboard,
     audioData,
     backgroundUrl,
     videoUrl,

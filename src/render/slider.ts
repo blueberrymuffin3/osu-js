@@ -1,4 +1,4 @@
-import { BeatmapDifficultySection, SliderPath } from "osu-classes";
+import { BeatmapDifficultySection } from "osu-classes";
 import { SlidableObject } from "osu-parsers-web";
 import { Application, Container, IDestroyOptions } from "pixi.js";
 import { clamp01, lerp } from "../anim";

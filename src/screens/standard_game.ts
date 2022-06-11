@@ -20,7 +20,6 @@ import { CirclePiece } from "../render/circle";
 import { HittableObject, SlidableObject } from "osu-parsers-web";
 import { Cursor } from "../render/cursor";
 import { SliderPiece } from "../render/slider";
-import { StoryboardRenderer } from "../render/storyboard";
 
 const maxVideoSkewSpeed = 0.05;
 const maxVideoSkewSeek = 0.5;
@@ -40,8 +39,6 @@ export class StandardGameScreen extends AbstractScreen {
 
   private sound: Sound | null = null;
   private mediaInstance: IMediaInstance | null = null;
-
-  private storyboardRenderer: StoryboardRenderer | null = null;
 
   private gameContainer: Container;
   private playAreaContainer: Container;
@@ -90,23 +87,14 @@ export class StandardGameScreen extends AbstractScreen {
       this.videoSprite.visible = false;
       this.container.addChild(this.videoSprite);
     }
-
-    this.gameContainer = new Container();
-
-    if (beatmap.storyboard) {
-      this.storyboardRenderer = new StoryboardRenderer(
-        app,
-        beatmap.zip,
-        this.clock,
-        beatmap.storyboard
-      );
-      this.gameContainer.addChild(this.storyboardRenderer);
-    } else if (beatmap.backgroundUrl) {
+    
+    if (beatmap.backgroundUrl) {
       app.loader.add(beatmap.backgroundUrl);
       this.background = Sprite.from(beatmap.backgroundUrl);
       this.container.addChild(this.background);
     }
     
+    this.gameContainer = new Container();
     this.container.addChild(this.gameContainer);
 
     this.playAreaContainer = new Container();
@@ -120,7 +108,6 @@ export class StandardGameScreen extends AbstractScreen {
 
 
     (async () => {
-      await this.storyboardRenderer?.load();
       this.mediaInstance = await this.sound!.play();
     })();
   }
