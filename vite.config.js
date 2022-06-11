@@ -1,9 +1,19 @@
+const { resolve } = require("path");
+
 /**
  * @type {import('vite').UserConfig}
  */
 const config = {
   server: {
     hmr: {},
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "index.html"),
+        play: resolve(__dirname, "play/index.html"),
+      },
+    },
   },
 };
 
