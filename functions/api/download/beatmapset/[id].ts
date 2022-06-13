@@ -2,7 +2,8 @@ import { cacheHeaders } from "../../../lib";
 
 export const onRequestGet: PagesFunction = async ({ params }) => {
   let id: number = Number(params.id as string);
-  const res = await fetch(`https://beatconnect.io/b/${id}/`);
+  // const res = await fetch(`https://beatconnect.io/b/${id}/`);
+  const res = await fetch(`https://kitsu.moe/api/d/${id}`);
   if (res.status == 200) {
     return new Response(res.body, {
       headers: {
