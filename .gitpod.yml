@@ -7,5 +7,3 @@ tasks:
 ports:
   - port: 3000
     onOpen: ignore
-  - port: 8788
-    onOpen: open-browser

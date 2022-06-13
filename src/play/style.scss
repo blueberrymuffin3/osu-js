@@ -1,0 +1,167 @@
+html {
+  font-size: min(2vw, 2vh);
+  font-family: sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: black;
+}
+
+.info {
+  position: relative;
+  margin: 2rem auto;
+  width: 40rem;
+  min-height: 27.5rem;
+  background-color: #4e4e4e;
+  border-radius: 2rem;
+  overflow: hidden;
+
+  .banner {
+    width: 100%;
+    height: auto;
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+
+  .status {
+    font-size: 1rem;
+    text-transform: uppercase;
+    position: absolute;
+    padding: 0.25rem 1rem;
+    top: 1rem;
+    right: 2rem;
+    border-radius: 10rem;
+  }
+  .status.graveyard {
+    background-color: #000;
+    color: hsl(200, 10%, 40%);
+  }
+  .status.wip {
+    background-color: hsl(20, 100%, 70%);
+    color: hsl(200, 10%, 25%);
+  }
+  .status.pending {
+    background-color: hsl(45, 100%, 70%);
+    color: hsl(200, 10%, 25%);
+  }
+  .status.qualified {
+    background-color: hsl(200, 100%, 70%);
+    color: hsl(200, 10%, 25%);
+  }
+  .status.approved {
+    background-color: hsl(90, 100%, 70%);
+    color: hsl(200, 10%, 25%);
+  }
+  .status.ranked {
+    background-color: hsl(90, 100%, 70%);
+    color: hsl(200, 10%, 25%);
+  }
+  .status.loved {
+    background-color: hsl(333, 100%, 70%);
+    color: hsl(200, 10%, 25%);
+  }
+
+  main {
+    margin: 0rem 2rem 2rem 2rem;
+    color: #eeeeee;
+
+    .stats {
+      display: flex;
+      font-size: 0.8rem;
+      align-items: baseline;
+      justify-content: space-between;
+      color: #cccccc;
+
+      div {
+        margin-bottom: 1rem;
+
+        svg {
+          width: 1rem;
+          transform: translate(0, 0.2rem);
+        }
+
+        .stars {
+          svg {
+            width: 0.9rem;
+          }
+          font-size: 0.6rem;
+          background-color: #f1f1f1;
+          padding: 0.25rem 0.25rem;
+          border-radius: 10rem;
+          color: #202020;
+        }
+      }
+    }
+    .title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .artist {
+      font-size: 1.15rem;
+      margin-bottom: 0.5rem;
+    }
+    .mapper {
+      font-size: 0.8rem;
+      em {
+        font-style: normal;
+        opacity: 0.7;
+      }
+    }
+    .loading {
+      position: relative;
+      display: block;
+      height: 2rem;
+      margin-top: 2rem;
+      border-radius: 10rem;
+      background-color: #cccccc;
+      overflow: hidden;
+      transition: box-shadow 1s;
+
+      div {
+        position: absolute;
+        display: block;
+        height: 100%;
+        background-color: #92ff70;
+        transition: width 0.5s ease-out, background-color 0.5s;
+      }
+
+      div.error {
+        background-color: #ff7070;
+      }
+
+      span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #1d1d1d;
+        position: absolute;
+      }
+    }
+
+    .loading.loaded {
+      box-shadow: 0 0 0.5rem 0.5rem #dcfad391;
+    }
+  }
+}
+
+.spinner {
+  margin: auto;
+  padding-top: 5rem;
+  display: block;
+  width: 6rem;
+}
+
+#container {
+  width: 100%;
+  height: 100%;
+  cursor: none;
+}
