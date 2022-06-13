@@ -117,7 +117,8 @@ body {
     }
     .loading {
       position: relative;
-      display: block;
+      display: flex;
+      align-items: center;
       height: 2rem;
       margin-top: 2rem;
       border-radius: 10rem;
@@ -138,10 +139,8 @@ body {
       }
 
       span {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        width: 100%;
+        text-align: center;
         color: #1d1d1d;
         position: absolute;
       }
