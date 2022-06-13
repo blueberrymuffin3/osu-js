@@ -18,10 +18,16 @@ export async function executeSteps(
     .reduce((a, b) => a + b, 0);
 
   let progress = 0;
+  let _activeStep: any;
 
   for (const step of steps) {
+    _activeStep = step;
     let localCallback: LoadCallback = function (prop, desc) {
-      callback(progress + prop * (step.weight / totalWeight), desc);
+      if (step === _activeStep) {
+        callback(progress + prop * (step.weight / totalWeight), desc);
+      } else {
+        // promise already resolved, ignore callback
+      }
     };
     await step.execute(localCallback);
     progress += step.weight / totalWeight;
