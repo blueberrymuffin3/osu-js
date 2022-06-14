@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@blueberrymuffin3/ffmpeg-core@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@blueberrymuffin3/ffmpeg-core/-/ffmpeg-core-0.11.1.tgz#7fb672e9a023d96f3d931d6fe53b1b6d74c57d09"
+  integrity sha512-s5aHaGOvh1/Zbf4HMcm7AdcdqS1EsRcukz6xK2z4pXhZ47j7rlrOjC8nvvkzL7CQZbWotn9CRGVSgIzZ95ufrg==
+
 "@cloudflare/workers-types@^3.11.0":
   version "3.11.0"
   resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-3.11.0.tgz#8067dede888ea495cae06898d5e75e4401acf435"
