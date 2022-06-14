@@ -23,6 +23,7 @@
     "@ffmpeg/ffmpeg": "^0.10.1",
     "@pixi/sound": "^4.2.0",
     "adaptive-scale": "^1.0.0",
+    "autoprefixer": "^10.4.7",
     "bezier-easing": "^2.1.0",
     "blueimp-md5": "^2.19.0",
     "buffer": "^6.0.3",
