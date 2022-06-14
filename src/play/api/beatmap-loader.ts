@@ -9,6 +9,7 @@ import md5 from "blueimp-md5";
 
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
+  corePath: "/assets/ffmpeg-core/ffmpeg-core.js",
 });
 
 // CORS Blocked
@@ -89,7 +90,9 @@ export const loadBeatmapStep =
             const md5Hash = md5(beatmapString);
             if (md5Hash == info.checksum) {
               console.log("Found OSU file with checksum", md5Hash);
-              loaded.data = new BeatmapDecoder().decodeFromString(beatmapString);
+              loaded.data = new BeatmapDecoder().decodeFromString(
+                beatmapString
+              );
               break;
             }
           }
@@ -105,7 +108,9 @@ export const loadBeatmapStep =
                 `Error downloading beatmap: Got status ${response.status}`
               );
             }
-            loaded.data = new BeatmapDecoder().decodeFromString(await response.text());
+            loaded.data = new BeatmapDecoder().decodeFromString(
+              await response.text()
+            );
           }
         },
       },
@@ -136,11 +141,10 @@ export const loadBeatmapStep =
             if (!videoFile) {
               console.error(`Video file "${videoFile}" not found in archive`);
             } else if (videoFilename.endsWith(".mp4")) {
+              console.log(`Using original "${videoFilename}"`);
               loaded.videoUrl = await blobUrlFromFile(videoFile);
             } else {
-              console.warn(
-                `Attempting to remux "${videoFilename}" with FFmpeg`
-              );
+              console.log(`Remuxing "${videoFilename}" with FFmpeg`);
               cb(0, "Remuxing Video (initializing)");
               await ffmpeg.load();
               const ffmpegInputFilename = "input_" + videoFile.name;
@@ -156,9 +160,7 @@ export const loadBeatmapStep =
                 );
                 await ffmpeg.run(
                   "-fflags",
-                  "+genpts+igndts",
-                  // "-loglevel",
-                  // "error",
+                  "+genpts+nofillin+ignidx",
                   "-i",
                   ffmpegInputFilename,
                   "-vcodec",
@@ -170,7 +172,11 @@ export const loadBeatmapStep =
                 ffmpeg.FS("unlink", ffmpegInputFilename);
                 const output = ffmpeg.FS("readFile", "output.mp4");
                 ffmpeg.FS("unlink", "output.mp4");
-                loaded.videoUrl = URL.createObjectURL(new Blob([output]));
+                loaded.videoUrl = URL.createObjectURL(
+                  new Blob([output], {
+                    type: "video/mp4",
+                  })
+                );
                 try {
                   ffmpeg.exit();
                 } catch (error) {
