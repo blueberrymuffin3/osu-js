@@ -90,9 +90,11 @@ export class SliderPathSprite extends Container {
     if (!this.matricesValid) {
       return;
     }
-    // const start = performance.now();
+
+    const renderer = this.app.renderer as Renderer
+
     const renderState: RenderState = {
-      renderScale: (this.worldTransform.a + this.worldTransform.d) / 2,
+      renderScale: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
       startProp: this.startProp,
       endProp: this.endProp,
     };
@@ -102,7 +104,7 @@ export class SliderPathSprite extends Container {
       this.lastRenderState.startProp != renderState.startProp ||
       this.lastRenderState.endProp != renderState.endProp
     ) {
-      this.updateSpriteRender(this.app.renderer as Renderer, renderState);
+      this.updateSpriteRender(renderer, renderState);
       // prettier-ignore
       // console.info(`Rendered slider path (${this.points.length} points, ${this.texture?.width}x${this.texture?.height}, scale=${renderState.renderScale.toFixed(2)}, ${renderState.startProp.toFixed(2)}-${renderState.endProp.toFixed(2)}) in ${(performance.now() - start).toFixed(2)} ms`);
       this.lastRenderState = renderState;
