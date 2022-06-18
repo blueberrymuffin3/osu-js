@@ -45,11 +45,12 @@ import template from "./main_info.handlebars?raw";
     loading.href = "#";
     loading.onclick = (e) => {
       e.preventDefault();
-      
+      loading.blur();
+
       document.body.innerHTML = `<div id="container" />`;
       const container = document.getElementById("container") as HTMLElement;
       app.start(container);
-    }
+    };
   } catch (error) {
     console.error(error);
 
