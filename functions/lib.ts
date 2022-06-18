@@ -58,8 +58,6 @@ export async function getAPITokenHeader(env: ENV): Promise<HeadersInit> {
   };
 }
 
-const _apiCache = caches.open("api-cache");
-
 export async function cachedApiResponseHelper(
   originUrl: string,
   {
@@ -76,7 +74,7 @@ export async function cachedApiResponseHelper(
     "Cache-Control": `max-age=${ttl}`,
   };
 
-  const cache = await _apiCache;
+  const cache = await caches.open("api-cache");
   const cachedResponse = await cache.match(originUrl);
 
   if (cachedResponse) {
