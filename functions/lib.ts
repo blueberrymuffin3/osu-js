@@ -21,10 +21,6 @@ interface TokenResponseData {
 let currentApiToken: string = "";
 let currentApiTokenExpires: number = 0;
 
-export const cacheHeaders = {
-  "Cache-Control": "max-age=21600",
-};
-
 export async function getAPITokenHeader(env: ENV): Promise<HeadersInit> {
   if (currentApiTokenExpires <= new Date().getTime()) {
     console.log("Getting a new API token");
@@ -32,7 +28,7 @@ export async function getAPITokenHeader(env: ENV): Promise<HeadersInit> {
       throw new Error("Environment variables are missing");
     }
     const requestData: TokenRequestData = {
-      client_id: Number.parseInt(env.OSU_CLIENT_ID),
+      client_id: Number(env.OSU_CLIENT_ID),
       client_secret: env.OSU_CLIENT_SECRET,
       grant_type: "client_credentials",
       scope: "public",
@@ -60,4 +56,52 @@ export async function getAPITokenHeader(env: ENV): Promise<HeadersInit> {
   return {
     Authorization: `Bearer ${currentApiToken}`,
   };
+}
+
+const _apiCache = caches.open("api-cache");
+
+export async function cachedApiResponseHelper(
+  originUrl: string,
+  {
+    waitUntil,
+    ttl,
+    fetchHeaders,
+  }: {
+    waitUntil: (promise: Promise<any>) => void;
+    ttl: number;
+    fetchHeaders?: HeadersInit | undefined;
+  }
+): Promise<Response> {
+  const cacheHeaders = {
+    "Cache-Control": `max-age=${ttl}`,
+  };
+
+  const cache = await _apiCache;
+  const cachedResponse = await cache.match(originUrl);
+
+  if (cachedResponse) {
+    console.log(`[HIT] ${originUrl}`);
+    return cachedResponse;
+  } else {
+    console.log(`[MISS] ${originUrl}`);
+  }
+
+  const res = await fetch(originUrl, { headers: fetchHeaders });
+  if (res.status == 200) {
+    const response = new Response(await res.blob(), {
+      headers: cacheHeaders,
+    });
+
+    // cache.put respects Cache-Control in cloudflare workers
+    waitUntil(cache.put(originUrl, response.clone()));
+    return response;
+  } else if (res.status == 404) {
+    return new Response("Not found", {
+      status: 404,
+    });
+  } else {
+    return new Response(`Error fetching: got code ${res.status}`, {
+      status: 500,
+    });
+  }
 }
