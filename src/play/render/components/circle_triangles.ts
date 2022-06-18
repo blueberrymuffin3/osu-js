@@ -1,4 +1,12 @@
-import { Filter, Application, Sprite, Texture, IDestroyOptions, UniformGroup, Renderer } from "pixi.js";
+import {
+  Filter,
+  Application,
+  Sprite,
+  Texture,
+  IDestroyOptions,
+  UniformGroup,
+  Renderer,
+} from "pixi.js";
 import { hex2rgb } from "@pixi/utils";
 import { lerp } from "../../anim";
 import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../resources/textures";
@@ -16,27 +24,29 @@ const TRIANGLE_X_MAX = 1 - TRIANGLE_X_MIN;
 const TRIANGLE_SPEED_MIN = 0.0001;
 const TRIANGLE_SPEED_MAX = 0.0002;
 
+const uniformGroup = new UniformGroup({
+  triangles: new Float32Array(),
+  color: [0, 0, 0, 0],
+  AA: 0,
+});
+
+const filter = new Filter(
+  undefined, // Use default vertex shader
+  TRIANGLES_FS,
+  uniformGroup
+);
+
 export class CircleTriangles extends Sprite {
   private app: Application;
+  private color: number[];
   private triangles = new Float32Array(TRIANGLE_COUNT * 3);
   private triangleSpeeds = new Float32Array(TRIANGLE_COUNT);
-  private uniforms;
 
   constructor(app: Application, color: number) {
     super(Texture.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC));
     this.app = app;
+    this.color = hex2rgb(color) as number[];
 
-    this.uniforms = new UniformGroup({
-      triangles: this.triangles,
-      color: hex2rgb(color),
-      AA: 0
-    })
-    
-    const filter = new Filter(
-      undefined, // Use default vertex shader
-      TRIANGLES_FS,
-      this.uniforms
-    );
     this.filters = [filter];
     // this.width = OSU_HIT_OBJECT_RADIUS * 2;
     // this.height = OSU_HIT_OBJECT_RADIUS * 2;
@@ -59,8 +69,10 @@ export class CircleTriangles extends Sprite {
   }
 
   protected _render(renderer: Renderer): void {
-    super._render(renderer)
-    this.uniforms.uniforms.AA = 1 / (this.width * this.worldTransform.a);
+    uniformGroup.uniforms.AA = 1 / (this.width * this.worldTransform.a);
+    uniformGroup.uniforms.color = this.color;
+    uniformGroup.uniforms.triangles = this.triangles;
+    super._render(renderer);
   }
 
   tick() {

@@ -46,7 +46,7 @@ interface RenderState {
   endProp: number;
 }
 
-const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG);
+const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniformGroup);
 
 export class SliderPathSprite extends Container {
   private app: Application;
@@ -127,7 +127,6 @@ export class SliderPathSprite extends Container {
     uniformGroup.uniforms.colorFill = this.color;
     renderer.state.set(GL_STATE);
     renderer.shader.bind(shader);
-    renderer.shader.syncUniformGroup(uniformGroup);
 
     const newWidth = Math.ceil(textureBounds.width);
     const newHeight = Math.ceil(textureBounds.height);
