@@ -6,7 +6,6 @@ in vec4 a_data;
 in vec2 a_range;
 
 uniform mat3 projectionMatrix;
-uniform float renderScale;
 uniform vec2 range;
 
 out vec2 v_position;

@@ -25,12 +25,14 @@ import { diameterFromCs, minMax } from "../../constants";
 
 const BORDER_PROP = 0.125;
 const PADDING = 5;
+const AA_FACTOR = 0.5;
 const GL_STATE = new State();
 GL_STATE.blend = false;
 GL_STATE.depthTest = true;
 GL_STATE.depthMask = true;
 
 const uniformGroup = new UniformGroup({
+  AA: 0,
   radius: 0,
   borderProp: BORDER_PROP,
   range: [0, 0],
@@ -119,6 +121,7 @@ export class SliderPathSprite extends Container {
       unscaledOverallBounds.width * state.renderScale,
       unscaledOverallBounds.height * state.renderScale
     );
+    uniformGroup.uniforms.AA = AA_FACTOR / state.renderScale;
     uniformGroup.uniforms.range = [state.startProp, state.endProp];
     uniformGroup.uniforms.radius = this.radius;
     uniformGroup.uniforms.colorFill = this.color;

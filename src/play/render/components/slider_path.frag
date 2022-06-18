@@ -3,11 +3,11 @@ precision mediump float;
 
 #define OPACITY_CENTER 0.3
 #define OPACITY_EDGE 0.8
-#define AA 0.25
 
 in vec2 v_position;
 flat in vec4 v_data;
 
+uniform float AA;
 uniform float radius;
 uniform float borderProp;
 uniform vec4 colorFill;
