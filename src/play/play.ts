@@ -1,5 +1,5 @@
 import "./style.scss";
-import { Application, Loader, UPDATE_PRIORITY } from "pixi.js";
+import { Application, ENV, Loader, settings, UPDATE_PRIORITY } from "pixi.js";
 import * as PIXI from "pixi.js";
 import { ScreenManager } from "./screens/screen";
 import { SoundLoader } from "@pixi/sound";
@@ -16,6 +16,8 @@ import { StandardGameScreen } from "./screens/standard_game";
 Loader.registerPlugin(SoundLoader);
 Loader.registerPlugin(BinaryFontLoader);
 (window as any).PIXI = PIXI; // For Pixi browser extension
+
+settings.PREFER_ENV = ENV.WEBGL2;
 
 const app = new Application({
   autoDensity: true,
