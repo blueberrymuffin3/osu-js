@@ -31,6 +31,8 @@ export const OSU_PIXELS_PLAY_AREA_OFFSET = {
 
 export const OSU_HIT_OBJECT_RADIUS = 64;
 
+export const OSU_DEFAULT_COMBO_COLORS = [ 0xffc000, 0x00ca00, 0x127cff, 0xf21839 ]
+
 export const diameterFromCs = (CS: number) => 54.4 - 4.48 * CS;
 
 export const preemtTimeFromAr = (AR: number) =>

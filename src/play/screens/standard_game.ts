@@ -8,6 +8,7 @@ import {
 } from "pixi.js";
 import {
   adaptiveScaleDisplayObject,
+  OSU_DEFAULT_COMBO_COLORS,
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
   preemtTimeFromAr,
@@ -50,6 +51,8 @@ export class StandardGameScreen extends AbstractScreen {
   private clock = () => this.timeElapsed * 1000;
 
   private preemtTime: number;
+  private comboLabelIndex = 1;
+  private comboColorIndex = 0;
 
   constructor(
     app: Application,
@@ -87,13 +90,13 @@ export class StandardGameScreen extends AbstractScreen {
       this.videoSprite.visible = false;
       this.container.addChild(this.videoSprite);
     }
-    
+
     if (beatmap.backgroundUrl) {
       app.loader.add(beatmap.backgroundUrl);
       this.background = Sprite.from(beatmap.backgroundUrl);
       this.container.addChild(this.background);
     }
-    
+
     this.gameContainer = new Container();
     this.container.addChild(this.gameContainer);
 
@@ -106,20 +109,29 @@ export class StandardGameScreen extends AbstractScreen {
     this.container.interactive = true;
     this.container.interactiveChildren = false;
 
-
     (async () => {
       this.mediaInstance = await this.sound!.play();
     })();
   }
 
   private instantiateHitObject(_hitObject: IHitObject) {
+    if (_hitObject.hitType & HitType.NewCombo) {
+      this.comboColorIndex =
+        (this.comboColorIndex + 1) % OSU_DEFAULT_COMBO_COLORS.length;
+      this.comboLabelIndex = 1;
+    } else {
+      this.comboLabelIndex += 1;
+    }
+    const color = OSU_DEFAULT_COMBO_COLORS[this.comboColorIndex];
+
     if (_hitObject.hitType & HitType.Normal) {
       const hitObject = _hitObject as HittableObject;
       const object = new CirclePiece(
         this.app,
         this.clock,
         hitObject.startTime,
-        0x4fe90d, // TODO: Where are these colors stored???
+        color,
+        this.comboLabelIndex.toString(),
         this.beatmap.data.difficulty
       );
       object.x = hitObject.startPosition.x;
@@ -131,7 +143,8 @@ export class StandardGameScreen extends AbstractScreen {
       const object = new SliderPiece(
         this.app,
         this.clock,
-        0x4fe90d, // TODO: Where are these colors stored???
+        color,
+        this.comboLabelIndex.toString(),
         hitObject,
         this.beatmap.data.difficulty
       );

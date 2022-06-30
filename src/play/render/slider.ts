@@ -25,6 +25,7 @@ export class SliderPiece extends Container {
     app: Application,
     clock: TimeMsProvider,
     color: number,
+    label: string,
     hitObject: SlidableObject,
     difficulty: BeatmapDifficultySection
   ) {
@@ -47,6 +48,7 @@ export class SliderPiece extends Container {
       clock,
       hitObject.startTime,
       color,
+      label,
       difficulty
     );
     this.addChild(this.sliderPathSprite, this.circlePiece);
@@ -73,8 +75,8 @@ export class SliderPiece extends Container {
       this.hitObject.path.positionAt(sliderProportion)
     );
 
-    if(finalSpan){
-      if(this.hitObject.spans % 2 == 0){
+    if (finalSpan) {
+      if (this.hitObject.spans % 2 == 0) {
         this.sliderPathSprite.startProp = 0;
         this.sliderPathSprite.endProp = sliderProportion;
       } else {

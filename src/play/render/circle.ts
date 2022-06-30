@@ -60,6 +60,7 @@ export class CirclePiece extends Container {
     clock: TimeMsProvider,
     startTime: number,
     color: number,
+    label: string,
     difficulty: BeatmapDifficultySection
   ) {
     super();
@@ -96,10 +97,7 @@ export class CirclePiece extends Container {
     this.numberGlow.anchor.set(0.5);
     this.addChild(this.numberGlow);
 
-    this.number = new BitmapText(
-      Math.floor(Math.random() * 15).toString(),
-      NUMBER_STYLE
-    );
+    this.number = new BitmapText(label, NUMBER_STYLE);
     this.number.anchor.set(0.5);
     this.number.y = 8;
     this.addChild(this.number);
