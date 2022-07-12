@@ -56,6 +56,7 @@ import template from "./main_info.handlebars?raw";
 
     loadingBar.style.width = "100%";
     loadingBar.classList.add("error");
+    // TODO: Show long error messages without clipping overflow
     loadingText.innerText = `Error loading beatmap: ${error}`;
 
     return;

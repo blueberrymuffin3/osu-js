@@ -1,11 +1,11 @@
 import JSZip from "jszip";
 import { BeatmapDecoder } from "osu-parsers-web";
-import { Beatmap } from "osu-classes";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "../loader";
 import fetchProgress from "fetch-progress";
 import md5 from "blueimp-md5";
+import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
@@ -23,11 +23,22 @@ async function blobUrlFromFile(file: JSZip.JSZipObject | null) {
 }
 
 export interface LoadedBeatmap {
-  data: Beatmap;
+  data: StandardBeatmap;
   audioData: ArrayBuffer;
   backgroundUrl?: string;
   videoUrl?: string;
   zip: JSZip;
+}
+
+function decodeBeatmap(beatmapString: string): StandardBeatmap {
+  const beatmapDecoded = new BeatmapDecoder().decodeFromString(beatmapString);
+
+  if (beatmapDecoded.mode !== 0) {
+    throw new Error(
+      "Beatmaps with game modes other that osu!standard (0) are not yet supported"
+    );
+  }
+  return new StandardRuleset().applyToBeatmap(beatmapDecoded);
 }
 
 export const loadBeatmapStep =
@@ -82,7 +93,6 @@ export const loadBeatmapStep =
           //   storyboard = new StoryboardDecoder().decodeFromString(storyboardString);
           // }
 
-          // TODO: Select Difficulty with MD5 hash
           const osuFiles = loaded.zip!.filter((path) => path.endsWith(".osu"));
 
           for (const osuFile of osuFiles) {
@@ -90,9 +100,7 @@ export const loadBeatmapStep =
             const md5Hash = md5(beatmapString);
             if (md5Hash == info.checksum) {
               console.log("Found OSU file with checksum", md5Hash);
-              loaded.data = new BeatmapDecoder().decodeFromString(
-                beatmapString
-              );
+              loaded.data = decodeBeatmap(beatmapString);
               break;
             }
           }
@@ -108,9 +116,7 @@ export const loadBeatmapStep =
                 `Error downloading beatmap: Got status ${response.status}`
               );
             }
-            loaded.data = new BeatmapDecoder().decodeFromString(
-              await response.text()
-            );
+            loaded.data = decodeBeatmap(await response.text());
           }
         },
       },
