@@ -1,5 +1,5 @@
 import { BeatmapDifficultySection } from "osu-classes";
-import { SlidableObject } from "osu-parsers-web";
+import { Slider } from "osu-standard-stable";
 import { Application, Container, IDestroyOptions } from "pixi.js";
 import { clamp01, lerp } from "../anim";
 import {
@@ -16,7 +16,7 @@ export class SliderPiece extends Container {
   private preempt: number;
   private fadeIn: number;
 
-  private hitObject: SlidableObject;
+  private hitObject: Slider;
 
   private sliderPathSprite: SliderPathSprite;
   private circlePiece: CirclePiece;
@@ -26,7 +26,7 @@ export class SliderPiece extends Container {
     clock: TimeMsProvider,
     color: number,
     label: string,
-    hitObject: SlidableObject,
+    hitObject: Slider,
     difficulty: BeatmapDifficultySection
   ) {
     super();
