@@ -252,6 +252,7 @@ export class StandardGame extends Container {
   }
 
   destroy(options?: IDestroyOptions | boolean) {
+    super.destroy(options)
     this.app.ticker.remove(this.tick, this);
   }
 }
