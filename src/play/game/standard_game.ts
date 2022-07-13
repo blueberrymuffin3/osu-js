@@ -1,8 +1,5 @@
 import {
   Application,
-  Sprite,
-  Texture,
-  IVideoResourceOptions,
   Container,
   IDestroyOptions,
 } from "pixi.js";
@@ -16,15 +13,12 @@ import {
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { LoadedBeatmap } from "../api/beatmap-loader";
 import { HitType } from "osu-classes";
-import { POLICY } from "adaptive-scale/lib-esm";
 import { CirclePiece } from "../render/circle";
 import { HittableObject } from "osu-parsers-web";
 import { Cursor } from "../render/cursor";
 import { SliderPiece } from "../render/slider";
 import { Circle, Slider, StandardHitObject } from "osu-standard-stable";
-
-const maxVideoSkewSpeed = 0.05;
-const maxVideoSkewSeek = 0.5;
+import { Background } from "./background";
 
 interface InstantiatedHitObject {
   object: Container;
@@ -34,12 +28,7 @@ interface InstantiatedHitObject {
 export class StandardGame extends Container {
   private app: Application;
 
-  private background: Sprite | null = null;
-
-  private video: HTMLVideoElement | null = null;
-  private videoSprite: Sprite | null = null;
-  private videoStarted = false;
-  private videoError = false;
+  private background: Background;
 
   private sound: Sound | null = null;
   private mediaInstance: IMediaInstance | null = null;
@@ -67,35 +56,8 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
-    if (beatmap.videoUrl) {
-      this.video = document.createElement("video");
-      this.video.src = beatmap.videoUrl;
-      this.video.muted = true;
-      this.video.addEventListener(
-        "error",
-        (error) => {
-          console.error("Error playing video", error.error || error);
-          this.videoError = true;
-        },
-        true
-      );
-      this.videoSprite = Sprite.from(
-        Texture.from(this.video, {
-          resourceOptions: {
-            autoLoad: true,
-            autoPlay: false,
-          } as IVideoResourceOptions,
-        })
-      );
-      this.videoSprite.visible = false;
-      this.addChild(this.videoSprite);
-    }
-
-    if (beatmap.backgroundUrl) {
-      app.loader.add(beatmap.backgroundUrl);
-      this.background = Sprite.from(beatmap.backgroundUrl);
-      this.addChild(this.background);
-    }
+    this.background = new Background(app, this.clock, beatmap);
+    this.addChild(this.background);
 
     this.gameContainer = new Container();
     this.addChild(this.gameContainer);
@@ -158,19 +120,6 @@ export class StandardGame extends Container {
   }
 
   protected tick() {
-    this.background &&
-      adaptiveScaleDisplayObject(
-        this.app.screen,
-        this.background.texture,
-        this.background
-      );
-    this.videoSprite &&
-      adaptiveScaleDisplayObject(
-        this.app.screen,
-        this.videoSprite.texture,
-        this.videoSprite,
-        POLICY.NoBorder
-      );
     adaptiveScaleDisplayObject(
       this.app.screen,
       OSU_PIXELS_SCREEN_SIZE,
@@ -207,46 +156,6 @@ export class StandardGame extends Container {
         // object.destroy({
         //   children: true,
         // });
-      }
-    }
-
-    if (this.video) {
-      if (
-        this.videoError ||
-        this.timeElapsed < this.beatmap.data.events.videoOffset! / 1000
-      ) {
-        this.videoSprite!.visible = false;
-        this.background && (this.background.visible = true);
-      } else {
-        this.videoSprite!.visible = true;
-        this.background && (this.background.visible = false);
-
-        if (!this.videoStarted) {
-          this.video.play();
-          this.videoStarted = true;
-        }
-
-        const targetVideoTime =
-          this.timeElapsed - this.beatmap.data.events.videoOffset! / 1000;
-        const skew = this.video.currentTime - targetVideoTime;
-
-        if (targetVideoTime > this.video.duration) {
-          console.warn("Video ended");
-          this.video = null;
-        } else if (Math.abs(skew) > maxVideoSkewSeek) {
-          this.video.currentTime = targetVideoTime;
-          this.video.playbackRate = 1;
-          console.warn("Video skew high, seeking");
-        } else if (Math.abs(skew) > maxVideoSkewSpeed) {
-          console.warn("Video skew high, changing playbackRate");
-          if (skew > 0) {
-            this.video.playbackRate = 0.5;
-          } else {
-            this.video.playbackRate = 2;
-          }
-        } else {
-          this.video.playbackRate = 1;
-        }
       }
     }
   }
