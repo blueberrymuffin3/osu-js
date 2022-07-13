@@ -1,7 +1,6 @@
 import "./style.scss";
 import { Application, ENV, Loader, settings, UPDATE_PRIORITY } from "pixi.js";
 import * as PIXI from "pixi.js";
-import { ScreenManager } from "./screens/screen";
 import { SoundLoader } from "@pixi/sound";
 import { BinaryFontLoader } from "./resources/fonts";
 import {
@@ -11,7 +10,7 @@ import {
 } from "./loader";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { loadBeatmapStep, LoadedBeatmap } from "./api/beatmap-loader";
-import { StandardGameScreen } from "./screens/standard_game";
+import { StandardGame } from "./game/standard_game";
 
 Loader.registerPlugin(SoundLoader);
 Loader.registerPlugin(BinaryFontLoader);
@@ -24,12 +23,7 @@ const app = new Application({
   resolution: window.devicePixelRatio,
 });
 
-const screenManager = new ScreenManager();
-
-let setLoadedBeatmap: (loadedBeatmap: LoadedBeatmap) => void;
-let loadedBeatmap = new Promise<LoadedBeatmap>((resolve) => {
-  setLoadedBeatmap = resolve;
-});
+let loadedBeatmap: LoadedBeatmap;
 
 export const load = (cb: LoadCallback, info: BeatmapInfo) =>
   executeSteps(cb, [
@@ -45,18 +39,14 @@ export const load = (cb: LoadCallback, info: BeatmapInfo) =>
     },
     {
       weight: 5,
-      execute: loadBeatmapStep(info, setLoadedBeatmap),
+      execute: loadBeatmapStep(info, (beatmap) => (loadedBeatmap = beatmap)),
     },
   ]);
 
 export function start(container: HTMLElement) {
   app.resizeTo = container;
   container.appendChild(app.view);
-  loadedBeatmap.then((loadedBeatmap) => {
-    screenManager.loadScreen(
-      () => new StandardGameScreen(app, screenManager, loadedBeatmap)
-    );
-  });
+  app.stage.addChild(new StandardGame(app, loadedBeatmap))
 
   if (import.meta.env.DEV) {
     import("spectorjs").then((SPECTOR) => {

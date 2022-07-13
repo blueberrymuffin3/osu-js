@@ -1,10 +1,10 @@
-import { AbstractScreen, ScreenManager } from "./screen";
 import {
   Application,
   Sprite,
   Texture,
   IVideoResourceOptions,
   Container,
+  IDestroyOptions,
 } from "pixi.js";
 import {
   adaptiveScaleDisplayObject,
@@ -31,7 +31,9 @@ interface InstantiatedHitObject {
   data: HittableObject;
 }
 
-export class StandardGameScreen extends AbstractScreen {
+export class StandardGame extends Container {
+  private app: Application;
+
   private background: Sprite | null = null;
 
   private video: HTMLVideoElement | null = null;
@@ -55,13 +57,10 @@ export class StandardGameScreen extends AbstractScreen {
   private comboLabelIndex = 1;
   private comboColorIndex = 0;
 
-  constructor(
-    app: Application,
-    manager: ScreenManager,
-    beatmap: LoadedBeatmap
-  ) {
-    super(app, manager);
+  constructor(app: Application, beatmap: LoadedBeatmap) {
+    super();
 
+    this.app = app;
     this.beatmap = beatmap;
 
     this.preemtTime = preemtTimeFromAr(beatmap.data.difficulty.approachRate);
@@ -89,17 +88,17 @@ export class StandardGameScreen extends AbstractScreen {
         })
       );
       this.videoSprite.visible = false;
-      this.container.addChild(this.videoSprite);
+      this.addChild(this.videoSprite);
     }
 
     if (beatmap.backgroundUrl) {
       app.loader.add(beatmap.backgroundUrl);
       this.background = Sprite.from(beatmap.backgroundUrl);
-      this.container.addChild(this.background);
+      this.addChild(this.background);
     }
 
     this.gameContainer = new Container();
-    this.container.addChild(this.gameContainer);
+    this.addChild(this.gameContainer);
 
     this.playAreaContainer = new Container();
     this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
@@ -107,12 +106,14 @@ export class StandardGameScreen extends AbstractScreen {
     this.gameContainer.addChild(this.playAreaContainer);
     this.gameContainer.addChild(new Cursor(app));
 
-    this.container.interactive = true;
-    this.container.interactiveChildren = false;
+    this.interactive = true;
+    this.interactiveChildren = false;
 
     (async () => {
       this.mediaInstance = await this.sound!.play();
     })();
+
+    app.ticker.add(this.tick, this);
   }
 
   private instantiateHitObject(_hitObject: StandardHitObject) {
@@ -248,5 +249,9 @@ export class StandardGameScreen extends AbstractScreen {
         }
       }
     }
+  }
+
+  destroy(options?: IDestroyOptions | boolean) {
+    this.app.ticker.remove(this.tick, this);
   }
 }
