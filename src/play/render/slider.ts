@@ -37,6 +37,8 @@ export class SliderPiece extends Container {
     this.preempt = preemtTimeFromAr(difficulty.approachRate);
     this.fadeIn = fadeInTimeFromAr(difficulty.approachRate);
 
+    app.ticker.add(this.tick, this);
+
     this.sliderPathSprite = new SliderPathSprite(
       app,
       hitObject.path,
@@ -52,8 +54,6 @@ export class SliderPiece extends Container {
       difficulty
     );
     this.addChild(this.sliderPathSprite, this.circlePiece);
-
-    app.ticker.add(this.tick, this);
   }
 
   tick() {
