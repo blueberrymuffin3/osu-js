@@ -421,11 +421,6 @@
   resolved "https://registry.yarnpkg.com/@types/stack-trace/-/stack-trace-0.0.29.tgz#eb7a7c60098edb35630ed900742a5ecb20cfcb4d"
   integrity sha512-TgfOX+mGY/NyNxJLIbDWrO9DjGoVSW9+aB8H2yy1fy32jsvxijhmyJI9fDFgvz3YP4lvJaq9DzdR/M1bOgVc9g==
 
-adaptive-scale@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/adaptive-scale/-/adaptive-scale-1.0.0.tgz#cf90fa7b3ac21caf141b15a418c9abf35630f443"
-  integrity sha512-CWbR51cgG5ChPKyI7Oe/wQFglX/l8w9ec36wCP5Ubbu4E1yW1SFsXy14MYwA5pHYACw+h/zDBrUulTP2VUcrmg==
-
 anymatch@~3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/anymatch/-/anymatch-3.1.2.tgz#c0557c096af32f106198f4f4e2a383537e378716"

@@ -1,4 +1,4 @@
-import { getScaledRect, POLICY } from "adaptive-scale/lib-esm";
+import { getScaledRect, POLICY } from "./adaptive-scale";
 import { BeatmapDifficultySection, Vector2 } from "osu-classes";
 import type { DisplayObject } from "pixi.js";
 

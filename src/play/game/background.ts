@@ -1,4 +1,4 @@
-import { POLICY } from "adaptive-scale";
+import { POLICY } from "../adaptive-scale";
 import { Application, IDestroyOptions, Sprite, Texture } from "pixi.js";
 import { LoadedBeatmap } from "../api/beatmap-loader";
 import { adaptiveScaleDisplayObject, TimeMsProvider } from "../constants";
