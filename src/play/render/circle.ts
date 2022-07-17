@@ -6,6 +6,7 @@ import {
   IDestroyOptions,
   BitmapText,
   IBitmapTextStyle,
+  BLEND_MODES,
 } from "pixi.js";
 import { clamp01, lerp } from "../anim";
 import { UpdatableDisplayObject } from "../game/timeline";
@@ -59,6 +60,7 @@ export class CirclePiece extends Container implements UpdatableDisplayObject {
     this.addChild(this.approachCircle);
 
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
+    this.glow.blendMode = BLEND_MODES.ADD;
     this.glow.anchor.set(0.5);
     this.glow.alpha = 0.5;
     this.glow.tint = color;
@@ -84,6 +86,7 @@ export class CirclePiece extends Container implements UpdatableDisplayObject {
     this.addChild(this.ring);
 
     this.flash = Sprite.from(TEXTURE_FLASH);
+    this.flash.blendMode = BLEND_MODES.ADD;
     this.flash.anchor.set(0.5);
     this.flash.alpha = 0;
     this.addChild(this.flash);
