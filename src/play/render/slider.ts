@@ -1,43 +1,30 @@
 import { BeatmapDifficultySection } from "osu-classes";
 import { Slider } from "osu-standard-stable";
-import { Application, Container, IDestroyOptions } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { clamp01, lerp } from "../anim";
-import {
-  fadeInTimeFromAr,
-  preemtTimeFromAr,
-  TimeMsProvider,
-} from "../constants";
-import { CirclePiece } from "./circle";
+import { UpdatableDisplayObject } from "../game/timeline";
 import { SliderPathSprite } from "./components/slider_path";
 
-export class SliderPiece extends Container {
-  private app: Application;
-  private clock: TimeMsProvider;
+export class SliderPiece extends Container implements UpdatableDisplayObject {
   private preempt: number;
   private fadeIn: number;
 
   private hitObject: Slider;
 
   private sliderPathSprite: SliderPathSprite;
-  private circlePiece: CirclePiece;
 
+  // TODO: Remove difficulty and app references
   public constructor(
     app: Application,
-    clock: TimeMsProvider,
     color: number,
-    label: string,
     hitObject: Slider,
     difficulty: BeatmapDifficultySection
   ) {
     super();
 
-    this.app = app;
-    this.clock = clock;
     this.hitObject = hitObject;
-    this.preempt = preemtTimeFromAr(difficulty.approachRate);
-    this.fadeIn = fadeInTimeFromAr(difficulty.approachRate);
-
-    app.ticker.add(this.tick, this);
+    this.preempt = hitObject.timePreempt;
+    this.fadeIn = hitObject.timeFadeIn;
 
     this.sliderPathSprite = new SliderPathSprite(
       app,
@@ -45,35 +32,23 @@ export class SliderPiece extends Container {
       color,
       difficulty
     );
-    this.circlePiece = new CirclePiece(
-      app,
-      clock,
-      hitObject.startTime,
-      color,
-      label,
-      difficulty
-    );
-    this.addChild(this.sliderPathSprite, this.circlePiece);
+    this.addChild(this.sliderPathSprite);
   }
 
-  tick() {
-    const sliderTime = this.clock() - this.hitObject.startTime;
+  update(timeMs: number) {
+    const timeRelativeMs = timeMs - this.hitObject.startTime;
 
-    const enterTime = sliderTime + this.preempt;
+    const enterTime = timeRelativeMs + this.preempt;
 
     this.alpha = lerp(enterTime / this.fadeIn, 0, 1);
     this.sliderPathSprite.endProp = clamp01(enterTime / this.fadeIn);
 
-    const sliderProgress = clamp01(sliderTime / this.hitObject.duration);
+    const sliderProgress = clamp01(timeRelativeMs / this.hitObject.duration);
     const sliderProportion = this.hitObject.path.progressAt(
       sliderProgress,
       this.hitObject.spans
     );
     const finalSpan = sliderProgress > 1 - 1 / this.hitObject.spans;
-
-    this.circlePiece.position.copyFrom(
-      this.hitObject.path.positionAt(sliderProportion)
-    );
 
     if (finalSpan) {
       if (this.hitObject.spans % 2 == 0) {
@@ -85,13 +60,10 @@ export class SliderPiece extends Container {
       }
     }
 
+    // TODO: This should be redundant
     if (sliderProgress == 1) {
+      // TODO: Is there any exit animation?
       this.destroy({ children: true });
     }
-  }
-
-  destroy(options?: boolean | IDestroyOptions): void {
-    super.destroy(options);
-    this.app.ticker.remove(this.tick, this);
   }
 }

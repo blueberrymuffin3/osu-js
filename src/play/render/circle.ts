@@ -1,4 +1,4 @@
-import { BeatmapDifficultySection } from "osu-classes";
+import { Circle } from "osu-standard-stable";
 import {
   Container,
   Application,
@@ -8,13 +8,7 @@ import {
   IBitmapTextStyle,
 } from "pixi.js";
 import { clamp01, lerp } from "../anim";
-import {
-  diameterFromCs,
-  fadeInTimeFromAr,
-  OSU_HIT_OBJECT_RADIUS,
-  preemtTimeFromAr,
-  TimeMsProvider,
-} from "../constants";
+import { UpdatableDisplayObject } from "../game/timeline";
 import { FONT_VENERA_FACE } from "../resources/fonts";
 import {
   TEXTURE_FLASH,
@@ -36,44 +30,26 @@ const FLASH_OUT_TIME = 100;
 const SCALE_TIME = 800;
 const FADE_OUT_TIME = 400;
 
-export class CirclePiece extends Container {
-  private app: Application;
-  private clock: TimeMsProvider;
-  private startTime: number;
-  private preempt: number;
-  private fadeIn: number;
+export class CirclePiece extends Container implements UpdatableDisplayObject {
+  private hitObject: Circle;
 
-  private approachCircle: Sprite | null;
-  private glow: Sprite | null;
-  private circle: CircleTriangles | null;
-  private numberGlow: Sprite | null;
-  private number: BitmapText | null;
-  private ring: Sprite | null;
-  private flash: Sprite | null = null;
+  private approachCircle: Sprite;
+  private glow: Sprite;
+  private circle: CircleTriangles;
+  private numberGlow: Sprite;
+  private number: BitmapText;
+  private ring: Sprite;
+  private flash: Sprite;
 
-  private intialScale: number;
-  private explodeStart: number | null = null;
-  private explodePhase2 = false;
+  private initialScale: number;
 
-  public constructor(
-    app: Application,
-    clock: TimeMsProvider,
-    startTime: number,
-    color: number,
-    label: string,
-    difficulty: BeatmapDifficultySection
-  ) {
+  // TODO: Remove reference to app
+  public constructor(app: Application, color: number, hitObject: Circle) {
     super();
+    this.hitObject = hitObject;
 
-    this.app = app;
-    this.clock = clock;
-    this.startTime = startTime;
-    this.preempt = preemtTimeFromAr(difficulty.approachRate);
-    this.fadeIn = fadeInTimeFromAr(difficulty.approachRate);
-
-    this.intialScale =
-      diameterFromCs(difficulty.circleSize) / (2 * OSU_HIT_OBJECT_RADIUS);
-    this.scale.set(this.intialScale);
+    this.initialScale = hitObject.scale / 2; // TODO: Why times 2?
+    this.scale.set(this.initialScale);
 
     this.approachCircle = Sprite.from(
       TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE
@@ -97,6 +73,7 @@ export class CirclePiece extends Container {
     this.numberGlow.anchor.set(0.5);
     this.addChild(this.numberGlow);
 
+    const label = (hitObject.currentComboIndex + 1).toString();
     this.number = new BitmapText(label, NUMBER_STYLE);
     this.number.anchor.set(0.5);
     this.number.y = 8;
@@ -106,60 +83,58 @@ export class CirclePiece extends Container {
     this.ring.anchor.set(0.5);
     this.addChild(this.ring);
 
-    app.ticker.add(this.tick, this);
-  }
-
-  public explode() {
-    this.explodeStart = this.clock();
     this.flash = Sprite.from(TEXTURE_FLASH);
     this.flash.anchor.set(0.5);
+    this.flash.alpha = 0;
     this.addChild(this.flash);
   }
 
-  private startExplodePhase2() {
-    this.explodePhase2 = true;
+  // TODO: Should be able to handle non-monotonic updates
+  update(timeMs: number) {
+    const timeRelativeMs = timeMs - this.hitObject.startTime;
 
-    // prettier-ignore
-    for (const key of ["approachCircle", "circle", "numberGlow", "number", "ring"] as ["approachCircle", "circle", "numberGlow", "number", "ring"]) {
-      this.removeChild(this[key]!);
-      this[key]!.destroy();
-      this[key] = null;
-    }
-  }
+    if (timeRelativeMs >= 0) {
+      // Exploding
+      // TODO: Add Particles
+      // TODO: This is redundant
 
-  tick() {
-    if (this.explodeStart != null) {
-      const progress = this.clock() - this.explodeStart;
-      if (progress > SCALE_TIME) {
-        this.destroy({ children: true });
-        return;
-      }
+      // Expand during explosion
+      this.scale.set(
+        lerp(timeRelativeMs / SCALE_TIME, 1.0, 1.5) * this.initialScale
+      );
 
-      this.scale.set(lerp(progress / SCALE_TIME, 1.0, 1.5) * this.intialScale);
-
-      const progressIn = progress / FLASH_IN_TIME;
-      if (progressIn < 1) {
-        this.flash!.alpha = clamp01(progressIn);
+      // Flash
+      const progressPhase1 = timeRelativeMs / FLASH_IN_TIME;
+      console.log(progressPhase1);
+      if (progressPhase1 < 1) {
+        // Phase 1
+        this.flash.alpha = clamp01(progressPhase1);
       } else {
-        if (!this.explodePhase2) {
-          this.startExplodePhase2();
-        }
-        const progress2 = progress - FLASH_IN_TIME;
-        this.flash!.alpha = clamp01(1 - progress2 / FLASH_OUT_TIME);
-        this.alpha = clamp01(1 - progress2 / FADE_OUT_TIME);
+        // Phase 2
+        this.approachCircle.visible = false;
+        this.circle.visible = false;
+        this.numberGlow.visible = false;
+        this.number.visible = false;
+        this.ring.visible = false;
+        const progressPhase2 = timeRelativeMs - FLASH_IN_TIME;
+
+        // TODO: Probably slightly incorrect because flash is faded twice
+        this.flash.alpha = clamp01(1 - progressPhase2 / FLASH_OUT_TIME);
+        this.alpha = clamp01(1 - progressPhase2 / FADE_OUT_TIME);
       }
-    }
+    } else {
+      // Entering
 
-    if (this.approachCircle) {
-      const progress = this.clock() - (this.startTime - this.preempt);
+      const timeRelativeEnterMs = timeRelativeMs + this.hitObject.timePreempt;
 
-      this.alpha = lerp(progress / this.fadeIn, 0, 1);
-      this.approachCircle.scale.set(lerp(progress / this.preempt, 4, 1));
+      this.alpha = lerp(timeRelativeEnterMs / this.hitObject.timeFadeIn, 0, 1);
+      this.approachCircle.scale.set(
+        lerp(timeRelativeEnterMs / this.hitObject.timePreempt, 4, 1)
+      );
     }
   }
 
   destroy(options?: boolean | IDestroyOptions): void {
     super.destroy(options);
-    this.app.ticker.remove(this.tick, this);
   }
 }
