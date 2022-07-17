@@ -1,6 +1,5 @@
 import { BeatmapDifficultySection, SliderPath, Vector2 } from "osu-classes";
 import {
-  Application,
   Container,
   DRAW_MODES,
   Geometry,
@@ -48,8 +47,9 @@ interface RenderState {
 
 const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniformGroup);
 
-export class SliderPathSprite extends Container {
-  private app: Application;
+export class SliderPathSprite
+  extends Container
+{
   private points: Vector2[];
   private geometry: Geometry;
   private lastRenderState: RenderState | null = null;
@@ -65,13 +65,11 @@ export class SliderPathSprite extends Container {
   public endProp = 1;
 
   constructor(
-    app: Application,
     sliderPath: SliderPath,
     color: number,
     difficulty: BeatmapDifficultySection
   ) {
     super();
-    this.app = app;
     this.points = sliderPath.path;
     this.radius = diameterFromCs(difficulty.circleSize);
     this.padding = this.radius + PADDING;
@@ -80,7 +78,6 @@ export class SliderPathSprite extends Container {
     this.geometry = this.generateGeometry(this.points);
 
     this.addChild(this.sprite);
-    app.ticker.add(this.tick, this);
   }
 
   updateTransform(): void {
@@ -88,14 +85,13 @@ export class SliderPathSprite extends Container {
     this.matricesValid = true;
   }
 
-  tick(): void {
+  _render(renderer: Renderer): void {
     if (!this.matricesValid) {
       return;
     }
 
-    const renderer = this.app.renderer as Renderer
-
     const renderState: RenderState = {
+      // prettier-ignore
       renderScale: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
       startProp: this.startProp,
       endProp: this.endProp,
@@ -114,6 +110,9 @@ export class SliderPathSprite extends Container {
   }
 
   updateSpriteRender(renderer: Renderer, state: RenderState) {
+    // TODO: Why is this needed?
+    renderer.batch.flush();
+
     const unscaledOverallBounds = this.boundingBox(this.points);
     const textureBounds = new Rectangle(
       0,
@@ -154,7 +153,7 @@ export class SliderPathSprite extends Container {
 
     renderer.geometry.bind(this.geometry, shader);
     renderer.geometry.draw(DRAW_MODES.TRIANGLES);
-
+    
     renderer.renderTexture.bind();
 
     this.sprite.texture = this.texture;
@@ -192,14 +191,14 @@ export class SliderPathSprite extends Container {
       quad: [Vector2, Vector2, Vector2, Vector2];
       point1: Vector2;
       point2: Vector2;
-      start: number,
-      end: number
+      start: number;
+      end: number;
     }
 
     const lengthCDF = new Float32Array(points.length);
     lengthCDF[0] = 0;
     for (let i = 1; i < points.length; i++) {
-      lengthCDF[i] = lengthCDF[i-1] + points[i-1].distance(points[i ]);
+      lengthCDF[i] = lengthCDF[i - 1] + points[i - 1].distance(points[i]);
     }
     const maxLength = lengthCDF[lengthCDF.length - 1];
     for (let i = 0; i < lengthCDF.length; i++) {
@@ -215,7 +214,7 @@ export class SliderPathSprite extends Container {
         point1: points[i],
         point2: points[i + 1],
         start: lengthCDF[i],
-        end: lengthCDF[i+1]
+        end: lengthCDF[i + 1],
       });
     }
 
@@ -274,9 +273,11 @@ export class SliderPathSprite extends Container {
       .addIndex(indices);
   }
 
-  destroy(options?: boolean | IDestroyOptions): void {
-    super.destroy(options);
-    this.texture?.destroy(true);
-    this.app.ticker.remove(this.tick, this);
+  destroy(_options?: boolean | IDestroyOptions): void {
+    super.destroy({
+      children: true,
+      texture: true,
+      baseTexture: true,
+    });
   }
 }

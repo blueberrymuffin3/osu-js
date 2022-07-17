@@ -46,7 +46,7 @@ export const load = (cb: LoadCallback, info: BeatmapInfo) =>
 export function start(container: HTMLElement) {
   app.resizeTo = container;
   container.appendChild(app.view);
-  app.stage.addChild(new StandardGame(app, loadedBeatmap))
+  app.stage.addChild(new StandardGame(app, loadedBeatmap));
 
   if (import.meta.env.DEV) {
     import("spectorjs").then((SPECTOR) => {

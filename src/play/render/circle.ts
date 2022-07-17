@@ -1,7 +1,6 @@
 import { Circle } from "osu-standard-stable";
 import {
   Container,
-  Application,
   Sprite,
   IDestroyOptions,
   BitmapText,
@@ -44,8 +43,7 @@ export class CirclePiece extends Container implements UpdatableDisplayObject {
 
   private initialScale: number;
 
-  // TODO: Remove reference to app
-  public constructor(app: Application, color: number, hitObject: Circle) {
+  public constructor(color: number, hitObject: Circle) {
     super();
     this.hitObject = hitObject;
 
@@ -66,7 +64,7 @@ export class CirclePiece extends Container implements UpdatableDisplayObject {
     this.glow.tint = color;
     this.addChild(this.glow);
 
-    this.circle = new CircleTriangles(app, color);
+    this.circle = new CircleTriangles(color);
     this.addChild(this.circle);
 
     this.numberGlow = Sprite.from(TEXTURE_NUMBER_GLOW);
@@ -94,12 +92,13 @@ export class CirclePiece extends Container implements UpdatableDisplayObject {
 
   // TODO: Should be able to handle non-monotonic updates
   update(timeMs: number) {
+    this.circle.update(timeMs);
+
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
     if (timeRelativeMs >= 0) {
       // Exploding
       // TODO: Add Particles
-      // TODO: This is redundant
 
       // Expand during explosion
       this.scale.set(

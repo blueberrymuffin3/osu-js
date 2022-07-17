@@ -1,9 +1,7 @@
 import {
   Filter,
-  Application,
   Sprite,
   Texture,
-  IDestroyOptions,
   UniformGroup,
   Renderer,
 } from "pixi.js";
@@ -11,6 +9,7 @@ import { hex2rgb } from "@pixi/utils";
 import { lerp } from "../../anim";
 import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../resources/textures";
 import TRIANGLES_FS_RAW from "./circle_triangles.frag?raw";
+import { UpdatableDisplayObject } from "../../game/timeline";
 
 const TRIANGLE_COUNT = 20;
 const TRIANGLES_FS = TRIANGLES_FS_RAW.replace(
@@ -36,15 +35,14 @@ const filter = new Filter(
   uniformGroup
 );
 
-export class CircleTriangles extends Sprite {
-  private app: Application;
+export class CircleTriangles extends Sprite implements UpdatableDisplayObject {
   private color: number[];
   private triangles = new Float32Array(TRIANGLE_COUNT * 3);
   private triangleSpeeds = new Float32Array(TRIANGLE_COUNT);
+  private lastTimeMs = NaN;
 
-  constructor(app: Application, color: number) {
+  constructor(color: number) {
     super(Texture.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC));
-    this.app = app;
     this.color = hex2rgb(color) as number[];
 
     this.filters = [filter];
@@ -64,8 +62,6 @@ export class CircleTriangles extends Sprite {
       this.triangles[j + 2] = size;
       this.triangleSpeeds[i] = speed;
     }
-
-    this.app.ticker.add(this.tick, this);
   }
 
   protected _render(renderer: Renderer): void {
@@ -75,13 +71,20 @@ export class CircleTriangles extends Sprite {
     super._render(renderer);
   }
 
-  tick() {
+  update(timeMs: number) {
+    const deltaMs = timeMs - this.lastTimeMs
+    this.lastTimeMs = timeMs;
+
+    if(isNaN(deltaMs)){
+      return
+    }
+
     for (let i = 0; i < TRIANGLE_COUNT; i++) {
       const j = i * 3;
       let x = this.triangles[j];
       let y = this.triangles[j + 1];
       let size = this.triangles[j + 2];
-      y -= this.app.ticker.deltaMS * this.triangleSpeeds[i];
+      y -= deltaMs * this.triangleSpeeds[i];
       if (y < -size * 2) {
         this.triangleSpeeds[i] = lerp(
           Math.random(),
@@ -96,10 +99,5 @@ export class CircleTriangles extends Sprite {
       this.triangles[j + 1] = y;
       this.triangles[j + 2] = size;
     }
-  }
-
-  destroy(options?: boolean | IDestroyOptions): void {
-    super.destroy(options);
-    this.app.ticker.remove(this.tick, this);
   }
 }

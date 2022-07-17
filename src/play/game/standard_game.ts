@@ -46,7 +46,6 @@ export class StandardGame extends Container {
     this.gameContainer.addChild(new Cursor(app));
 
     this.hitObjectTimeline = new HitObjectTimeline(
-      app,
       beatmap.data.difficulty,
       beatmap.data.hitObjects
     );
