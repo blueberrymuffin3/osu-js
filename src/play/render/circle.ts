@@ -108,7 +108,6 @@ export class CirclePiece extends Container implements UpdatableDisplayObject {
 
       // Flash
       const progressPhase1 = timeRelativeMs / FLASH_IN_TIME;
-      console.log(progressPhase1);
       if (progressPhase1 < 1) {
         // Phase 1
         this.flash.alpha = clamp01(progressPhase1);

@@ -23,6 +23,10 @@ export class Background extends Sprite {
     this.app = app;
     this.clock = clock;
 
+    // Dim by a fixed amount
+    // TODO: Dim automatically
+    this.tint = 0x333333;
+
     if (beatmap.backgroundUrl) {
       this.texture = Texture.from(beatmap.backgroundUrl);
     }
