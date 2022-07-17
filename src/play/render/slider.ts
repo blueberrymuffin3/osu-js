@@ -1,8 +1,9 @@
 import { BeatmapDifficultySection } from "osu-classes";
 import { Slider } from "osu-standard-stable";
-import { Application, Container } from "pixi.js";
+import { Application, BLEND_MODES, Container, Sprite } from "pixi.js";
 import { clamp01, lerp } from "../anim";
 import { UpdatableDisplayObject } from "../game/timeline";
+import { TEXTURE_SLIDER_BALL } from "../resources/textures";
 import { SliderPathSprite } from "./components/slider_path";
 
 export class SliderPiece extends Container implements UpdatableDisplayObject {
@@ -12,6 +13,7 @@ export class SliderPiece extends Container implements UpdatableDisplayObject {
   private hitObject: Slider;
 
   private sliderPathSprite: SliderPathSprite;
+  private sliderBallSprite: Sprite;
 
   // TODO: Remove difficulty and app references
   public constructor(
@@ -32,7 +34,14 @@ export class SliderPiece extends Container implements UpdatableDisplayObject {
       color,
       difficulty
     );
-    this.addChild(this.sliderPathSprite);
+
+    this.sliderBallSprite = Sprite.from(TEXTURE_SLIDER_BALL);
+    this.sliderBallSprite.blendMode = BLEND_MODES.ADD;
+    this.sliderBallSprite.anchor.set(0.5);
+    this.sliderBallSprite.scale.set(this.hitObject.scale / 2);
+    this.sliderBallSprite.visible = false;
+
+    this.addChild(this.sliderPathSprite, this.sliderBallSprite);
   }
 
   update(timeMs: number) {
@@ -50,6 +59,11 @@ export class SliderPiece extends Container implements UpdatableDisplayObject {
     );
     const finalSpan = sliderProgress > 1 - 1 / this.hitObject.spans;
 
+    this.sliderBallSprite.visible = timeRelativeMs >= 0;
+    this.sliderBallSprite.position.copyFrom(
+      this.hitObject.path.positionAt(sliderProportion)
+    );
+
     if (finalSpan) {
       if (this.hitObject.spans % 2 == 0) {
         this.sliderPathSprite.startProp = 0;
@@ -58,12 +72,6 @@ export class SliderPiece extends Container implements UpdatableDisplayObject {
         this.sliderPathSprite.startProp = sliderProportion;
         this.sliderPathSprite.endProp = 1;
       }
-    }
-
-    // TODO: This should be redundant
-    if (sliderProgress == 1) {
-      // TODO: Is there any exit animation?
-      this.destroy({ children: true });
     }
   }
 }

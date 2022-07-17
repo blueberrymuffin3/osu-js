@@ -14,6 +14,7 @@ import TEXTURE_CURSOR_INNER from "./custom/cursor_inner.png";
 import TEXTURE_CURSOR_OUTER from "./custom/cursor_outer.png";
 import TEXTURE_NUMBER_GLOW from "./custom/number_glow.png";
 import TEXTURE_FLASH from "./custom/flash.png";
+import TEXTURE_SLIDER_BALL from "./custom/slider_ball.png";
 
 const TEXTURES_MENU_BACKGROUND: string[] = [
   // TEXTURE_MENU_BACKGROUND_1,
@@ -36,6 +37,7 @@ export {
   TEXTURE_CURSOR_OUTER,
   TEXTURE_NUMBER_GLOW,
   TEXTURE_FLASH,
+  TEXTURE_SLIDER_BALL,
 };
 
 export const preloadTextures = [
@@ -47,5 +49,6 @@ export const preloadTextures = [
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
   TEXTURE_NUMBER_GLOW,
-  TEXTURE_FLASH
+  TEXTURE_FLASH,
+  TEXTURE_SLIDER_BALL,
 ];
