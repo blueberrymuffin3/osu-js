@@ -81,7 +81,7 @@ export default class CursorAutoplay extends Cursor {
       } else {
         clickDuration = Math.min(
           MAX_CLICK_DURATION,
-          nextHitObject.startTime - currentEndTime
+          (nextHitObject.startTime - currentEndTime) * MAX_CLICK_PROPORTION
         );
       }
       const clickEnd = currentEndTime + clickDuration;
