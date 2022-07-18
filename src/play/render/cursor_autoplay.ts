@@ -37,7 +37,7 @@ export default class CursorAutoplay extends Cursor {
 
     const nextHitObject = this.hitObjects[this.nextHitObjectIndex];
     if (this.nextHitObjectIndex == 0) {
-      return { pos: nextHitObject.startPosition, expanded: false };
+      return { pos: nextHitObject.stackedStartPosition, expanded: false };
     }
 
     const currentHitObject = this.hitObjects[this.nextHitObjectIndex - 1];
@@ -64,12 +64,12 @@ export default class CursorAutoplay extends Cursor {
         return {
           pos: currentHitObject.path
             .curvePositionAt(progress, currentHitObject.spans)
-            .add(currentHitObject.startPosition),
+            .add(currentHitObject.stackedStartPosition),
           expanded: true,
         };
       } else {
         return {
-          pos: currentHitObject.endPosition,
+          pos: currentHitObject.stackedEndPosition,
           expanded: true,
         };
       }
@@ -102,8 +102,8 @@ export default class CursorAutoplay extends Cursor {
       return {
         pos: lerp2D(
           easingFunction(progress),
-          currentHitObject.endPosition,
-          nextHitObject.startPosition
+          currentHitObject.stackedEndPosition,
+          nextHitObject.stackedStartPosition
         ),
         expanded: timeMs < clickEnd,
       };
