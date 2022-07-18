@@ -1,10 +1,11 @@
 import { EasingFunction } from "bezier-easing";
-import { Easing } from "osu-classes";
+import { Easing, Vector2 } from "osu-classes";
 
 export const clamp01 = (p: number) => Math.max(0, Math.min(1, p));
 
 export const lerp = (p: number, a: number, b: number) => lerpUnclamped(clamp01(p), a, b);
 export const lerpUnclamped = (p: number, a: number, b: number) => a * (1 - p) + b * p;
+export const lerp2D = (p: number, a: Vector2, b: Vector2) => new Vector2(lerp(p, a.x, b.x), lerp(p, a.y, b.y));
 
 export const clampEase =
   (fn: EasingFunction): EasingFunction =>

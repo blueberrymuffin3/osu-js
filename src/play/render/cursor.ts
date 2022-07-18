@@ -1,6 +1,7 @@
 import { EasingFunction } from "bezier-easing";
-import { Application, Container, IDestroyOptions, Sprite } from "pixi.js";
+import { Container, Sprite } from "pixi.js";
 import { EasingFunctions, lerpUnclamped } from "../anim";
+import { UpdatableDisplayObject } from "../game/timeline";
 import {
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
@@ -10,8 +11,7 @@ const SCALE_DEFAULT = 0.25;
 const SCALE_EXPANDED = SCALE_DEFAULT * 1.2;
 const SCALE_DURATION = 400;
 
-export class Cursor extends Container {
-  private app: Application;
+export class Cursor extends Container implements UpdatableDisplayObject {
   private inner: Sprite;
   private outer: Sprite;
 
@@ -27,7 +27,7 @@ export class Cursor extends Container {
         : EasingFunctions.OutQuad;
       this.scaleStart = this.scaleCurrent;
       this.scaleEnd = value ? SCALE_EXPANDED : SCALE_DEFAULT;
-      this.scaleProgress = 0;
+      this.scaleStartTimeMs = NaN;
     }
   }
 
@@ -35,28 +35,10 @@ export class Cursor extends Container {
   private scaleStart: number = SCALE_DEFAULT;
   private scaleEnd: number = SCALE_DEFAULT;
   private scaleCurrent: number = SCALE_DEFAULT;
-  private scaleProgress: number = 0;
+  private scaleStartTimeMs: number = NaN;
 
-  private onMouseMove = (e: MouseEvent) => {
-    this.visible = true;
-    this.position.copyFrom(this.parent.worldTransform.applyInverse(e));
-  };
-  private onMouseDown = () => {
-    this.expanded = true;
-  };
-  private onMouseUp = () => {
-    this.expanded = false;
-  };
-  private onMouseOver = () => {
-    this.visible = true;
-  };
-  private onMouseOut = () => {
-    this.visible = false;
-  };
-
-  constructor(app: Application) {
+  constructor() {
     super();
-    this.app = app;
     this.inner = Sprite.from(TEXTURE_CURSOR_INNER);
     this.inner.anchor.set(0.5);
     this.inner.scale.set(SCALE_DEFAULT);
@@ -64,39 +46,26 @@ export class Cursor extends Container {
     this.outer.anchor.set(0.5);
     this.outer.scale.set(SCALE_DEFAULT);
     this.addChild(this.outer, this.inner);
-    this.visible = false;
-    document.addEventListener("mousemove", this.onMouseMove);
-    document.addEventListener("mousedown", this.onMouseDown);
-    document.addEventListener("mouseup", this.onMouseUp);
-    document.addEventListener("mouseover", this.onMouseOver);
-    document.addEventListener("mouseout", this.onMouseOut);
-    app.ticker.add(this.tick, this);
   }
 
-  tick() {
+  update(timeMs: number) {
     if (this.scaleFn) {
-      this.scaleProgress += this.app.ticker.deltaMS / SCALE_DURATION;
-      if (this.scaleProgress >= 1) {
+      if (isNaN(this.scaleStartTimeMs)) {
+        this.scaleStartTimeMs = timeMs;
+      }
+
+      const scaleProgress = (timeMs - this.scaleStartTimeMs) / SCALE_DURATION;
+      if (scaleProgress >= 1) {
         this.scaleFn = null;
         this.scaleCurrent = this.scaleEnd;
       } else {
         this.scaleCurrent = lerpUnclamped(
-          this.scaleFn(this.scaleProgress),
+          this.scaleFn(scaleProgress),
           this.scaleStart,
           this.scaleEnd
         );
       }
       this.outer.scale.set(this.scaleCurrent);
     }
-  }
-
-  destroy(options?: boolean | IDestroyOptions): void {
-    super.destroy(options);
-    document.removeEventListener("mousemove", this.onMouseMove);
-    document.removeEventListener("mousedown", this.onMouseDown);
-    document.removeEventListener("mouseup", this.onMouseUp);
-    document.removeEventListener("mouseover", this.onMouseOver);
-    document.removeEventListener("mouseout", this.onMouseOut);
-    this.app.ticker.remove(this.tick, this);
   }
 }

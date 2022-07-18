@@ -6,9 +6,9 @@ import {
 } from "../constants";
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { LoadedBeatmap } from "../api/beatmap-loader";
-import { Cursor } from "../render/cursor";
 import { Background } from "./background";
 import { HitObjectTimeline } from "./hitobject_timeline";
+import CursorAutoplay from "../render/cursor_autoplay";
 
 export class StandardGame extends Container {
   private app: Application;
@@ -25,6 +25,7 @@ export class StandardGame extends Container {
   private clock = () => this.timeElapsed * 1000;
 
   private hitObjectTimeline: HitObjectTimeline;
+  private cursorAutoplay: CursorAutoplay;
 
   constructor(app: Application, beatmap: LoadedBeatmap) {
     super();
@@ -43,13 +44,13 @@ export class StandardGame extends Container {
     this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
     this.playAreaContainer.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
     this.gameContainer.addChild(this.playAreaContainer);
-    this.gameContainer.addChild(new Cursor(app));
 
     this.hitObjectTimeline = new HitObjectTimeline(
       beatmap.data.difficulty,
       beatmap.data.hitObjects
     );
-    this.playAreaContainer.addChild(this.hitObjectTimeline);
+    this.cursorAutoplay = new CursorAutoplay(beatmap.data.hitObjects);
+    this.playAreaContainer.addChild(this.hitObjectTimeline, this.cursorAutoplay);
 
     this.interactive = true;
     this.interactiveChildren = false;
@@ -75,6 +76,7 @@ export class StandardGame extends Container {
     this.timeElapsed = this.mediaInstance.progress * this.sound.duration;
 
     this.hitObjectTimeline.update(this.timeElapsed * 1000);
+    this.cursorAutoplay.update(this.timeElapsed * 1000);
   }
 
   destroy(options?: IDestroyOptions | boolean) {
