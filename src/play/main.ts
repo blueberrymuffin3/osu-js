@@ -16,6 +16,8 @@ import template from "./main_info.handlebars?raw";
 
   console.log(info);
 
+  document.title = `${info.beatmapset?.artist} - ${info.beatmapset?.title} - ${info.version} (\u2605 ${info.difficulty_rating.toFixed(2)})`
+
   document.querySelector<HTMLElement>(".info")!.innerHTML = Mustache.render(
     template,
     {
