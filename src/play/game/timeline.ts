@@ -1,43 +1,51 @@
 import { Container, DisplayObject } from "pixi.js";
 
-export interface UpdatableDisplayObject extends DisplayObject {
+export interface IUpdatable {
   update(timeMs: number): void;
 }
 
-export interface TimelineElement {
+export interface TimelineElement<Instance> {
   startTimeMs: number;
   endTimeMs: number;
-  build: () => UpdatableDisplayObject;
+  build: () => Instance;
 }
 
-interface TimelineElementState {
+interface TimelineElementState<Instance> {
   endTimeMs: number;
-  instance: UpdatableDisplayObject;
+  instance: Instance;
 }
 
-export abstract class Timeline
-  extends Container
-  implements UpdatableDisplayObject
-{
-  private nextElementIndex = 0;
-  private elements: TimelineElement[];
-  private activeElements = new Set<TimelineElementState>();
+type TimelineCallback<Instance> = (instance: Instance, timeMs: number) => void;
 
-  protected constructor(elements: TimelineElement[]) {
-    super();
-    this.elements = elements;
+export class Timeline<Instance> implements IUpdatable {
+  private allowSkippingElements: boolean;
+
+  private nextElementIndex = 0;
+  private elements: TimelineElement<Instance>[];
+  private activeElements = new Set<TimelineElementState<Instance>>();
+
+  private createElement: TimelineCallback<Instance>;
+  private updateElement: TimelineCallback<Instance>;
+  private destroyElement: TimelineCallback<Instance>;
+
+  public constructor(
+    elements: TimelineElement<Instance>[],
+    createElement: TimelineCallback<Instance>,
+    updateElement: TimelineCallback<Instance>,
+    destroyElement: TimelineCallback<Instance>,
+    allowSkippingElements: boolean
+  ) {
+    this.elements = elements
+      .slice()
+      .sort((a, b) => a.startTimeMs - b.startTimeMs);
+
+    this.createElement = createElement;
+    this.updateElement = updateElement;
+    this.destroyElement = destroyElement;
+    this.allowSkippingElements = allowSkippingElements;
   }
 
   public update(timeMs: number) {
-    for (const element of this.activeElements) {
-      if (timeMs < element.endTimeMs) {
-        element.instance.update(timeMs);
-      } else {
-        element.instance.destroy({ children: true });
-        this.activeElements.delete(element);
-      }
-    }
-
     for (
       ;
       this.nextElementIndex < this.elements.length &&
@@ -46,20 +54,58 @@ export abstract class Timeline
     ) {
       const nextElement = this.elements[this.nextElementIndex];
 
-      if (timeMs < nextElement.endTimeMs) {
-        const nextElementState: TimelineElementState = {
+      if (!this.allowSkippingElements || timeMs < nextElement.endTimeMs) {
+        const nextElementState: TimelineElementState<Instance> = {
           instance: nextElement.build(),
           endTimeMs: nextElement.endTimeMs,
         };
-        this.addChildAt(nextElementState.instance, 0);
-        nextElementState.instance.update(timeMs);
+        this.createElement(nextElementState.instance, timeMs);
         this.activeElements.add(nextElementState);
-      } else {
-        console.warn(
-          "Skipping element, expired before being instantiated",
-          nextElement
-        );
       }
     }
+
+    for (const element of this.activeElements) {
+      if (timeMs < element.endTimeMs) {
+        this.updateElement(element.instance, timeMs);
+      } else {
+        this.destroyElement(element.instance, timeMs);
+        this.activeElements.delete(element);
+      }
+    }
+  }
+}
+
+export type DOTimelineInstance = DisplayObject & IUpdatable;
+
+export class DisplayObjectTimeline extends Container implements IUpdatable {
+  public constructor(elements: TimelineElement<DOTimelineInstance>[]) {
+    super();
+    this.timeline = new Timeline(
+      elements,
+      this.createElement,
+      this.updateElement,
+      this.destroyElement,
+      true
+    );
+  }
+
+  private createElement: TimelineCallback<DOTimelineInstance> = (instance) => {
+    this.addChildAt(instance, 0);
+  };
+  private updateElement: TimelineCallback<DOTimelineInstance> = (
+    instance,
+    timeMs
+  ) => {
+    instance.update(timeMs);
+  };
+  private destroyElement: TimelineCallback<DOTimelineInstance> = (instance) => {
+    instance.destroy({ children: true });
+    this.removeChild(instance);
+  };
+
+  private timeline: Timeline<DOTimelineInstance>;
+
+  public update(timeMs: number) {
+    this.timeline.update(timeMs);
   }
 }

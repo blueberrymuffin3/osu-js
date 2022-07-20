@@ -2,11 +2,11 @@ import { BeatmapDifficultySection } from "osu-classes";
 import { Slider } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { clamp01, lerp } from "../anim";
-import { UpdatableDisplayObject } from "../game/timeline";
+import { IUpdatable } from "../game/timeline";
 import { TEXTURE_SLIDER_BALL } from "../resources/textures";
 import { SliderPathSprite } from "./components/slider_path";
 
-export class SliderPiece extends Container implements UpdatableDisplayObject {
+export class SliderPiece extends Container implements IUpdatable {
   private preempt: number;
   private fadeIn: number;
 

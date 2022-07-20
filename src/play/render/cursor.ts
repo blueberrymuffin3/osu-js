@@ -1,7 +1,7 @@
 import { EasingFunction } from "bezier-easing";
 import { Container, Sprite } from "pixi.js";
 import { EasingFunctions, lerpUnclamped } from "../anim";
-import { UpdatableDisplayObject } from "../game/timeline";
+import { IUpdatable } from "../game/timeline";
 import {
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
@@ -11,7 +11,7 @@ const SCALE_DEFAULT = 0.25;
 const SCALE_EXPANDED = SCALE_DEFAULT * 1.2;
 const SCALE_DURATION = 400;
 
-export class Cursor extends Container implements UpdatableDisplayObject {
+export class Cursor extends Container implements IUpdatable {
   private inner: Sprite;
   private outer: Sprite;
 

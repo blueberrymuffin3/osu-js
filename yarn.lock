@@ -1060,10 +1060,10 @@ osu-classes@^0.9.1:
   resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.9.1.tgz#5a6d8e975c42beb6193b6cbd05fcca27e46cde4d"
   integrity sha512-84LaoqMqypT9aGeHklwwftXa1fuUNKSHv1y8rcDM4eSsOAv8+ICo3MmpUswJXKh96rcIWhJG8X1mpmulubRkkQ==
 
-osu-parsers-web@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/osu-parsers-web/-/osu-parsers-web-3.1.0.tgz#f7eea986d1bab8970730886736cac4e7f5145709"
-  integrity sha512-rJr6oJIgtGRdYpDIksyRVhZFWqlw7neb6rIw05KYiqSN3Cqru4kuXAA/T/xspmsCPwON2XVfND3V3aTTCC4qOw==
+osu-parsers-web@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/osu-parsers-web/-/osu-parsers-web-3.1.1.tgz#6921f2fa4805ba637699e77d44980db970a46d9f"
+  integrity sha512-/lGtJ+CHHbTNR0Kl8R2c7MXqE66ew+aiR4R+RwVE1peL+NUP7T/t+uJRJKQ6M6UrgYeMk8GFYEddiC2BD4Z4Gg==
   dependencies:
     osu-classes "^0.9.1"
 

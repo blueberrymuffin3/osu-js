@@ -1,11 +1,14 @@
 import JSZip from "jszip";
-import { BeatmapDecoder } from "osu-parsers-web";
+import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers-web";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "../loader";
 import fetchProgress from "fetch-progress";
 import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
+import { Storyboard, StoryboardAnimation, StoryboardSprite } from "osu-classes";
+import { BaseTexture, ImageResource, Texture } from "pixi.js";
+import { getAllFramePaths } from "../constants";
 
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
@@ -16,22 +19,79 @@ const ffmpeg = createFFmpeg({
 // const getBeatmapRequest = (setId: number) =>
 //   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
 
+function getFileWinCompat(
+  zip: JSZip,
+  path: string
+): JSZip.JSZipObject | null {
+  path = path.replaceAll("\\", "/");
+
+  const file = zip.file(path);
+  if (file) {
+    return file; // Exact match
+  }
+
+  const files = zip.filter(
+    (candidatePath) => candidatePath.toLowerCase() == path.toLowerCase()
+  );
+  if (files.length > 0) {
+    if (files.length > 1) {
+      console.warn(
+        "Multiple candidates for case-insensitive search, no exact matches",
+        path,
+        files
+      );
+    }
+    console.log(`Fuzzy match: "${files[0].name}" for "${path}"`);
+    return files[0];
+  }
+
+  return null;
+}
+
 async function blobUrlFromFile(file: JSZip.JSZipObject | null) {
   if (!file) return undefined;
   const blob = await file.async("blob");
   return URL.createObjectURL(blob);
 }
 
+async function textureFromFile(
+  zip: JSZip,
+  path: string
+): Promise<Texture | undefined> {
+  const file = getFileWinCompat(zip, path);
+  if (!file) {
+    console.warn(`Image "${path}" not found in osz archive`);
+    return undefined;
+  }
+
+  const blob = await file.async("blob");
+  const imageResource = new ImageResource(URL.createObjectURL(blob));
+  await imageResource.load();
+  return new Texture(new BaseTexture(imageResource));
+}
+
+const ALL_LAYERS: ["background", "fail", "pass", "foreground", "overlay"] = [
+  "background",
+  "fail",
+  "pass",
+  "foreground",
+  "overlay",
+];
+
 export interface LoadedBeatmap {
   data: StandardBeatmap;
+  storyboardResources: Map<string, Texture>;
   audioData: ArrayBuffer;
-  backgroundUrl?: string;
+  background?: Texture;
   videoUrl?: string;
   zip: JSZip;
 }
 
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
-  const beatmapDecoded = new BeatmapDecoder().decodeFromString(beatmapString);
+  const beatmapDecoded = new BeatmapDecoder().decodeFromString(
+    beatmapString,
+    true
+  );
 
   if (beatmapDecoded.mode !== 0) {
     throw new Error(
@@ -49,6 +109,7 @@ export const loadBeatmapStep =
   async (cb: LoadCallback) => {
     const loaded: Partial<LoadedBeatmap> = {
       zip: new JSZip(),
+      storyboardResources: new Map(),
     };
     let blob: Blob;
 
@@ -86,13 +147,6 @@ export const loadBeatmapStep =
 
           await loaded.zip!.loadAsync(blob!);
 
-          // let storyboard: Storyboard | undefined = undefined;
-          // const osbFile = loaded.zip!.filter((path) => path.endsWith(".osb"))[0];
-          // if (osbFile) {
-          //   const storyboardString = await osbFile.async("string");
-          //   storyboard = new StoryboardDecoder().decodeFromString(storyboardString);
-          // }
-
           const osuFiles = loaded.zip!.filter((path) => path.endsWith(".osu"));
 
           for (const osuFile of osuFiles) {
@@ -118,6 +172,69 @@ export const loadBeatmapStep =
             }
             loaded.data = decodeBeatmap(await response.text());
           }
+
+          const osbFiles = loaded.zip!.filter((path) => path.endsWith(".osb"));
+          for (const osbFile of osbFiles) {
+            const storyboardString = await osbFile.async("string");
+            const storyboard = new StoryboardDecoder().decodeFromString(
+              storyboardString
+            );
+
+            if (!loaded.data.events.storyboard) {
+              loaded.data.events.storyboard = new Storyboard();
+            }
+
+            for (const layer of ALL_LAYERS) {
+              loaded.data.events.storyboard![layer] = [
+                ...loaded.data.events.storyboard![layer],
+                ...storyboard[layer],
+              ];
+            }
+          }
+        },
+      },
+      {
+        weight: 3,
+        async execute(cb) {
+          if (!loaded.data!.events.storyboard) {
+            return;
+          }
+
+          cb(0, "Loading Storyboard Images");
+
+          const allElements = ALL_LAYERS.flatMap(
+            (layer) => loaded.data!.events.storyboard![layer]
+          );
+
+          const allImagePaths = new Set(
+            allElements.flatMap((element) => {
+              if (element instanceof StoryboardAnimation) {
+                return getAllFramePaths(element);
+              } else if (element instanceof StoryboardSprite) {
+                return element.filePath;
+              } else {
+                console.warn("Unknown element type", element);
+                return [];
+              }
+            })
+          );
+
+          let loadedCount = 0;
+          for (const imagePath of allImagePaths) {
+            cb(
+              loadedCount / allImagePaths.size,
+              `Loading Storyboard Images (${loadedCount + 1}/${
+                allImagePaths.size + 1
+              })`
+            );
+            loadedCount++;
+
+            const texture = await textureFromFile(loaded.zip!, imagePath);
+
+            if (texture) {
+              loaded.storyboardResources!.set(imagePath, texture);
+            }
+          }
         },
       },
       {
@@ -129,7 +246,10 @@ export const loadBeatmapStep =
             throw new Error("!data");
           }
 
-          const audioFile = loaded.zip!.file(loaded.data.general.audioFilename);
+          const audioFile = getFileWinCompat(
+            loaded.zip!,
+            loaded.data.general.audioFilename
+          );
           if (!audioFile) {
             throw new Error("Audio file not found in archive");
           }
@@ -137,13 +257,19 @@ export const loadBeatmapStep =
           loaded.audioData = await audioFile.async("arraybuffer");
 
           const backgroundFilename = loaded.data.events.background;
-          loaded.backgroundUrl =
-            backgroundFilename &&
-            (await blobUrlFromFile(loaded.zip!.file(backgroundFilename)));
+          if (backgroundFilename) {
+            loaded.background = await textureFromFile(
+              loaded.zip!,
+              backgroundFilename
+            );
+          }
 
           const videoFilename = loaded.data.events.video;
           if (videoFilename) {
-            const videoFile = loaded.zip!.file(videoFilename);
+            const videoFile = getFileWinCompat(
+              loaded.zip!,
+              videoFilename
+            );
             if (!videoFile) {
               console.error(`Video file "${videoFile}" not found in archive`);
             } else if (videoFilename.endsWith(".mp4")) {

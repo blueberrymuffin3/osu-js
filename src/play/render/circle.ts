@@ -8,7 +8,7 @@ import {
   BLEND_MODES,
 } from "pixi.js";
 import { clamp01, lerp } from "../anim";
-import { UpdatableDisplayObject } from "../game/timeline";
+import { IUpdatable } from "../game/timeline";
 import { FONT_VENERA_FACE } from "../resources/fonts";
 import {
   TEXTURE_FLASH,
@@ -30,7 +30,9 @@ const FLASH_OUT_TIME = 100;
 const SCALE_TIME = 800;
 const FADE_OUT_TIME = 400;
 
-export class CirclePiece extends Container implements UpdatableDisplayObject {
+export class CirclePiece extends Container implements IUpdatable {
+  public static EXIT_ANIMATION_DURATION = FADE_OUT_TIME
+
   private hitObject: Circle;
 
   private approachCircle: Sprite;

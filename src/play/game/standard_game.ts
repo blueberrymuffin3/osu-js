@@ -9,11 +9,13 @@ import { LoadedBeatmap } from "../api/beatmap-loader";
 import { Background } from "./background";
 import { HitObjectTimeline } from "./hitobject_timeline";
 import CursorAutoplay from "../render/cursor_autoplay";
+import { StoryboardTimeline } from "./storyboard_timeline";
 
 export class StandardGame extends Container {
   private app: Application;
 
-  private background: Background;
+  private storyboardTimeline?: StoryboardTimeline;
+  private background?: Background;
 
   private sound: Sound | null = null;
   private mediaInstance: IMediaInstance | null = null;
@@ -22,7 +24,6 @@ export class StandardGame extends Container {
   private playAreaContainer: Container;
 
   private timeElapsed = 0;
-  private clock = () => this.timeElapsed * 1000;
 
   private hitObjectTimeline: HitObjectTimeline;
   private cursorAutoplay: CursorAutoplay;
@@ -34,10 +35,20 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
-    this.background = new Background(app, this.clock, beatmap);
-    this.addChild(this.background);
+    if (beatmap.data.events.storyboard) {
+      this.storyboardTimeline = new StoryboardTimeline(
+        beatmap.storyboardResources,
+        beatmap.data.events.storyboard
+      );
+    } else {
+      this.background = new Background(app, beatmap);
+      this.addChild(this.background);
+    }
 
     this.gameContainer = new Container();
+    if (this.storyboardTimeline) {
+      this.gameContainer.addChild(this.storyboardTimeline);
+    }
     this.addChild(this.gameContainer);
 
     this.playAreaContainer = new Container();
@@ -50,7 +61,10 @@ export class StandardGame extends Container {
       beatmap.data.hitObjects
     );
     this.cursorAutoplay = new CursorAutoplay(beatmap.data.hitObjects);
-    this.playAreaContainer.addChild(this.hitObjectTimeline, this.cursorAutoplay);
+    this.playAreaContainer.addChild(
+      this.hitObjectTimeline,
+      this.cursorAutoplay
+    );
 
     this.interactive = true;
     this.interactiveChildren = false;
@@ -70,6 +84,8 @@ export class StandardGame extends Container {
     );
 
     if (!this.mediaInstance || !this.sound) {
+      this.background?.update(0);
+      this.storyboardTimeline?.update(0);
       return;
     }
 
@@ -77,6 +93,8 @@ export class StandardGame extends Container {
 
     this.hitObjectTimeline.update(this.timeElapsed * 1000);
     this.cursorAutoplay.update(this.timeElapsed * 1000);
+    this.background?.update(this.timeElapsed * 1000);
+    this.storyboardTimeline?.update(this.timeElapsed * 1000);
   }
 
   destroy(options?: IDestroyOptions | boolean) {

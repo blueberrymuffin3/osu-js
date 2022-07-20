@@ -1,5 +1,9 @@
 import { getScaledRect, POLICY } from "./adaptive-scale";
-import { BeatmapDifficultySection, Vector2 } from "osu-classes";
+import {
+  BeatmapDifficultySection,
+  StoryboardAnimation,
+  Vector2,
+} from "osu-classes";
 import type { DisplayObject } from "pixi.js";
 
 export type TimeMsProvider = () => number;
@@ -31,7 +35,9 @@ export const OSU_PIXELS_PLAY_AREA_OFFSET = {
 
 export const OSU_HIT_OBJECT_RADIUS = 64;
 
-export const OSU_DEFAULT_COMBO_COLORS = [ 0xffc000, 0x00ca00, 0x127cff, 0xf21839 ]
+export const OSU_DEFAULT_COMBO_COLORS = [
+  0xffc000, 0x00ca00, 0x127cff, 0xf21839,
+];
 
 export const diameterFromCs = (CS: number) => 54.4 - 4.48 * CS;
 
@@ -62,18 +68,21 @@ export function adaptiveScaleDisplayObject(
 export function minMax(points: Vector2[]): [Vector2, Vector2] {
   return [
     points.reduce(
-      (a, b) =>
-        new Vector2(
-          Math.min(a.x, b.x),
-          Math.min(a.y, b.y)
-        )
+      (a, b) => new Vector2(Math.min(a.x, b.x), Math.min(a.y, b.y))
     ),
     points.reduce(
-      (a, b) =>
-        new Vector2(
-          Math.max(a.x, b.x),
-          Math.max(a.y, b.y)
-        )
+      (a, b) => new Vector2(Math.max(a.x, b.x), Math.max(a.y, b.y))
     ),
   ];
 }
+
+export const getAllFramePaths = (element: StoryboardAnimation) => {
+  const extensionDotIndex = element.filePath.lastIndexOf(".");
+  const prefix = element.filePath.substring(0, extensionDotIndex);
+  const suffix = element.filePath.substring(extensionDotIndex);
+  const paths = [];
+  for (let i = 0; i < element.frames; i++) {
+    paths.push(prefix + i + suffix);
+  }
+  return paths;
+};

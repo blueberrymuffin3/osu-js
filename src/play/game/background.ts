@@ -1,15 +1,15 @@
 import { POLICY } from "../adaptive-scale";
-import { Application, IDestroyOptions, Sprite, Texture } from "pixi.js";
+import { Application, Sprite, Texture } from "pixi.js";
 import { LoadedBeatmap } from "../api/beatmap-loader";
-import { adaptiveScaleDisplayObject, TimeMsProvider } from "../constants";
+import { adaptiveScaleDisplayObject } from "../constants";
+import { IUpdatable } from "./timeline";
 
 const MAX_VIDEO_SKEW_SPEED = 0.05;
 const MAX_VIDEO_SKEW_SEEK = 0.5;
 
 // TODO: Use WebCodecs in supported browsers
-export class Background extends Sprite {
+export class Background extends Sprite implements IUpdatable {
   private app: Application;
-  private clock: TimeMsProvider;
 
   private videoStartTime: number | null = null;
   private videoStarted = false;
@@ -17,18 +17,17 @@ export class Background extends Sprite {
 
   private backgroundTexture: Texture | null = null;
 
-  constructor(app: Application, clock: TimeMsProvider, beatmap: LoadedBeatmap) {
+  constructor(app: Application, beatmap: LoadedBeatmap) {
     super();
 
     this.app = app;
-    this.clock = clock;
 
     // Dim by a fixed amount
     // TODO: Dim automatically
     this.tint = 0x333333;
 
-    if (beatmap.backgroundUrl) {
-      this.texture = Texture.from(beatmap.backgroundUrl);
+    if (beatmap.background) {
+      this.texture = beatmap.background;
     }
 
     if (beatmap.videoUrl) {
@@ -52,12 +51,10 @@ export class Background extends Sprite {
         this.video.currentTime = -this.videoStartTime;
       }
     }
-
-    app.ticker.add(this.tick, this);
   }
 
-  tick() {
-    const timeElapsed = this.clock() / 1000;
+  update(timeMs: number) {
+    const timeElapsed = timeMs / 1000;
 
     adaptiveScaleDisplayObject(
       this.app.screen,
@@ -100,10 +97,5 @@ export class Background extends Sprite {
         this.video!.playbackRate = 1;
       }
     }
-  }
-
-  destroy(options?: boolean | IDestroyOptions): void {
-    super.destroy(options);
-    this.app.ticker.remove(this.tick, this);
   }
 }

@@ -9,7 +9,7 @@ import { hex2rgb } from "@pixi/utils";
 import { lerp } from "../../anim";
 import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../resources/textures";
 import TRIANGLES_FS_RAW from "./circle_triangles.frag?raw";
-import { UpdatableDisplayObject } from "../../game/timeline";
+import { IUpdatable } from "../../game/timeline";
 
 const TRIANGLE_COUNT = 20;
 const TRIANGLES_FS = TRIANGLES_FS_RAW.replace(
@@ -35,7 +35,7 @@ const filter = new Filter(
   uniformGroup
 );
 
-export class CircleTriangles extends Sprite implements UpdatableDisplayObject {
+export class CircleTriangles extends Sprite implements IUpdatable {
   private color: number[];
   private triangles = new Float32Array(TRIANGLE_COUNT * 3);
   private triangleSpeeds = new Float32Array(TRIANGLE_COUNT);
