@@ -6,25 +6,14 @@
  * Commands from the .osb file take precedence over those from the .osu file within the layers, as if the commands from the .osb were appended to the end of the .osu commands. This does not overrule the four layers mentioned above. Example: https://osu.ppy.sh/community/forums/topics/1869?n=103.
  */
 
+import { Origins, ParameterType, Vector2 } from "osu-classes";
 import {
-  ColourCommand,
+  AnimationObject,
   Command,
-  FadeCommand,
-  IStoryboardElement,
-  MoveCommand,
-  MoveXCommand,
-  MoveYCommand,
-  Origins,
-  ParameterCommand,
-  ParameterType,
-  RotateCommand,
-  ScaleCommand,
+  SpriteObject,
   Storyboard,
-  StoryboardAnimation,
-  StoryboardSprite,
-  Vector2,
-  VectorScaleCommand,
-} from "osu-classes";
+  StoryboardObject,
+} from "osu-storyboard-parser";
 import {
   BLEND_MODES,
   Container,
@@ -33,10 +22,8 @@ import {
   Texture,
   utils,
 } from "pixi.js";
-import { EasingFunctions, lerp, lerp2D } from "../anim";
-import {
-  getAllFramePaths,
-} from "../constants";
+import { EasingFunctions, lerp, lerpRGB } from "../anim";
+import { getAllFramePaths } from "../constants";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
@@ -47,11 +34,7 @@ import {
 
 // TODO: What is the overlay layer? Does anyone use it?
 
-const VISIBLE_LAYERS: ["background", "pass", "foreground"] = [
-  "background",
-  "pass",
-  "foreground",
-];
+const VISIBLE_LAYERS = ["Background", "Pass", "Foreground"] as const;
 
 // Dimming each sprite individually allows for "overexposure" with additive blending
 const STORYBOARD_BRIGHTNESS = 0.2;
@@ -71,9 +54,7 @@ const ORIGIN_MAP = new Map<Origins, IPointData>([
 ]);
 
 type LayerMap<T> = {
-  background: T;
-  pass: T;
-  foreground: T;
+  [key in typeof VISIBLE_LAYERS[number]]: T;
 };
 
 export class StoryboardTimeline extends Container {
@@ -100,45 +81,65 @@ export class StoryboardTimeline extends Container {
   }
 
   private createElement = (
-    element: IStoryboardElement,
+    object: StoryboardObject,
     index: number
   ): TimelineElement<DOTimelineInstance> => {
-    if (element instanceof StoryboardAnimation) {
+    if (object.commands.length === 0) {
+      console.warn("Object has no commands", object);
+
       return {
-        startTimeMs: element.startTime,
-        endTimeMs: element.endTime,
+        startTimeMs: -1,
+        endTimeMs: -1,
+        build: () => {
+          throw new Error("unreachable");
+        },
+      };
+    }
+
+    const startTimeMs = object.commands
+      .map((command) => command.startTime)
+      .reduce((a, b) => Math.min(a, b)); // TODO: Calculate from first frame w/ nonzero alpha and scale
+    const endTimeMs = object.commands
+      .map((command) => command.endTime)
+      .reduce((a, b) => Math.max(a, b));
+
+    if (object.type === "Animation") {
+      return {
+        startTimeMs,
+        endTimeMs,
         build: () => {
           const animation = new StoryboardAnimationRenderer(
             this.storyboardResources,
-            element
+            object
           );
           animation.zIndex = index;
           return animation;
         },
       };
-    } else if (element instanceof StoryboardSprite) {
+    } else if (object.type === "Sprite") {
       return {
-        startTimeMs: element.startTime,
-        endTimeMs: element.endTime,
+        startTimeMs,
+        endTimeMs,
         build: () => {
           const sprite = new StoryboardSpriteRenderer(
             this.storyboardResources,
-            element
+            object
           );
           sprite.zIndex = index;
           return sprite;
         },
       };
-    }
+    } else {
+      console.warn("Unknown storyboard element", object);
 
-    console.warn("Unknown storyboard element", element);
-    return {
-      startTimeMs: -1,
-      endTimeMs: -1,
-      build: () => {
-        throw new Error("unreachable");
-      },
-    };
+      return {
+        startTimeMs: -1,
+        endTimeMs: -1,
+        build: () => {
+          throw new Error("unreachable");
+        },
+      };
+    }
   };
 
   public update(timeMs: number) {
@@ -149,7 +150,16 @@ export class StoryboardTimeline extends Container {
   }
 }
 
-abstract class StoryboardRendererBase<T extends StoryboardSprite>
+const BACKTRACK_DEFAULT_VALUE_CLASSES = [
+  ["S", "V"],
+  ["C"],
+  ["R"],
+  ["C"],
+  ["P"],
+  ["F"]
+] as const;
+
+abstract class StoryboardRendererBase<T extends StoryboardObject>
   extends Sprite
   implements IUpdatable
 {
@@ -162,17 +172,17 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
     V: false,
   };
 
-  protected element: T;
+  protected object: T;
 
-  constructor(element: T) {
+  constructor(object: T) {
     super();
-    this.element = element;
-    this.position.copyFrom(element.startPosition);
-    this.anchor.copyFrom(ORIGIN_MAP.get(element.origin)!);
+    this.object = object;
+    this.position.copyFrom(object.defaultPos);
+    this.anchor.copyFrom(ORIGIN_MAP.get(object.origin)!);
     // TODO: Loops
     // TODO: Triggers
     this.commandTimeline = new Timeline(
-      element.commands.map(this.createElement),
+      object.commands.map(this.createElement),
       () => {},
       this.updateCommand,
       this.finalizeCommand,
@@ -183,6 +193,50 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
       STORYBOARD_BRIGHTNESS,
       STORYBOARD_BRIGHTNESS,
     ]);
+
+    const commandsDefault = object.commands
+      .slice()
+      .sort((a, b) => a.startTime - b.startTime);
+
+    // Setup default values
+    for (const classTypes of BACKTRACK_DEFAULT_VALUE_CLASSES) {
+      for (const command of commandsDefault) {
+        // TODO: WTF Typescript???
+        if (classTypes.includes(command.type as never)) {
+          this.updateCommand(command, 0);
+          break;
+        }
+      }
+    }
+
+    // Setup default position
+    let xPosSet = false;
+    let yPosSet = false;
+    for (const command of commandsDefault) {
+      if (command.type === "M") {
+        if (!xPosSet) {
+          this.x = command.startValue.x;
+        }
+        if (!yPosSet) {
+          this.y = command.startValue.y;
+        }
+        break;
+      } else if (command.type === "MX") {
+        if (!xPosSet) {
+          this.x = command.startValue;
+          xPosSet = true;
+        }
+      } else if (command.type === "MY") {
+        if (!yPosSet) {
+          this.y = command.startValue;
+          yPosSet = true;
+        }
+      }
+
+      if (xPosSet && yPosSet) {
+        break;
+      }
+    }
   }
 
   private createElement = (command: Command): TimelineElement<Command> => ({
@@ -192,8 +246,16 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
   });
 
   private updateCommand = (command: Command, timeMs: number) => {
-    const p = (timeMs - command.startTime) / command.duration;
-    this.applyCommand(command, EasingFunctions.getEasingFn(command.easing)(p));
+    if (command.endTime > command.startTime) {
+      const p =
+        (timeMs - command.startTime) / (command.endTime - command.startTime);
+      this.applyCommand(
+        command,
+        EasingFunctions.getEasingFn(command.easing)(p)
+      );
+    } else {
+      this.applyCommand(command, timeMs >= command.startTime ? 1 : 0);
+    }
   };
 
   private finalizeCommand = (command: Command) => {
@@ -201,35 +263,40 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
   };
 
   private applyCommand(command: Command, p: number) {
-    if (command instanceof ParameterCommand) {
+    if (command.type === "P") {
       // BlendingCommand, HorizontalFlipCommand, and VerticalFlipCommand
       // Active for the duration of the command
-      this.isParameterActive[command.parameter] = p < 1;
-    } else if (command instanceof ColourCommand) {
-      const r = lerp(p, command.startRed, command.endRed);
-      const g = lerp(p, command.startGreen, command.endGreen);
-      const b = lerp(p, command.startBlue, command.endBlue);
+      if ((command.endValue as any).length !== 1) {
+        debugger;
+      }
+      (this.isParameterActive as any)[command.endValue as any] = p < 1;
+    } else if (command.type === "C") {
+      const { r, g, b } = lerpRGB(p, command.startValue, command.endValue);
       this.tint = utils.rgb2hex([
         (r / 255) * STORYBOARD_BRIGHTNESS,
         (g / 255) * STORYBOARD_BRIGHTNESS,
         (b / 255) * STORYBOARD_BRIGHTNESS,
       ]);
-    } else if (command instanceof FadeCommand) {
-      this.alpha = lerp(p, command.startOpacity, command.endOpacity);
-    } else if (command instanceof MoveCommand) {
-      this.x = lerp(p, command.startX, command.endX);
-      this.y = lerp(p, command.startY, command.endY);
-    } else if (command instanceof MoveXCommand) {
-      this.x = lerp(p, command.startX, command.endX);
-    } else if (command instanceof MoveYCommand) {
-      this.y = lerp(p, command.startY, command.endY);
-    } else if (command instanceof RotateCommand) {
-      this.rotation = lerp(p, command.startRotate, command.endRotate);
-    } else if (
-      command instanceof ScaleCommand ||
-      command instanceof VectorScaleCommand
-    ) {
-      this.scalePositive = lerp2D(p, command.startScale, command.endScale);
+    } else if (command.type === "F") {
+      this.alpha = lerp(p, command.startValue, command.endValue);
+    } else if (command.type === "M") {
+      this.x = lerp(p, command.startValue.x, command.endValue.x);
+      this.y = lerp(p, command.startValue.y, command.endValue.y);
+    } else if (command.type === "MX") {
+      this.x = lerp(p, command.startValue, command.endValue);
+    } else if (command.type === "MY") {
+      this.y = lerp(p, command.startValue, command.endValue);
+    } else if (command.type === "R") {
+      this.rotation = lerp(p, command.startValue, command.endValue);
+    } else if (command.type === "S") {
+      const scale = lerp(p, command.startValue, command.endValue);
+      this.scalePositive = new Vector2(scale, scale);
+    } else if (command.type === "V") {
+      const scaleX = lerp(p, command.startValue.x, command.endValue.x);
+      const scaleY = lerp(p, command.startValue.y, command.endValue.y);
+      this.scalePositive = new Vector2(scaleX, scaleY);
+    } else {
+      console.warn("Unknown command", command);
     }
   }
 
@@ -249,44 +316,42 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
   }
 }
 
-class StoryboardSpriteRenderer extends StoryboardRendererBase<StoryboardSprite> {
+class StoryboardSpriteRenderer extends StoryboardRendererBase<SpriteObject> {
   public constructor(
     storyboardResources: Map<string, Texture>,
-    element: StoryboardSprite
+    object: SpriteObject
   ) {
-    super(element);
-    this.texture = storyboardResources.get(element.filePath) ?? Texture.EMPTY;
+    super(object);
+    this.texture = storyboardResources.get(object.filepath) ?? Texture.EMPTY;
     if (this.texture == Texture.EMPTY) {
       console.warn("Sprite has no texture");
     }
   }
 }
 
-class StoryboardAnimationRenderer extends StoryboardRendererBase<StoryboardAnimation> {
+class StoryboardAnimationRenderer extends StoryboardRendererBase<AnimationObject> {
   private frames: Texture[];
 
   public constructor(
     storyboardResources: Map<string, Texture>,
-    element: StoryboardAnimation
+    object: AnimationObject
   ) {
-    super(element);
-    this.frames = getAllFramePaths(element).map(
+    super(object);
+    this.frames = getAllFramePaths(object).map(
       (path) => storyboardResources.get(path) ?? Texture.EMPTY
     );
     if (this.frames.findIndex((x) => x == Texture.EMPTY) >= 0) {
       console.warn("Animation missing frames");
     }
-    console.log("anim");
     this.texture = this.frames[0];
   }
 
   update(timeMs: number): void {
     super.update(timeMs);
 
-    let frameNumber = Math.floor(
-      (timeMs - this.element.startTime) / this.element.frameDelay
-    );
-    if (this.element.loop) {
+    // TODO: When does this start?
+    let frameNumber = Math.floor((timeMs - 0) / this.object.frameDelay);
+    if (this.object.loops) {
       frameNumber = frameNumber % this.frames.length;
     } else {
       frameNumber = Math.min(frameNumber, this.frames.length - 1);

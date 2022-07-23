@@ -1,14 +1,14 @@
 import JSZip from "jszip";
-import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers-web";
+import { BeatmapDecoder } from "osu-parsers-web";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "../loader";
 import fetchProgress from "fetch-progress";
 import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
-import { Storyboard, StoryboardAnimation, StoryboardSprite } from "osu-classes";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
+import { loadStoryboard, Storyboard } from "osu-storyboard-parser";
 
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
@@ -19,10 +19,7 @@ const ffmpeg = createFFmpeg({
 // const getBeatmapRequest = (setId: number) =>
 //   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
 
-function getFileWinCompat(
-  zip: JSZip,
-  path: string
-): JSZip.JSZipObject | null {
+function getFileWinCompat(zip: JSZip, path: string): JSZip.JSZipObject | null {
   path = path.replaceAll("\\", "/");
 
   const file = zip.file(path);
@@ -70,16 +67,17 @@ async function textureFromFile(
   return new Texture(new BaseTexture(imageResource));
 }
 
-const ALL_LAYERS: ["background", "fail", "pass", "foreground", "overlay"] = [
-  "background",
-  "fail",
-  "pass",
-  "foreground",
-  "overlay",
-];
+const ALL_LAYERS = [
+  "Background",
+  "Fail",
+  "Pass",
+  "Foreground",
+  "Overlay",
+] as const;
 
 export interface LoadedBeatmap {
   data: StandardBeatmap;
+  storyboard: Storyboard;
   storyboardResources: Map<string, Texture>;
   audioData: ArrayBuffer;
   background?: Texture;
@@ -90,7 +88,7 @@ export interface LoadedBeatmap {
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
   const beatmapDecoded = new BeatmapDecoder().decodeFromString(
     beatmapString,
-    true
+    false
   );
 
   if (beatmapDecoded.mode !== 0) {
@@ -149,12 +147,13 @@ export const loadBeatmapStep =
 
           const osuFiles = loaded.zip!.filter((path) => path.endsWith(".osu"));
 
+          let osuString: string;
           for (const osuFile of osuFiles) {
-            const beatmapString = await osuFile.async("string");
-            const md5Hash = md5(beatmapString);
+            osuString = await osuFile.async("string");
+            const md5Hash = md5(osuString);
             if (md5Hash == info.checksum) {
               console.log("Found OSU file with checksum", md5Hash);
-              loaded.data = decodeBeatmap(beatmapString);
+              loaded.data = decodeBeatmap(osuString);
               break;
             }
           }
@@ -170,50 +169,41 @@ export const loadBeatmapStep =
                 `Error downloading beatmap: Got status ${response.status}`
               );
             }
-            loaded.data = decodeBeatmap(await response.text());
+            osuString = await response.text();
+            loaded.data = decodeBeatmap(osuString);
           }
 
-          const osbFiles = loaded.zip!.filter((path) => path.endsWith(".osb"));
-          for (const osbFile of osbFiles) {
-            const storyboardString = await osbFile.async("string");
-            const storyboard = new StoryboardDecoder().decodeFromString(
-              storyboardString
-            );
-
-            if (!loaded.data.events.storyboard) {
-              loaded.data.events.storyboard = new Storyboard();
-            }
-
-            for (const layer of ALL_LAYERS) {
-              loaded.data.events.storyboard![layer] = [
-                ...loaded.data.events.storyboard![layer],
-                ...storyboard[layer],
-              ];
-            }
+          const osbFile: JSZip.JSZipObject | null = loaded.zip!.filter((path) =>
+            path.endsWith(".osb")
+          )[0];
+          const osbString = await osbFile?.async("string");
+          const storyboard = loadStoryboard(osuString!, osbString);
+          if (storyboard) {
+            loaded.storyboard = storyboard;
           }
         },
       },
       {
         weight: 3,
         async execute(cb) {
-          if (!loaded.data!.events.storyboard) {
+          if (!loaded.storyboard) {
             return;
           }
 
           cb(0, "Loading Storyboard Images");
 
-          const allElements = ALL_LAYERS.flatMap(
-            (layer) => loaded.data!.events.storyboard![layer]
+          const allObjects = ALL_LAYERS.flatMap(
+            (layer) => loaded.storyboard![layer]
           );
 
           const allImagePaths = new Set(
-            allElements.flatMap((element) => {
-              if (element instanceof StoryboardAnimation) {
-                return getAllFramePaths(element);
-              } else if (element instanceof StoryboardSprite) {
-                return element.filePath;
+            allObjects.flatMap((object) => {
+              if (object.type === "Animation") {
+                return getAllFramePaths(object);
+              } else if (object.type === "Sprite") {
+                return object.filepath;
               } else {
-                console.warn("Unknown element type", element);
+                console.warn("Unknown object type", object);
                 return [];
               }
             })
@@ -266,10 +256,7 @@ export const loadBeatmapStep =
 
           const videoFilename = loaded.data.events.video;
           if (videoFilename) {
-            const videoFile = getFileWinCompat(
-              loaded.zip!,
-              videoFilename
-            );
+            const videoFile = getFileWinCompat(loaded.zip!, videoFilename);
             if (!videoFile) {
               console.error(`Video file "${videoFile}" not found in archive`);
             } else if (videoFilename.endsWith(".mp4")) {

@@ -35,10 +35,10 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
-    if (beatmap.data.events.storyboard) {
+    if (beatmap.storyboard) {
       this.storyboardTimeline = new StoryboardTimeline(
         beatmap.storyboardResources,
-        beatmap.data.events.storyboard
+        beatmap.storyboard
       );
     } else {
       this.background = new Background(app, beatmap);
