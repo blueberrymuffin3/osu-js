@@ -80,6 +80,8 @@ export class StoryboardTimeline extends Container {
     }
   }
 
+  private sortChildrenRequired = false;
+
   private createElement = (
     object: StoryboardObject,
     index: number
@@ -96,9 +98,10 @@ export class StoryboardTimeline extends Container {
       };
     }
 
-    const startTimeMs = object.commands
+    let startTimeMs = object.commands
       .map((command) => command.startTime)
       .reduce((a, b) => Math.min(a, b)); // TODO: Calculate from first frame w/ nonzero alpha and scale
+
     const endTimeMs = object.commands
       .map((command) => command.endTime)
       .reduce((a, b) => Math.max(a, b));
@@ -108,6 +111,8 @@ export class StoryboardTimeline extends Container {
         startTimeMs,
         endTimeMs,
         build: () => {
+          this.sortChildrenRequired = true;
+
           const animation = new StoryboardAnimationRenderer(
             this.storyboardResources,
             object
@@ -121,6 +126,8 @@ export class StoryboardTimeline extends Container {
         startTimeMs,
         endTimeMs,
         build: () => {
+          this.sortChildrenRequired = true;
+
           const sprite = new StoryboardSpriteRenderer(
             this.storyboardResources,
             object
@@ -144,8 +151,11 @@ export class StoryboardTimeline extends Container {
 
   public update(timeMs: number) {
     for (const layer of VISIBLE_LAYERS) {
+      this.sortChildrenRequired = false;
       this.timelines[layer].update(timeMs);
-      this.timelines[layer].sortChildren(); // TODO: Do this on insert only
+      if (this.sortChildrenRequired) {
+        this.timelines[layer].sortChildren();
+      }
     }
   }
 }
@@ -156,7 +166,7 @@ const BACKTRACK_DEFAULT_VALUE_CLASSES = [
   ["R"],
   ["C"],
   ["P"],
-  ["F"]
+  ["F"],
 ] as const;
 
 abstract class StoryboardRendererBase<T extends StoryboardObject>
@@ -179,7 +189,6 @@ abstract class StoryboardRendererBase<T extends StoryboardObject>
     this.object = object;
     this.position.copyFrom(object.defaultPos);
     this.anchor.copyFrom(ORIGIN_MAP.get(object.origin)!);
-    // TODO: Loops
     // TODO: Triggers
     this.commandTimeline = new Timeline(
       object.commands.map(this.createElement),
