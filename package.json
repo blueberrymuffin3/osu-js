@@ -33,7 +33,7 @@
     "osu-classes": "^0.9.1",
     "osu-parsers-web": "^3.1.1",
     "osu-standard-stable": "^2.3.1",
-    "osu-storyboard-parser": "^0.1.5",
+    "osu-storyboard-parser": "^0.1.6",
     "parse-bmfont-binary": "^1.0.6",
     "pixi-stats": "^1.0.7",
     "pixi.js": "^6.3.2"
