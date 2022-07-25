@@ -9,6 +9,7 @@ import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
 import { loadStoryboard, Storyboard } from "osu-storyboard-parser";
+import { generateSpriteSheet } from "../spritesheet";
 
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
@@ -107,7 +108,6 @@ export const loadBeatmapStep =
   async (cb: LoadCallback) => {
     const loaded: Partial<LoadedBeatmap> = {
       zip: new JSZip(),
-      storyboardResources: new Map(),
     };
     let blob: Blob;
 
@@ -209,22 +209,29 @@ export const loadBeatmapStep =
             })
           );
 
-          let loadedCount = 0;
+          const blobMap = new Map<string, Blob>();
           for (const imagePath of allImagePaths) {
-            cb(
-              loadedCount / allImagePaths.size,
-              `Loading Storyboard Images (${loadedCount + 1}/${
-                allImagePaths.size + 1
-              })`
-            );
-            loadedCount++;
-
-            const texture = await textureFromFile(loaded.zip!, imagePath);
-
-            if (texture) {
-              loaded.storyboardResources!.set(imagePath, texture);
-            }
+            const file = getFileWinCompat(loaded.zip!, imagePath)!;
+            blobMap.set(imagePath, await file.async("blob"));
           }
+          loaded.storyboardResources = await generateSpriteSheet(blobMap);
+
+          // let loadedCount = 0;
+          // for (const imagePath of allImagePaths) {
+          //   cb(
+          //     loadedCount / allImagePaths.size,
+          //     `Loading Storyboard Images (${loadedCount + 1}/${
+          //       allImagePaths.size + 1
+          //     })`
+          //   );
+          //   loadedCount++;
+
+          //   const texture = await textureFromFile(loaded.zip!, imagePath);
+
+          //   if (texture) {
+          //     loaded.storyboardResources!.set(imagePath, texture);
+          //   }
+          // }
         },
       },
       {

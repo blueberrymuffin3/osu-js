@@ -394,6 +394,11 @@
     eventemitter3 "^3.1.0"
     url "^0.11.0"
 
+"@types/bin-pack@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/bin-pack/-/bin-pack-1.0.1.tgz#6ade8b81fd661041033160cb32ceae2cffdccc70"
+  integrity sha512-f7FM9X/h0MHUORA1DnTHroiNn6/CZXyxP++mwrc6ZuhuAJzcrg7MQA77htmkGraelwgizcYgwPe9/7tLYGRm+A==
+
 "@types/blueimp-md5@^2.18.0":
   version "2.18.0"
   resolved "https://registry.yarnpkg.com/@types/blueimp-md5/-/blueimp-md5-2.18.0.tgz#a5c44fa0a61f5840e95a7965eafcec2c30d6c4df"
@@ -448,6 +453,11 @@ bezier-easing@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/bezier-easing/-/bezier-easing-2.1.0.tgz#c04dfe8b926d6ecaca1813d69ff179b7c2025d86"
   integrity sha512-gbIqZ/eslnUFC1tjEvtz0sgx+xTK20wDnYMIA27VA04R7w6xxXQPZDbibjA9DTWZRA2CXtwHykkVzlCaAJAZig==
+
+bin-pack@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/bin-pack/-/bin-pack-1.0.2.tgz#c2a014edbf0bed70a3292062ed46577b96120679"
+  integrity sha512-aOk0SxEon5LF9cMxQFViSKb4qccG6rs7XKyMXIb1J8f8LA2acTIWnHdT0IOTe4gYBbqgjdbuTZ5f+UP+vlh4Mw==
 
 binary-extensions@^2.0.0:
   version "2.2.0"
