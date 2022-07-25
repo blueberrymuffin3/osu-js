@@ -211,8 +211,12 @@ export const loadBeatmapStep =
 
           const blobMap = new Map<string, Blob>();
           for (const imagePath of allImagePaths) {
-            const file = getFileWinCompat(loaded.zip!, imagePath)!;
-            blobMap.set(imagePath, await file.async("blob"));
+            const file = getFileWinCompat(loaded.zip!, imagePath);
+            if (file) {
+              blobMap.set(imagePath, await file.async("blob"));
+            } else {
+              console.warn(`File "${imagePath}" not found in osz`);
+            }
           }
           loaded.storyboardResources = await generateSpriteSheet(blobMap);
 
