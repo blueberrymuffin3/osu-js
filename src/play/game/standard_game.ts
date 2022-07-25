@@ -28,6 +28,8 @@ export class StandardGame extends Container {
   private hitObjectTimeline: HitObjectTimeline;
   private cursorAutoplay: CursorAutoplay;
 
+  private frameTimes: number[] | null = [];
+
   constructor(app: Application, beatmap: LoadedBeatmap) {
     super();
 
@@ -77,6 +79,37 @@ export class StandardGame extends Container {
   }
 
   protected tick() {
+    this.frameTimes?.push(this.app.ticker.elapsedMS);
+    if (
+      this.frameTimes &&
+      this.mediaInstance &&
+      this.mediaInstance.progress == 1
+    ) {
+      console.log("Rendered", this.frameTimes.length, "frames");
+      this.frameTimes.sort((a, b) => a - b);
+      const Ps = [50, 90, 99, 99.9, 99.99];
+      for (const P of Ps) {
+        console.log(
+          `P${P}`,
+          this.frameTimes[
+            Math.floor((this.frameTimes.length * P) / 100)
+          ].toFixed(2)
+        );
+      }
+      console.log("min", this.frameTimes[0].toFixed(2));
+      console.log(
+        "max",
+        this.frameTimes[this.frameTimes.length - 1].toFixed(2)
+      );
+      console.log(
+        "mean",
+        (
+          this.frameTimes.reduce((a, b) => a + b) / this.frameTimes.length
+        ).toFixed(2)
+      );
+      this.frameTimes = null;
+    }
+
     adaptiveScaleDisplayObject(
       this.app.screen,
       OSU_PIXELS_SCREEN_SIZE,
