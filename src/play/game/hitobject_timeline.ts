@@ -37,7 +37,7 @@ function generateTimelineElement(
       circlePiece,
       {
         startTimeMs: hitObject.startTime - hitObject.timePreempt,
-        endTimeMs: hitObject.endTime,
+        endTimeMs: hitObject.endTime + SliderPiece.EXIT_ANIMATION_DURATION,
         build() {
           const object = new SliderPiece(color, hitObject);
           object.x = hitObject.stackedStartPosition.x;
