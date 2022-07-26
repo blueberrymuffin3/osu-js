@@ -1,4 +1,3 @@
-import { BeatmapDifficultySection } from "osu-classes";
 import { Slider } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { clamp01, lerp } from "../anim";
@@ -15,11 +14,9 @@ export class SliderPiece extends Container implements IUpdatable {
   private sliderPathSprite: SliderPathSprite;
   private sliderBallSprite: Sprite;
 
-  // TODO: Remove difficulty references
   public constructor(
     color: number,
     hitObject: Slider,
-    difficulty: BeatmapDifficultySection
   ) {
     super();
 
@@ -28,9 +25,8 @@ export class SliderPiece extends Container implements IUpdatable {
     this.fadeIn = hitObject.timeFadeIn;
 
     this.sliderPathSprite = new SliderPathSprite(
-      hitObject.path,
+      hitObject,
       color,
-      difficulty
     );
 
     this.sliderBallSprite = Sprite.from(TEXTURE_SLIDER_BALL);

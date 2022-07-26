@@ -1,4 +1,4 @@
-import { BeatmapDifficultySection, SliderPath, Vector2 } from "osu-classes";
+import { Vector2 } from "osu-classes";
 import {
   Container,
   DRAW_MODES,
@@ -16,7 +16,8 @@ import {
 
 import SDF_LINE_VERT from "./slider_path.vert?raw";
 import SDF_LINE_FRAG from "./slider_path.frag?raw";
-import { diameterFromCs, minMax } from "../../constants";
+import { minMax } from "../../constants";
+import { Slider } from "osu-standard-stable";
 
 // https://www.shadertoy.com/view/lsdBDS Quadratic Bezier SDF
 // https://gamedev.stackexchange.com/a/164816 Bezier AABB
@@ -47,9 +48,7 @@ interface RenderState {
 
 const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniformGroup);
 
-export class SliderPathSprite
-  extends Container
-{
+export class SliderPathSprite extends Container {
   private points: Vector2[];
   private geometry: Geometry;
   private lastRenderState: RenderState | null = null;
@@ -65,13 +64,12 @@ export class SliderPathSprite
   public endProp = 1;
 
   constructor(
-    sliderPath: SliderPath,
+    slider: Slider,
     color: number,
-    difficulty: BeatmapDifficultySection
   ) {
     super();
-    this.points = sliderPath.path;
-    this.radius = diameterFromCs(difficulty.circleSize);
+    this.points = slider.path.path;
+    this.radius = slider.radius;
     this.padding = this.radius + PADDING;
     this.color = [...utils.hex2rgb(color), 1];
 
@@ -153,7 +151,7 @@ export class SliderPathSprite
 
     renderer.geometry.bind(this.geometry, shader);
     renderer.geometry.draw(DRAW_MODES.TRIANGLES);
-    
+
     renderer.renderTexture.bind();
 
     this.sprite.texture = this.texture;

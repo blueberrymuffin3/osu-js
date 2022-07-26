@@ -1,4 +1,3 @@
-import { BeatmapDifficultySection } from "osu-classes";
 import { Circle, Slider, StandardHitObject } from "osu-standard-stable";
 import { OSU_DEFAULT_COMBO_COLORS } from "../constants";
 import { CirclePiece } from "../render/circle";
@@ -11,7 +10,6 @@ import {
 
 // TODO: Remove difficulty reference
 function generateTimelineElement(
-  difficulty: BeatmapDifficultySection,
   hitObject: StandardHitObject
 ): TimelineElement<DOTimelineInstance>[] {
   // TODO: calculate color elsewhere
@@ -41,7 +39,7 @@ function generateTimelineElement(
         startTimeMs: hitObject.startTime - hitObject.timePreempt,
         endTimeMs: hitObject.endTime,
         build() {
-          const object = new SliderPiece(color, hitObject, difficulty);
+          const object = new SliderPiece(color, hitObject);
           object.x = hitObject.stackedStartPosition.x;
           object.y = hitObject.stackedStartPosition.y;
 
@@ -56,10 +54,7 @@ function generateTimelineElement(
 }
 
 export class HitObjectTimeline extends DisplayObjectTimeline {
-  public constructor(
-    difficulty: BeatmapDifficultySection,
-    hitObjects: StandardHitObject[]
-  ) {
-    super(hitObjects.flatMap(generateTimelineElement.bind(null, difficulty)));
+  public constructor(hitObjects: StandardHitObject[]) {
+    super(hitObjects.flatMap(generateTimelineElement));
   }
 }
