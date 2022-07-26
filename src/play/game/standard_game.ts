@@ -1,4 +1,10 @@
-import { Application, Container, IDestroyOptions } from "pixi.js";
+import {
+  Application,
+  Container,
+  Graphics,
+  IDestroyOptions,
+  Rectangle,
+} from "pixi.js";
 import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
@@ -11,8 +17,12 @@ import { HitObjectTimeline } from "./hitobject_timeline";
 import CursorAutoplay from "../render/cursor_autoplay";
 import { StoryboardTimeline } from "./storyboard_timeline";
 
+export const VIRTUAL_SCREEN = new Rectangle(0, 0, 1920, 1080);
+
 export class StandardGame extends Container {
   private app: Application;
+
+  private virtualScreenMask: Graphics = new Graphics();
 
   private storyboardTimeline?: StoryboardTimeline;
   private background?: Background;
@@ -37,17 +47,34 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
+    this.virtualScreenMask.setParent(this);
+    this.virtualScreenMask.beginFill();
+    this.virtualScreenMask.drawRect(
+      VIRTUAL_SCREEN.x,
+      VIRTUAL_SCREEN.y,
+      VIRTUAL_SCREEN.width,
+      VIRTUAL_SCREEN.height
+    );
+    this.virtualScreenMask.endFill();
+    this.mask = this.virtualScreenMask;
+
     if (beatmap.storyboard) {
       this.storyboardTimeline = new StoryboardTimeline(
         beatmap.storyboardResources,
         beatmap.storyboard
       );
     } else {
-      this.background = new Background(app, beatmap);
+      this.background = new Background(beatmap);
       this.addChild(this.background);
     }
 
     this.gameContainer = new Container();
+    adaptiveScaleDisplayObject(
+      VIRTUAL_SCREEN,
+      OSU_PIXELS_SCREEN_SIZE,
+      this.gameContainer
+    );
+
     if (this.storyboardTimeline) {
       this.gameContainer.addChild(this.storyboardTimeline);
     }
@@ -79,6 +106,8 @@ export class StandardGame extends Container {
   }
 
   protected tick() {
+    adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
+
     this.frameTimes?.push(this.app.ticker.elapsedMS);
     if (
       this.frameTimes &&
@@ -109,12 +138,6 @@ export class StandardGame extends Container {
       );
       this.frameTimes = null;
     }
-
-    adaptiveScaleDisplayObject(
-      this.app.screen,
-      OSU_PIXELS_SCREEN_SIZE,
-      this.gameContainer
-    );
 
     if (!this.mediaInstance || !this.sound) {
       this.background?.update(0);

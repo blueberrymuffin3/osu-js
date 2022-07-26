@@ -1,26 +1,23 @@
 import { POLICY } from "../adaptive-scale";
-import { Application, Sprite, Texture } from "pixi.js";
+import { Sprite, Texture } from "pixi.js";
 import { LoadedBeatmap } from "../api/beatmap-loader";
 import { adaptiveScaleDisplayObject } from "../constants";
 import { IUpdatable } from "./timeline";
+import { VIRTUAL_SCREEN } from "./standard_game";
 
 const MAX_VIDEO_SKEW_SPEED = 0.05;
 const MAX_VIDEO_SKEW_SEEK = 0.5;
 
 // TODO: Use WebCodecs in supported browsers
 export class Background extends Sprite implements IUpdatable {
-  private app: Application;
-
   private videoStartTime: number | null = null;
   private videoStarted = false;
   private video: HTMLVideoElement | null = null;
 
   private backgroundTexture: Texture | null = null;
 
-  constructor(app: Application, beatmap: LoadedBeatmap) {
+  constructor(beatmap: LoadedBeatmap) {
     super();
-
-    this.app = app;
 
     // Dim by a fixed amount
     // TODO: Dim automatically
@@ -57,7 +54,7 @@ export class Background extends Sprite implements IUpdatable {
     const timeElapsed = timeMs / 1000;
 
     adaptiveScaleDisplayObject(
-      this.app.screen,
+      VIRTUAL_SCREEN,
       this.texture,
       this,
       this.texture == this.backgroundTexture ? POLICY.ShowAll : POLICY.NoBorder

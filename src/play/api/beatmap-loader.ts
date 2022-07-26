@@ -9,7 +9,7 @@ import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
 import { loadStoryboard, Storyboard } from "osu-storyboard-parser";
-import { generateSpriteSheet } from "../spritesheet";
+import { generateAtlases } from "../sprite_atlas";
 
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
@@ -218,7 +218,7 @@ export const loadBeatmapStep =
               console.warn(`File "${imagePath}" not found in osz`);
             }
           }
-          loaded.storyboardResources = await generateSpriteSheet(blobMap, cb);
+          loaded.storyboardResources = await generateAtlases(blobMap, cb);
 
           // let loadedCount = 0;
           // for (const imagePath of allImagePaths) {
