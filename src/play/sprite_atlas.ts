@@ -9,7 +9,7 @@ import {
 import { executeSteps, LoadCallback } from "./loader";
 
 const MAX_ATLAS_SIZE = Math.min(2048, getMaxWebGlTextureSize());
-const PADDING = 4;
+const MARGIN = 2;
 
 interface AtlasItemMeta {
   name: String;
@@ -30,7 +30,7 @@ export async function generateAtlases(
   const packer = new MultiBinPacker<AtlasItemMeta>(
     MAX_ATLAS_SIZE,
     MAX_ATLAS_SIZE,
-    PADDING
+    MARGIN * 2
   );
 
   const map = new Map<string, Texture>();
@@ -69,6 +69,7 @@ export async function generateAtlases(
 
         packer.addArray(sprites);
 
+        console.log(packer.bins);
         console.log(
           `Packed ${sprites.length} sprites into ${
             packer.bins.filter((bin) => !bin.rects[0].oversized).length
@@ -88,7 +89,7 @@ export async function generateAtlases(
             rendered / packer.bins.length,
             `Rendering Atlas (${rendered + 1} / ${packer.bins.length})`
           );
-          
+
           renderBin(map, bin);
           rendered++;
         }
@@ -111,7 +112,7 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
     ctx.drawImage(bitmap, result.x, result.y);
 
     // "extend" image borders to get sharp edges?
-    if (result.x - PADDING > 0 && result.y - PADDING > 0)
+    if (result.x - MARGIN > 0 && result.y - MARGIN > 0)
       // Top Left
       ctx.drawImage(
         bitmap,
@@ -119,14 +120,14 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         0,
         1,
         1,
-        result.x - PADDING,
-        result.y - PADDING,
-        PADDING,
-        PADDING
+        result.x - MARGIN,
+        result.y - MARGIN,
+        MARGIN,
+        MARGIN
       );
     if (
-      result.x + result.width + PADDING < canvas.width - 1 &&
-      result.y - PADDING > 0
+      result.x + result.width + MARGIN < canvas.width - 1 &&
+      result.y - MARGIN > 0
     )
       // Top Right
       ctx.drawImage(
@@ -136,13 +137,13 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         1,
         1,
         result.x + result.width,
-        result.y - PADDING,
-        PADDING,
-        PADDING
+        result.y - MARGIN,
+        MARGIN,
+        MARGIN
       );
     if (
-      result.x - PADDING > 0 &&
-      result.y + result.height + PADDING < canvas.height - 1
+      result.x - MARGIN > 0 &&
+      result.y + result.height + MARGIN < canvas.height - 1
     )
       // Bottom Left
       ctx.drawImage(
@@ -151,14 +152,14 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         bitmap.height - 1,
         1,
         1,
-        result.x - PADDING,
+        result.x - MARGIN,
         result.y + result.height,
-        PADDING,
-        PADDING
+        MARGIN,
+        MARGIN
       );
     if (
-      result.x + result.width + PADDING < canvas.width - 1 &&
-      result.y + result.height + PADDING < canvas.height - 1
+      result.x + result.width + MARGIN < canvas.width - 1 &&
+      result.y + result.height + MARGIN < canvas.height - 1
     )
       // Bottom Right
       ctx.drawImage(
@@ -169,10 +170,10 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         1,
         result.x + result.width,
         result.y + result.height,
-        PADDING,
-        PADDING
+        MARGIN,
+        MARGIN
       );
-    if (result.x - PADDING > 0)
+    if (result.x - MARGIN > 0)
       // Left
       ctx.drawImage(
         bitmap,
@@ -180,12 +181,12 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         0,
         1,
         bitmap.height,
-        result.x - PADDING,
+        result.x - MARGIN,
         result.y,
-        PADDING,
+        MARGIN,
         result.height
       );
-    if (result.x + result.width + PADDING < canvas.width - 1)
+    if (result.x + result.width + MARGIN < canvas.width - 1)
       // Right
       ctx.drawImage(
         bitmap,
@@ -195,10 +196,10 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         bitmap.height,
         result.x + result.width,
         result.y,
-        PADDING,
+        MARGIN,
         result.height
       );
-    if (result.y - PADDING > 0)
+    if (result.y - MARGIN > 0)
       // Top
       ctx.drawImage(
         bitmap,
@@ -207,11 +208,11 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         bitmap.width,
         1,
         result.x,
-        result.y - PADDING,
+        result.y - MARGIN,
         result.width,
-        PADDING
+        MARGIN
       );
-    if (result.y + result.height + PADDING < canvas.height - 1)
+    if (result.y + result.height + MARGIN < canvas.height - 1)
       ctx.drawImage(
         bitmap,
         0,
@@ -221,7 +222,7 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
         result.x,
         result.y + result.height,
         result.width,
-        PADDING
+        MARGIN
       ); // Bottom
   }
 
