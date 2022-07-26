@@ -113,7 +113,7 @@ export const loadBeatmapStep =
 
     await executeSteps(cb, [
       {
-        weight: 10,
+        weight: 8,
         async execute(cb) {
           cb(0, "Downloading Beatmap");
 
@@ -218,7 +218,7 @@ export const loadBeatmapStep =
               console.warn(`File "${imagePath}" not found in osz`);
             }
           }
-          loaded.storyboardResources = await generateSpriteSheet(blobMap);
+          loaded.storyboardResources = await generateSpriteSheet(blobMap, cb);
 
           // let loadedCount = 0;
           // for (const imagePath of allImagePaths) {

@@ -28,7 +28,7 @@ let loadedBeatmap: LoadedBeatmap;
 export const load = (cb: LoadCallback, info: BeatmapInfo) =>
   executeSteps(cb, [
     {
-      weight: 0.2,
+      weight: 0.5,
       async execute(_cb) {
         /* Download App */
       },
@@ -38,7 +38,7 @@ export const load = (cb: LoadCallback, info: BeatmapInfo) =>
       execute: loadResourcesStep(app),
     },
     {
-      weight: 5,
+      weight: 10,
       execute: loadBeatmapStep(info, (beatmap) => (loadedBeatmap = beatmap)),
     },
   ]);
