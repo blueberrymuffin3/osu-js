@@ -1,5 +1,6 @@
 import { Vector2 } from "osu-classes";
 import {
+  Bounds,
   Container,
   DRAW_MODES,
   Geometry,
@@ -16,8 +17,8 @@ import {
 
 import SDF_LINE_VERT from "./slider_path.vert?raw";
 import SDF_LINE_FRAG from "./slider_path.frag?raw";
-import { minMax } from "../../constants";
 import { Slider } from "osu-standard-stable";
+import { VIRTUAL_SCREEN_MASK } from "../../game/standard_game";
 
 // https://www.shadertoy.com/view/lsdBDS Quadratic Bezier SDF
 // https://gamedev.stackexchange.com/a/164816 Bezier AABB
@@ -107,7 +108,22 @@ export class SliderPathSprite extends Container {
     // TODO: Why is this needed?
     renderer.batch.flush();
 
-    const overallBounds = this.boundingBox(this.points);
+    const mask = new Bounds();
+    const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
+    mask.addFrameMatrix(
+      this.worldTransform.clone().invert(),
+      virtualScreenRect.left,
+      virtualScreenRect.top,
+      virtualScreenRect.right,
+      virtualScreenRect.bottom
+    );
+
+    const overallBoundsUnclipped = this.boundingBox(this.points);
+
+    const overallBoundsClipped = new Bounds();
+    overallBoundsClipped.addBoundsMask(overallBoundsUnclipped, mask)
+
+    const overallBounds = overallBoundsClipped.getRectangle();
     const textureBounds = new Rectangle(
       0,
       0,
@@ -121,13 +137,10 @@ export class SliderPathSprite extends Container {
     renderer.state.set(GL_STATE);
     renderer.shader.bind(shader);
 
-    const newWidth = Math.ceil(textureBounds.width);
-    const newHeight = Math.ceil(textureBounds.height);
-
     if (!this.texture) {
       this.texture = RenderTexture.create({
-        width: newWidth,
-        height: newHeight,
+        width: textureBounds.width,
+        height: textureBounds.height,
         resolution: state.resolution,
       });
     } else {
@@ -158,13 +171,10 @@ export class SliderPathSprite extends Container {
   }
 
   boundingBox(points: Vector2[]) {
-    const [min, max] = minMax(points);
-    return new Rectangle(
-      min.x - this.padding,
-      min.y - this.padding,
-      max.x - min.x + 2 * this.padding,
-      max.y - min.y + 2 * this.padding
-    );
+    const bounds = new Bounds();
+    points.forEach((point) => bounds.addPoint(point));
+    bounds.pad(this.padding);
+    return bounds;
   }
 
   boundingBoxAngled(

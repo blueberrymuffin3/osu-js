@@ -18,11 +18,18 @@ import CursorAutoplay from "../render/cursor_autoplay";
 import { StoryboardTimeline } from "./storyboard_timeline";
 
 export const VIRTUAL_SCREEN = new Rectangle(0, 0, 1920, 1080);
+export const VIRTUAL_SCREEN_MASK = new Graphics();
+VIRTUAL_SCREEN_MASK.beginFill();
+VIRTUAL_SCREEN_MASK.drawRect(
+  VIRTUAL_SCREEN.x,
+  VIRTUAL_SCREEN.y,
+  VIRTUAL_SCREEN.width,
+  VIRTUAL_SCREEN.height
+);
+VIRTUAL_SCREEN_MASK.endFill();
 
 export class StandardGame extends Container {
   private app: Application;
-
-  private virtualScreenMask: Graphics = new Graphics();
 
   private storyboardTimeline?: StoryboardTimeline;
   private background?: Background;
@@ -47,16 +54,8 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
-    this.virtualScreenMask.setParent(this);
-    this.virtualScreenMask.beginFill();
-    this.virtualScreenMask.drawRect(
-      VIRTUAL_SCREEN.x,
-      VIRTUAL_SCREEN.y,
-      VIRTUAL_SCREEN.width,
-      VIRTUAL_SCREEN.height
-    );
-    this.virtualScreenMask.endFill();
-    this.mask = this.virtualScreenMask;
+    VIRTUAL_SCREEN_MASK.setParent(this);
+    this.mask = VIRTUAL_SCREEN_MASK;
 
     if (beatmap.storyboard) {
       this.storyboardTimeline = new StoryboardTimeline(
