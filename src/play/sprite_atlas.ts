@@ -9,7 +9,7 @@ import {
 import { executeSteps, LoadCallback } from "./loader";
 
 const MAX_ATLAS_SIZE = Math.min(2048, getMaxWebGlTextureSize());
-const PADDING = 1;
+const PADDING = 4;
 
 interface AtlasItemMeta {
   name: String;
