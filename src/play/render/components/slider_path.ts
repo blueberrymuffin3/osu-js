@@ -41,7 +41,7 @@ const uniformGroup = new UniformGroup({
 });
 
 interface RenderState {
-  renderScale: number;
+  resolution: number;
   startProp: number;
   endProp: number;
 }
@@ -63,10 +63,7 @@ export class SliderPathSprite extends Container {
   public startProp = 0;
   public endProp = 1;
 
-  constructor(
-    slider: Slider,
-    color: number,
-  ) {
+  constructor(slider: Slider, color: number) {
     super();
     this.points = slider.path.path;
     this.radius = slider.radius;
@@ -90,19 +87,18 @@ export class SliderPathSprite extends Container {
 
     const renderState: RenderState = {
       // prettier-ignore
-      renderScale: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
+      resolution: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
       startProp: this.startProp,
       endProp: this.endProp,
     };
     if (
       !this.lastRenderState ||
-      this.lastRenderState.renderScale != renderState.renderScale ||
+      this.lastRenderState.resolution != renderState.resolution ||
       this.lastRenderState.startProp != renderState.startProp ||
       this.lastRenderState.endProp != renderState.endProp
     ) {
       this.updateSpriteRender(renderer, renderState);
       // prettier-ignore
-      // console.info(`Rendered slider path (${this.points.length} points, ${this.texture?.width}x${this.texture?.height}, scale=${renderState.renderScale.toFixed(2)}, ${renderState.startProp.toFixed(2)}-${renderState.endProp.toFixed(2)}) in ${(performance.now() - start).toFixed(2)} ms`);
       this.lastRenderState = renderState;
     }
   }
@@ -111,14 +107,14 @@ export class SliderPathSprite extends Container {
     // TODO: Why is this needed?
     renderer.batch.flush();
 
-    const unscaledOverallBounds = this.boundingBox(this.points);
+    const overallBounds = this.boundingBox(this.points);
     const textureBounds = new Rectangle(
       0,
       0,
-      unscaledOverallBounds.width * state.renderScale,
-      unscaledOverallBounds.height * state.renderScale
+      overallBounds.width,
+      overallBounds.height
     );
-    uniformGroup.uniforms.AA = AA_FACTOR / state.renderScale;
+    uniformGroup.uniforms.AA = AA_FACTOR / state.resolution;
     uniformGroup.uniforms.range = [state.startProp, state.endProp];
     uniformGroup.uniforms.radius = this.radius;
     uniformGroup.uniforms.colorFill = this.color;
@@ -127,26 +123,28 @@ export class SliderPathSprite extends Container {
 
     const newWidth = Math.ceil(textureBounds.width);
     const newHeight = Math.ceil(textureBounds.height);
-    if (
-      !this.texture ||
-      this.texture.width != newWidth ||
-      this.texture.height != newHeight
-    ) {
-      this.texture?.destroy(true);
+
+    if (!this.texture) {
       this.texture = RenderTexture.create({
         width: newWidth,
         height: newHeight,
+        resolution: state.resolution,
       });
+    } else {
+      if (this.texture.resolution != state.resolution) {
+        this.texture.setResolution(state.resolution);
+      }
+      if (
+        this.texture.width != textureBounds.width ||
+        this.texture.height != textureBounds.height
+      )
+        this.texture.resize(textureBounds.width, textureBounds.height, true);
     }
 
     if (!this.texture.framebuffer.depthTexture) {
       this.texture.framebuffer.addDepthTexture();
     }
-    renderer.renderTexture.bind(
-      this.texture,
-      unscaledOverallBounds,
-      textureBounds
-    );
+    renderer.renderTexture.bind(this.texture, overallBounds, textureBounds);
     renderer.renderTexture.clear();
 
     renderer.geometry.bind(this.geometry, shader);
@@ -155,9 +153,8 @@ export class SliderPathSprite extends Container {
     renderer.renderTexture.bind();
 
     this.sprite.texture = this.texture;
-    this.sprite.x = unscaledOverallBounds.x - this.points[0].x;
-    this.sprite.y = unscaledOverallBounds.y - this.points[0].x;
-    this.sprite.scale.set(1 / state.renderScale);
+    this.sprite.x = overallBounds.x - this.points[0].x;
+    this.sprite.y = overallBounds.y - this.points[0].x;
   }
 
   boundingBox(points: Vector2[]) {
