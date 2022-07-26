@@ -1,8 +1,11 @@
 #version 300 es
+// precision highp float;
 precision mediump float;
 
 #define OPACITY_CENTER 0.3
 #define OPACITY_EDGE 0.8
+#define PRECISION_SCALE_INV 128.0
+#define PRECISION_SCALE (1.0 / PRECISION_SCALE_INV)
 
 in vec2 v_position;
 flat in vec4 v_data;
@@ -16,10 +19,16 @@ uniform vec4 colorBorder;
 out vec4 color;
 
 float lineSegmentSDF(in vec2 p, in vec2 a, in vec2 b) {
+  // Some calculations for long paths can overflow mediump floats
+  // Scaling them down helps with that
+  p *= PRECISION_SCALE;
+  a *= PRECISION_SCALE;
+  b *= PRECISION_SCALE;
+
   vec2 ba = b - a;
   vec2 pa = p - a;
   float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.);
-  return length(pa - h * ba);
+  return length(pa - h * ba) * PRECISION_SCALE_INV;
 }
 
 void main() {
