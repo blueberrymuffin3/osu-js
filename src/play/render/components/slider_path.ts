@@ -37,8 +37,8 @@ const uniformGroup = new UniformGroup({
   radius: 0,
   borderProp: BORDER_PROP,
   range: [0, 0],
-  colorFill: [0.6, 0.8, 1, 1],
-  colorBorder: [1, 1, 1, 1],
+  trackColor: [1, 1, 1, 1],
+  borderColor: [1, 1, 1, 1],
 });
 
 interface RenderState {
@@ -55,7 +55,8 @@ export class SliderPathSprite extends Container {
   private lastRenderState: RenderState | null = null;
   private texture: RenderTexture | null = null;
   private sprite: Sprite = new Sprite();
-  private color: number[];
+  private trackColor: number[];
+  private borderColor: number[];
 
   private radius!: number;
   private padding!: number;
@@ -64,12 +65,13 @@ export class SliderPathSprite extends Container {
   public startProp = 0;
   public endProp = 1;
 
-  constructor(slider: Slider, color: number) {
+  constructor(slider: Slider, trackColor: number, borderColor: number) {
     super();
     this.points = slider.path.path;
     this.radius = slider.radius;
     this.padding = this.radius + PADDING;
-    this.color = [...utils.hex2rgb(color), 1];
+    this.trackColor = [...utils.hex2rgb(trackColor), 1];
+    this.borderColor = [...utils.hex2rgb(borderColor), 1];
 
     this.geometry = this.generateGeometry(this.points);
 
@@ -133,7 +135,8 @@ export class SliderPathSprite extends Container {
     uniformGroup.uniforms.AA = AA_FACTOR / state.resolution;
     uniformGroup.uniforms.range = [state.startProp, state.endProp];
     uniformGroup.uniforms.radius = this.radius;
-    uniformGroup.uniforms.colorFill = this.color;
+    uniformGroup.uniforms.trackColor = this.trackColor;
+    uniformGroup.uniforms.borderColor = this.borderColor;
     renderer.state.set(GL_STATE);
     renderer.shader.bind(shader);
 

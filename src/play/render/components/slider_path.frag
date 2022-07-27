@@ -13,8 +13,8 @@ flat in vec4 v_data;
 uniform float AA;
 uniform float radius;
 uniform float borderProp;
-uniform vec4 colorFill;
-uniform vec4 colorBorder;
+uniform vec4 trackColor;
+uniform vec4 borderColor;
 
 out vec4 color;
 
@@ -43,7 +43,7 @@ void main() {
   float border = smoothstep(borderDist - AA, borderDist + AA, dist);
   float edge = clamp(dist / borderDist, 0.0, 1.0);
 
-  color = colorFill * mix(OPACITY_CENTER, OPACITY_EDGE, edge);
-  color = mix(color, colorBorder, border);
+  color = trackColor * mix(OPACITY_CENTER, OPACITY_EDGE, edge);
+  color = mix(color, borderColor, border);
   color = color * opacity;
 }

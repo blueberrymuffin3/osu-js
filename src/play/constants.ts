@@ -36,6 +36,8 @@ export const OSU_DEFAULT_COMBO_COLORS = [
   0xffc000, 0x00ca00, 0x127cff, 0xf21839,
 ];
 
+export const OSU_DEFAULT_SLIDER_BORDER_COLOR = 0xffffff;
+
 export const diameterFromCs = (CS: number) => 54.4 - 4.48 * CS;
 
 export const preemtTimeFromAr = (AR: number) =>

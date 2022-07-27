@@ -84,7 +84,7 @@ export class StandardGame extends Container {
     this.playAreaContainer.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
     this.gameContainer.addChild(this.playAreaContainer);
 
-    this.hitObjectTimeline = new HitObjectTimeline(beatmap.data.hitObjects);
+    this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
     this.cursorAutoplay = new CursorAutoplay(beatmap.data.hitObjects);
     this.playAreaContainer.addChild(
       this.hitObjectTimeline,
