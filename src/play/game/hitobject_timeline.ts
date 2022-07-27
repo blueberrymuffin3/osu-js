@@ -1,4 +1,5 @@
-import { Circle, Slider, StandardHitObject } from "osu-standard-stable";
+import { BeatmapColoursSection } from "osu-classes";
+import { Circle, Slider, StandardBeatmap, StandardHitObject } from "osu-standard-stable";
 import { OSU_DEFAULT_COMBO_COLORS } from "../constants";
 import { CirclePiece } from "../render/circle";
 import { SliderPiece } from "../render/slider";
@@ -8,16 +9,20 @@ import {
   TimelineElement,
 } from "./timeline";
 
-// TODO: Remove difficulty reference
-function generateTimelineElement(
-  hitObject: StandardHitObject
-): TimelineElement<DOTimelineInstance>[] {
-  // TODO: calculate color elsewhere
-  const color =
-    OSU_DEFAULT_COMBO_COLORS[
-      hitObject.comboIndex % OSU_DEFAULT_COMBO_COLORS.length
-    ];
+function getBeatmapColors(colors: BeatmapColoursSection): number[] {
+  if (!colors?.comboColours?.length) {
+    return OSU_DEFAULT_COMBO_COLORS;
+  }
+  
+  return colors.comboColours.map((color) => {
+    return (color.red << 16) | (color.green << 8) | color.blue;
+  })
+}
 
+function generateTimelineElement(
+  hitObject: StandardHitObject,
+  color: number,
+): TimelineElement<DOTimelineInstance>[] {
   const circlePiece = {
     startTimeMs: hitObject.startTime - hitObject.timePreempt,
     endTimeMs: hitObject.startTime + CirclePiece.EXIT_ANIMATION_DURATION,
@@ -32,7 +37,9 @@ function generateTimelineElement(
 
   if (hitObject instanceof Circle) {
     return [circlePiece];
-  } else if (hitObject instanceof Slider) {
+  } 
+  
+  if (hitObject instanceof Slider) {
     return [
       circlePiece,
       {
@@ -54,7 +61,16 @@ function generateTimelineElement(
 }
 
 export class HitObjectTimeline extends DisplayObjectTimeline {
-  public constructor(hitObjects: StandardHitObject[]) {
-    super(hitObjects.flatMap(generateTimelineElement));
+  public constructor(beatmap: StandardBeatmap) {
+    const colors = getBeatmapColors(beatmap.colours);
+
+    const timelineElements = beatmap.hitObjects.flatMap((hitObject) => {
+      // Use combo index with offset to get combo color after all combo skips. 
+      const color = colors[hitObject.comboIndexWithOffsets % colors.length];
+      
+      return generateTimelineElement(hitObject, color);
+    });
+
+    super(timelineElements);
   }
 }
