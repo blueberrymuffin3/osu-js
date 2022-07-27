@@ -1,12 +1,18 @@
-import { Slider } from "osu-standard-stable";
+import { Slider, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { clamp01, EasingFunctions, lerp } from "../anim";
-import { IUpdatable } from "../game/timeline";
+import {
+  DisplayObjectTimeline,
+  DOTimelineInstance,
+  IUpdatable,
+  TimelineElement,
+} from "../game/timeline";
 import {
   TEXTURE_FOLLOW_CIRCLE,
   TEXTURE_SLIDER_BALL,
 } from "../resources/textures";
 import { SliderPathSprite } from "./components/slider_path";
+import { SliderTickSprite } from "./components/slider_tick";
 
 const SLIDER_FADE_OUT = 450;
 
@@ -34,6 +40,7 @@ export class SliderPiece extends Container implements IUpdatable {
   private hitObject: Slider;
 
   private sliderPathSprite: SliderPathSprite;
+  private sliderTicks: DisplayObjectTimeline;
   private follower: Container;
   private sliderBallSprite: Sprite;
   private followCircleSprite: Sprite;
@@ -51,6 +58,33 @@ export class SliderPiece extends Container implements IUpdatable {
     this.sliderBallSprite.blendMode = BLEND_MODES.ADD;
     this.sliderBallSprite.anchor.set(0.5);
 
+    const ticks: TimelineElement<DOTimelineInstance>[] = [];
+
+    for (const object of hitObject.nestedHitObjects) {
+      if (object instanceof SliderTick) {
+        let startTime = object.startTime - object.timePreempt;
+        const endTime = object.startTime;
+
+        ticks.push({
+          startTimeMs: startTime,
+          endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
+          build: () => {
+            const sprite = new SliderTickSprite(
+              color,
+              startTime,
+              endTime,
+              object.scale / 2
+            );
+            sprite.position.copyFrom(
+              object.startPosition.subtract(hitObject.startPosition)
+            );
+            return sprite;
+          },
+        });
+      }
+    }
+    this.sliderTicks = new DisplayObjectTimeline(ticks);
+
     this.followCircleSprite = Sprite.from(TEXTURE_FOLLOW_CIRCLE);
     this.followCircleSprite.blendMode = BLEND_MODES.ADD;
     this.followCircleSprite.tint = 0xffa500;
@@ -61,10 +95,12 @@ export class SliderPiece extends Container implements IUpdatable {
     this.follower.scale.set(this.hitObject.scale / 2);
     this.follower.addChild(this.sliderBallSprite, this.followCircleSprite);
 
-    this.addChild(this.sliderPathSprite, this.follower);
+    this.addChild(this.sliderPathSprite, this.sliderTicks, this.follower);
   }
 
   update(timeMs: number) {
+    this.sliderTicks.update(timeMs);
+
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
     const enterTime = timeRelativeMs + this.preempt;

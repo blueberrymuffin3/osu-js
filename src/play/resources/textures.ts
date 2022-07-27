@@ -16,6 +16,8 @@ import TEXTURE_NUMBER_GLOW from "./custom/number_glow.png";
 import TEXTURE_FLASH from "./custom/flash.png";
 import TEXTURE_SLIDER_BALL from "./custom/slider_ball.png";
 import TEXTURE_FOLLOW_CIRCLE from "./custom/follow_circle.png";
+import TEXTURE_SLIDER_TICK_INNER from "./custom/slider_tick_inner.png";
+import TEXTURE_SLIDER_TICK_OUTER from "./custom/slider_tick_outer.png";
 
 const TEXTURES_MENU_BACKGROUND: string[] = [
   // TEXTURE_MENU_BACKGROUND_1,
@@ -40,6 +42,8 @@ export {
   TEXTURE_FLASH,
   TEXTURE_SLIDER_BALL,
   TEXTURE_FOLLOW_CIRCLE,
+  TEXTURE_SLIDER_TICK_INNER,
+  TEXTURE_SLIDER_TICK_OUTER,
 };
 
 export const preloadTextures = [
@@ -54,4 +58,6 @@ export const preloadTextures = [
   TEXTURE_FLASH,
   TEXTURE_SLIDER_BALL,
   TEXTURE_FOLLOW_CIRCLE,
+  TEXTURE_SLIDER_TICK_INNER,
+  TEXTURE_SLIDER_TICK_OUTER,
 ];
