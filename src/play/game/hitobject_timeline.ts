@@ -38,17 +38,17 @@ function generateTimelineElement(
   colors: IBeatmapColors,
 ): TimelineElement<DOTimelineInstance>[] {
   // Use combo index with offset to get combo color after all combo skips. 
-  const color = colors.combo[hitObject.comboIndexWithOffsets % colors.combo.length];
+  const accentColor = colors.combo[hitObject.comboIndexWithOffsets % colors.combo.length];
   
   // Slider track color uses combo color by default.
-  const trackColor = colors.sliderTrack ?? color;
+  const trackColor = colors.sliderTrack ?? accentColor;
   const borderColor = colors.sliderBorder;
 
   const circlePiece = {
     startTimeMs: hitObject.startTime - hitObject.timePreempt,
     endTimeMs: hitObject.startTime + CirclePiece.EXIT_ANIMATION_DURATION,
     build() {
-      const object = new CirclePiece(hitObject, color);
+      const object = new CirclePiece(hitObject, accentColor);
       object.x = hitObject.stackedStartPosition.x;
       object.y = hitObject.stackedStartPosition.y;
 
@@ -67,7 +67,7 @@ function generateTimelineElement(
         startTimeMs: hitObject.startTime - hitObject.timePreempt,
         endTimeMs: hitObject.endTime + SliderPiece.EXIT_ANIMATION_DURATION,
         build() {
-          const object = new SliderPiece(hitObject, color, trackColor, borderColor);
+          const object = new SliderPiece(hitObject, accentColor, trackColor, borderColor);
           object.x = hitObject.stackedStartPosition.x;
           object.y = hitObject.stackedStartPosition.y;
 

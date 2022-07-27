@@ -45,7 +45,7 @@ export class SliderPiece extends Container implements IUpdatable {
   private sliderBallSprite: Sprite;
   private followCircleSprite: Sprite;
 
-  public constructor(hitObject: Slider, color: number, trackColor: number, borderColor: number) {
+  public constructor(hitObject: Slider, accentColor: number, trackColor: number, borderColor: number) {
     super();
 
     this.hitObject = hitObject;
@@ -70,7 +70,7 @@ export class SliderPiece extends Container implements IUpdatable {
           endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
           build: () => {
             const sprite = new SliderTickSprite(
-              color,
+              accentColor,
               startTime,
               endTime,
               object.scale / 2
