@@ -64,12 +64,13 @@ export class SliderPathSprite extends Container {
   public startProp = 0;
   public endProp = 1;
 
-  constructor(slider: Slider, color: number) {
+  // TODO: How to change slider border color?
+  constructor(slider: Slider, trackColor: number, borderColor: number) {
     super();
     this.points = slider.path.path;
     this.radius = slider.radius;
     this.padding = this.radius + PADDING;
-    this.color = [...utils.hex2rgb(color), 1];
+    this.color = [...utils.hex2rgb(trackColor), 1];
 
     this.geometry = this.generateGeometry(this.points);
 

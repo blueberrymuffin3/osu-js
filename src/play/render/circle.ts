@@ -45,7 +45,7 @@ export class CirclePiece extends Container implements IUpdatable {
 
   private initialScale: number;
 
-  public constructor(color: number, hitObject: Circle) {
+  public constructor(hitObject: Circle, color: number) {
     super();
     this.hitObject = hitObject;
 

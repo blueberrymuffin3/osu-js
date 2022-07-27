@@ -1,6 +1,6 @@
-import { BeatmapColoursSection } from "osu-classes";
+import { BeatmapColoursSection, Colour } from "osu-classes";
 import { Circle, Slider, StandardBeatmap, StandardHitObject } from "osu-standard-stable";
-import { OSU_DEFAULT_COMBO_COLORS } from "../constants";
+import { OSU_DEFAULT_COMBO_COLORS, OSU_DEFAULT_SLIDER_BORDER_COLOR } from "../constants";
 import { CirclePiece } from "../render/circle";
 import { SliderPiece } from "../render/slider";
 import {
@@ -9,25 +9,46 @@ import {
   TimelineElement,
 } from "./timeline";
 
-function getBeatmapColors(colors: BeatmapColoursSection): number[] {
-  if (!colors?.comboColours?.length) {
-    return OSU_DEFAULT_COMBO_COLORS;
-  }
+interface IBeatmapColors {
+  combo: number[];
+  sliderBorder: number;
+  sliderTrack: number | null;
+}
+
+function getBeatmapColors(colors: BeatmapColoursSection): IBeatmapColors {
+  const colorToNum = (c: Colour) => (c.red << 16) | (c.green << 8) | c.blue;
   
-  return colors.comboColours.map((color) => {
-    return (color.red << 16) | (color.green << 8) | color.blue;
-  })
+  const combo = colors.comboColours.length > 0 
+    ? colors.comboColours.map(colorToNum) 
+    : OSU_DEFAULT_COMBO_COLORS;
+
+  const sliderBorder = colors.sliderBorderColor
+    ? colorToNum(colors.sliderBorderColor)
+    : OSU_DEFAULT_SLIDER_BORDER_COLOR;
+
+  const sliderTrack = colors.sliderTrackColor
+    ? colorToNum(colors.sliderTrackColor)
+    : null;
+
+  return { combo, sliderBorder, sliderTrack };
 }
 
 function generateTimelineElement(
   hitObject: StandardHitObject,
-  color: number,
+  colors: IBeatmapColors,
 ): TimelineElement<DOTimelineInstance>[] {
+  // Use combo index with offset to get combo color after all combo skips. 
+  const color = colors.combo[hitObject.comboIndexWithOffsets % colors.combo.length];
+  
+  // Slider track color uses combo color by default.
+  const trackColor = colors.sliderTrack ?? color;
+  const borderColor = colors.sliderBorder;
+
   const circlePiece = {
     startTimeMs: hitObject.startTime - hitObject.timePreempt,
     endTimeMs: hitObject.startTime + CirclePiece.EXIT_ANIMATION_DURATION,
     build() {
-      const object = new CirclePiece(color, hitObject);
+      const object = new CirclePiece(hitObject, color);
       object.x = hitObject.stackedStartPosition.x;
       object.y = hitObject.stackedStartPosition.y;
 
@@ -46,7 +67,7 @@ function generateTimelineElement(
         startTimeMs: hitObject.startTime - hitObject.timePreempt,
         endTimeMs: hitObject.endTime + SliderPiece.EXIT_ANIMATION_DURATION,
         build() {
-          const object = new SliderPiece(color, hitObject);
+          const object = new SliderPiece(hitObject, color, trackColor, borderColor);
           object.x = hitObject.stackedStartPosition.x;
           object.y = hitObject.stackedStartPosition.y;
 
@@ -62,13 +83,10 @@ function generateTimelineElement(
 
 export class HitObjectTimeline extends DisplayObjectTimeline {
   public constructor(beatmap: StandardBeatmap) {
-    const colors = getBeatmapColors(beatmap.colours);
+    const beatmapColors = getBeatmapColors(beatmap.colours);
 
-    const timelineElements = beatmap.hitObjects.flatMap((hitObject) => {
-      // Use combo index with offset to get combo color after all combo skips. 
-      const color = colors[hitObject.comboIndexWithOffsets % colors.length];
-      
-      return generateTimelineElement(hitObject, color);
+    const timelineElements = beatmap.hitObjects.flatMap((hitObject) => {   
+      return generateTimelineElement(hitObject, beatmapColors);
     });
 
     super(timelineElements);

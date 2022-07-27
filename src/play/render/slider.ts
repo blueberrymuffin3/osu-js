@@ -45,14 +45,14 @@ export class SliderPiece extends Container implements IUpdatable {
   private sliderBallSprite: Sprite;
   private followCircleSprite: Sprite;
 
-  public constructor(color: number, hitObject: Slider) {
+  public constructor(hitObject: Slider, color: number, trackColor: number, borderColor: number) {
     super();
 
     this.hitObject = hitObject;
     this.preempt = hitObject.timePreempt;
     this.fadeIn = hitObject.timeFadeIn;
 
-    this.sliderPathSprite = new SliderPathSprite(hitObject, color);
+    this.sliderPathSprite = new SliderPathSprite(hitObject, trackColor, borderColor);
 
     this.sliderBallSprite = Sprite.from(TEXTURE_SLIDER_BALL);
     this.sliderBallSprite.blendMode = BLEND_MODES.ADD;
