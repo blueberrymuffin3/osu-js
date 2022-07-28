@@ -7,6 +7,7 @@
  */
 
 import { Origins, ParameterType, Vector2 } from "osu-classes";
+import { StandardBeatmap } from "osu-standard-stable";
 import {
   AnimationObject,
   Command,
@@ -17,13 +18,14 @@ import {
 import {
   BLEND_MODES,
   Container,
+  Graphics,
   IPointData,
   Sprite,
   Texture,
   utils,
 } from "pixi.js";
 import { EasingFunctions, lerp, lerpRGB } from "../anim";
-import { getAllFramePaths } from "../constants";
+import { getAllFramePaths, OSU_PIXELS_SCREEN_SIZE } from "../constants";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
@@ -38,6 +40,16 @@ const VISIBLE_LAYERS = ["Background", "Pass", "Foreground"] as const;
 
 // Dimming each sprite individually allows for "overexposure" with additive blending
 const STORYBOARD_BRIGHTNESS = 0.2;
+
+export const STORYBOARD_STANDARD_MASK = new Graphics();
+STORYBOARD_STANDARD_MASK.beginFill();
+STORYBOARD_STANDARD_MASK.drawRect(
+  0,
+  0,
+  OSU_PIXELS_SCREEN_SIZE.width,
+  OSU_PIXELS_SCREEN_SIZE.height
+);
+STORYBOARD_STANDARD_MASK.endFill();
 
 // prettier-ignore
 const ORIGIN_MAP = new Map<Origins, IPointData>([
@@ -63,7 +75,8 @@ export class StoryboardTimeline extends Container {
 
   public constructor(
     storyboardResources: Map<string, Texture>,
-    storyboard: Storyboard
+    storyboard: Storyboard,
+    beatmap: StandardBeatmap
   ) {
     super();
     this.storyboardResources = storyboardResources;
@@ -77,6 +90,11 @@ export class StoryboardTimeline extends Container {
 
     for (const layer of VISIBLE_LAYERS) {
       this.addChild(this.timelines[layer]);
+    }
+
+    if (!beatmap.general.widescreenStoryboard) {
+      STORYBOARD_STANDARD_MASK.setParent(this);
+      this.mask = STORYBOARD_STANDARD_MASK;
     }
   }
 

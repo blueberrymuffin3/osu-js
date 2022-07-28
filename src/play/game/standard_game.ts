@@ -60,7 +60,8 @@ export class StandardGame extends Container {
     if (beatmap.storyboard) {
       this.storyboardTimeline = new StoryboardTimeline(
         beatmap.storyboardResources,
-        beatmap.storyboard
+        beatmap.storyboard,
+        beatmap.data
       );
     } else {
       this.background = new Background(beatmap);
