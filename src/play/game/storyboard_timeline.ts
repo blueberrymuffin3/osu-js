@@ -7,12 +7,10 @@
  */
 
 import { Origins, ParameterType, Vector2 } from "osu-classes";
-import { StandardBeatmap } from "osu-standard-stable";
 import {
   AnimationObject,
   Command,
   SpriteObject,
-  Storyboard,
   StoryboardObject,
 } from "osu-storyboard-parser";
 import {
@@ -20,12 +18,19 @@ import {
   Container,
   Graphics,
   IPointData,
+  Rectangle,
   Sprite,
   Texture,
   utils,
 } from "pixi.js";
+import { POLICY } from "../adaptive-scale";
 import { EasingFunctions, lerp, lerpRGB } from "../anim";
-import { getAllFramePaths, OSU_PIXELS_SCREEN_SIZE } from "../constants";
+import { LoadedBeatmap } from "../api/beatmap-loader";
+import {
+  adaptiveScaleDisplayObject,
+  getAllFramePaths,
+  OSU_PIXELS_SCREEN_SIZE,
+} from "../constants";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
@@ -41,13 +46,20 @@ const VISIBLE_LAYERS = ["Background", "Pass", "Foreground"] as const;
 // Dimming each sprite individually allows for "overexposure" with additive blending
 const STORYBOARD_BRIGHTNESS = 0.2;
 
-export const STORYBOARD_STANDARD_MASK = new Graphics();
-STORYBOARD_STANDARD_MASK.beginFill();
-STORYBOARD_STANDARD_MASK.drawRect(
+const STORYBOARD_STANDARD_RECT = new Rectangle(
   0,
   0,
   OSU_PIXELS_SCREEN_SIZE.width,
   OSU_PIXELS_SCREEN_SIZE.height
+);
+
+const STORYBOARD_STANDARD_MASK = new Graphics();
+STORYBOARD_STANDARD_MASK.beginFill();
+STORYBOARD_STANDARD_MASK.drawRect(
+  STORYBOARD_STANDARD_RECT.x,
+  STORYBOARD_STANDARD_RECT.y,
+  STORYBOARD_STANDARD_RECT.width,
+  STORYBOARD_STANDARD_RECT.height
 );
 STORYBOARD_STANDARD_MASK.endFill();
 
@@ -70,16 +82,46 @@ type LayerMap<T> = {
 };
 
 export class StoryboardTimeline extends Container {
+  private backgroundSprite: Sprite | null = null;
   private timelines: LayerMap<DisplayObjectTimeline>;
   private storyboardResources: Map<string, Texture>;
 
-  public constructor(
-    storyboardResources: Map<string, Texture>,
-    storyboard: Storyboard,
-    beatmap: StandardBeatmap
-  ) {
+  public constructor({
+    storyboardResources,
+    storyboard,
+    background,
+    data: beatmap,
+  }: LoadedBeatmap) {
     super();
     this.storyboardResources = storyboardResources;
+
+    if (
+      background &&
+      beatmap.events.background &&
+      !storyboardResources.has(beatmap.events.background)
+    ) {
+      // Background not referenced in storyboard, so it should always be rendered behind everything else
+      this.backgroundSprite = new Sprite(background);
+      adaptiveScaleDisplayObject(
+        STORYBOARD_STANDARD_RECT,
+        background,
+        this.backgroundSprite,
+        POLICY.FullHeight
+      );
+
+      this.backgroundSprite.tint = utils.rgb2hex([
+        STORYBOARD_BRIGHTNESS,
+        STORYBOARD_BRIGHTNESS,
+        STORYBOARD_BRIGHTNESS,
+      ]);
+
+      this.addChild(this.backgroundSprite);
+    }
+
+    if (!beatmap.general.widescreenStoryboard) {
+      STORYBOARD_STANDARD_MASK.setParent(this);
+      this.mask = STORYBOARD_STANDARD_MASK;
+    }
 
     this.timelines = Object.fromEntries<DisplayObjectTimeline>(
       VISIBLE_LAYERS.map((layer) => [
@@ -90,11 +132,6 @@ export class StoryboardTimeline extends Container {
 
     for (const layer of VISIBLE_LAYERS) {
       this.addChild(this.timelines[layer]);
-    }
-
-    if (!beatmap.general.widescreenStoryboard) {
-      STORYBOARD_STANDARD_MASK.setParent(this);
-      this.mask = STORYBOARD_STANDARD_MASK;
     }
   }
 

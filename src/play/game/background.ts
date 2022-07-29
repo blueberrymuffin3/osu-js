@@ -57,7 +57,7 @@ export class Background extends Sprite implements IUpdatable {
       VIRTUAL_SCREEN,
       this.texture,
       this,
-      this.texture == this.backgroundTexture ? POLICY.ShowAll : POLICY.NoBorder
+      POLICY.FullHeight
     );
 
     if (this.video && timeElapsed >= this.videoStartTime!) {

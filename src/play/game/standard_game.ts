@@ -58,11 +58,7 @@ export class StandardGame extends Container {
     this.mask = VIRTUAL_SCREEN_MASK;
 
     if (beatmap.storyboard) {
-      this.storyboardTimeline = new StoryboardTimeline(
-        beatmap.storyboardResources,
-        beatmap.storyboard,
-        beatmap.data
-      );
+      this.storyboardTimeline = new StoryboardTimeline(beatmap);
     } else {
       this.background = new Background(beatmap);
       this.addChild(this.background);
