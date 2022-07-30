@@ -330,9 +330,6 @@ abstract class StoryboardRendererBase<T extends StoryboardObject>
     if (command.type === "P") {
       // BlendingCommand, HorizontalFlipCommand, and VerticalFlipCommand
       // Active for the duration of the command
-      if ((command.endValue as any).length !== 1) {
-        debugger;
-      }
       (this.isParameterActive as any)[command.endValue as any] = p < 1;
     } else if (command.type === "C") {
       const { r, g, b } = lerpRGB(p, command.startValue, command.endValue);
