@@ -267,6 +267,11 @@ export const loadBeatmapStep =
 
           const videoFilename = loaded.data.events.video;
           if (videoFilename) {
+            if (!window.SharedArrayBuffer) {
+              console.warn("Ignoring video, SharedArrayBuffer is undefined");
+              return;
+            }
+
             const videoFile = getFileWinCompat(loaded.zip!, videoFilename);
             if (!videoFile) {
               console.error(`Video file "${videoFile}" not found in archive`);
