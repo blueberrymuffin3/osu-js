@@ -1,0 +1,52 @@
+import { SliderRepeat } from "osu-standard-stable";
+import { BLEND_MODES, Sprite, Texture } from "pixi.js";
+import { EasingFunctions, lerp } from "../../anim";
+import { IUpdatable } from "../../game/timeline";
+import { TEXTURE_SLIDER_REVERSE_ARROW } from "../../resources/textures";
+
+const SCALE_IN = 0.5;
+const SCALE_OUT = 1.5;
+const SCALE_FACTOR = 0.6;
+
+const MAX_ANIM_DURATION = 300;
+
+export class SliderReverseArrowSprite extends Sprite implements IUpdatable {
+  public static EXIT_ANIMATION_DURATION = MAX_ANIM_DURATION;
+
+  private timeEnter: number;
+  private timeHit: number;
+  private animDuration: number;
+  private baseScale: number;
+
+  constructor(hitObject: SliderRepeat) {
+    super(Texture.from(TEXTURE_SLIDER_REVERSE_ARROW));
+
+    this.anchor.set(0.5);
+    this.blendMode = BLEND_MODES.ADD;
+
+    this.timeEnter = hitObject.startTime - hitObject.timePreempt;
+    this.timeHit = hitObject.startTime;
+    this.animDuration = Math.min(MAX_ANIM_DURATION, hitObject.spanDuration);
+    this.baseScale = hitObject.scale * SCALE_FACTOR;
+  }
+
+  update(timeMs: number): void {
+    const enter = timeMs - this.timeEnter;
+    const hit = timeMs - this.timeHit;
+    this.alpha =
+      lerp(enter / this.animDuration, 0, 1) *
+      lerp(EasingFunctions.OutQuad(hit / this.animDuration), 1, 0);
+
+    // TODO: "Pulse" slider reverse arrows with the beat
+    // See https://github.com/ppy/osu/blob/d590219779fa2f4baec692f09dd7b6b7e3b0996f/osu.Game.Rulesets.Osu/Skinning/Default/ReverseArrowPiece.cs#L47-L51
+    this.scale.set(
+      lerp(
+        EasingFunctions.OutElasticHalf(enter / (this.animDuration * 2)),
+        SCALE_IN,
+        1
+      ) *
+        lerp(EasingFunctions.OutQuad(hit / this.animDuration), 1, SCALE_OUT) *
+        this.baseScale
+    );
+  }
+}

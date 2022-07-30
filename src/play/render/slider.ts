@@ -1,4 +1,5 @@
-import { Slider, SliderTick } from "osu-standard-stable";
+import { SliderPath } from "osu-classes";
+import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { clamp01, EasingFunctions, lerp } from "../anim";
 import {
@@ -12,6 +13,7 @@ import {
   TEXTURE_SLIDER_BALL,
 } from "../resources/textures";
 import { SliderPathSprite } from "./components/slider_path";
+import { SliderReverseArrowSprite } from "./components/slider_reverse_arrow";
 import { SliderTickSprite } from "./components/slider_tick";
 
 const SLIDER_FADE_OUT = 450;
@@ -28,6 +30,14 @@ const FOLLOW_CIRCLE_SCALE_FULL = 1.0;
 const FOLLOW_CIRCLE_DURATION = 300;
 const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_DURATION / 2;
 
+function sliderAngle(sliderPath: SliderPath, atStart: boolean) {
+  const path = sliderPath.path;
+  const position1 = path[atStart ? 0 : path.length - 1];
+  const position2 = path[atStart ? 1 : path.length - 2];
+  const delta = position2.subtract(position1);
+  return Math.atan2(delta.y, delta.x) * (180 / Math.PI);
+}
+
 export class SliderPiece extends Container implements IUpdatable {
   public static EXIT_ANIMATION_DURATION = Math.max(
     SLIDER_BALL_FADE_OUT,
@@ -40,32 +50,42 @@ export class SliderPiece extends Container implements IUpdatable {
   private hitObject: Slider;
 
   private sliderPathSprite: SliderPathSprite;
-  private sliderTicks: DisplayObjectTimeline;
+  private nestedDisplayObjectsTimeline: DisplayObjectTimeline;
   private follower: Container;
   private sliderBallSprite: Sprite;
   private followCircleSprite: Sprite;
 
-  public constructor(hitObject: Slider, accentColor: number, trackColor: number, borderColor: number) {
+  public constructor(
+    hitObject: Slider,
+    accentColor: number,
+    trackColor: number,
+    borderColor: number
+  ) {
     super();
 
     this.hitObject = hitObject;
     this.preempt = hitObject.timePreempt;
     this.fadeIn = hitObject.timeFadeIn;
 
-    this.sliderPathSprite = new SliderPathSprite(hitObject, trackColor, borderColor);
+    this.sliderPathSprite = new SliderPathSprite(
+      hitObject,
+      trackColor,
+      borderColor
+    );
 
     this.sliderBallSprite = Sprite.from(TEXTURE_SLIDER_BALL);
     this.sliderBallSprite.blendMode = BLEND_MODES.ADD;
     this.sliderBallSprite.anchor.set(0.5);
 
-    const ticks: TimelineElement<DOTimelineInstance>[] = [];
+    const nestedDisplayObjects: TimelineElement<DOTimelineInstance>[] = [];
 
-    for (const object of hitObject.nestedHitObjects) {
-      if (object instanceof SliderTick) {
-        let startTime = object.startTime - object.timePreempt;
-        const endTime = object.startTime;
+    for (const nestedHitObject of hitObject.nestedHitObjects) {
+      if (nestedHitObject instanceof SliderTick) {
+        const startTime =
+          nestedHitObject.startTime - nestedHitObject.timePreempt;
+        const endTime = nestedHitObject.startTime;
 
-        ticks.push({
+        nestedDisplayObjects.push({
           startTimeMs: startTime,
           endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
           build: () => {
@@ -73,17 +93,38 @@ export class SliderPiece extends Container implements IUpdatable {
               accentColor,
               startTime,
               endTime,
-              object.scale / 2
+              nestedHitObject.scale / 2
             );
             sprite.position.copyFrom(
-              object.startPosition.subtract(hitObject.startPosition)
+              nestedHitObject.startPosition.subtract(hitObject.startPosition)
             );
+            return sprite;
+          },
+        });
+      } else if (nestedHitObject instanceof SliderRepeat) {
+        const angle = sliderAngle(
+          hitObject.path,
+          nestedHitObject.repeatIndex % 2 !== 0
+        );
+        nestedDisplayObjects.push({
+          startTimeMs: nestedHitObject.startTime - nestedHitObject.timePreempt,
+          endTimeMs:
+            nestedHitObject.startTime +
+            SliderReverseArrowSprite.EXIT_ANIMATION_DURATION,
+          build: () => {
+            const sprite = new SliderReverseArrowSprite(nestedHitObject);
+            sprite.position.copyFrom(
+              nestedHitObject.startPosition.subtract(hitObject.startPosition)
+            );
+            sprite.angle = angle;
             return sprite;
           },
         });
       }
     }
-    this.sliderTicks = new DisplayObjectTimeline(ticks);
+    this.nestedDisplayObjectsTimeline = new DisplayObjectTimeline(
+      nestedDisplayObjects
+    );
 
     this.followCircleSprite = Sprite.from(TEXTURE_FOLLOW_CIRCLE);
     this.followCircleSprite.blendMode = BLEND_MODES.ADD;
@@ -95,11 +136,15 @@ export class SliderPiece extends Container implements IUpdatable {
     this.follower.scale.set(this.hitObject.scale / 2);
     this.follower.addChild(this.sliderBallSprite, this.followCircleSprite);
 
-    this.addChild(this.sliderPathSprite, this.sliderTicks, this.follower);
+    this.addChild(
+      this.sliderPathSprite,
+      this.nestedDisplayObjectsTimeline,
+      this.follower
+    );
   }
 
   update(timeMs: number) {
-    this.sliderTicks.update(timeMs);
+    this.nestedDisplayObjectsTimeline.update(timeMs);
 
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
