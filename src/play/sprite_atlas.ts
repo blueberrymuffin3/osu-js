@@ -1,5 +1,6 @@
 import MultiBinPacker, { Bin, Rect } from "multi-bin-packer";
 import {
+  ALPHA_MODES,
   BaseTexture,
   MIPMAP_MODES,
   Rectangle,
@@ -233,7 +234,8 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
     {
       scaleMode: SCALE_MODES.LINEAR,
       mipmap: MIPMAP_MODES.OFF,
-    }
+      alphaMode: ALPHA_MODES.PREMULTIPLY_ON_UPLOAD
+    },
   );
 
   for (const result of bin.rects) {
