@@ -41,7 +41,6 @@ export class StandardGame extends Container {
   private mediaInstance: IMediaInstance | null = null;
 
   private gameContainer: Container;
-  private playAreaContainer: Container;
 
   private timeElapsed = 0;
 
@@ -83,30 +82,29 @@ export class StandardGame extends Container {
       this.gameContainer
     );
 
-    this.addChild(this.gameContainer);
+    this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
 
-    this.playAreaContainer = new Container();
-    this.playAreaContainer.x = OSU_PIXELS_PLAY_AREA_OFFSET.x;
-    this.playAreaContainer.y = OSU_PIXELS_PLAY_AREA_OFFSET.y;
+    this.cursorAutoplay = new CursorAutoplay(beatmap.data.hitObjects);
+    const cursorContainer = new Container();
+    cursorContainer.addChild(this.cursorAutoplay);
+
+    this.hitObjectTimeline.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
+    cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
     if (beatmap.storyboard) {
       this.gameContainer.addChild(
         this.storyboardBackground!,
         this.storyboardPass!,
         this.storyboardForeground!,
-        this.playAreaContainer,
-        this.storyboardOverlay!
+        this.hitObjectTimeline,
+        this.storyboardOverlay!,
+        cursorContainer
       );
     } else {
-      this.gameContainer.addChild(this.playAreaContainer);
+      this.gameContainer.addChild(this.hitObjectTimeline, cursorContainer);
     }
 
-    this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
-    this.cursorAutoplay = new CursorAutoplay(beatmap.data.hitObjects);
-    this.playAreaContainer.addChild(
-      this.hitObjectTimeline,
-      this.cursorAutoplay
-    );
+    this.addChild(this.gameContainer);
 
     this.interactive = true;
     this.interactiveChildren = false;
