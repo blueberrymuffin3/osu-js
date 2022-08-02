@@ -25,9 +25,10 @@ export const OSU_PIXELS_PLAY_AREA_SIZE: Size = {
   height: 384,
 };
 
+// Formula from https://github.com/Damnae/storybrew/blob/0cf685a24ca53860d809cb7202aab134599d5b15/common/Mapset/OsuHitObject.cs#L14
 export const OSU_PIXELS_PLAY_AREA_OFFSET = {
-  x: (OSU_PIXELS_SCREEN_SIZE.width - OSU_PIXELS_PLAY_AREA_SIZE.width) / 2,
-  y: (OSU_PIXELS_SCREEN_SIZE.height - OSU_PIXELS_PLAY_AREA_SIZE.height) / 2,
+  x: (OSU_PIXELS_SCREEN_SIZE.width - OSU_PIXELS_PLAY_AREA_SIZE.width) * 0.5,
+  y: (OSU_PIXELS_SCREEN_SIZE.height - OSU_PIXELS_PLAY_AREA_SIZE.height) * 0.75 - 16,
 };
 
 export const OSU_HIT_OBJECT_RADIUS = 64;
