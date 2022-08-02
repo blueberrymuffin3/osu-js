@@ -28,13 +28,24 @@ function getFileWinCompat(zip: JSZip, path: string): JSZip.JSZipObject | null {
     return file; // Exact match
   }
 
-  const files = zip.filter(
-    (candidatePath) => candidatePath.toLowerCase() == path.toLowerCase()
-  );
+  const files = zip.filter((candidatePath) => {
+    candidatePath = candidatePath.toLocaleLowerCase();
+    let query = path.toLowerCase();
+    if (candidatePath == query) {
+      return true; // case-insensitive
+    }
+
+    query = query + ".";
+    if (candidatePath.startsWith(query) && candidatePath.lastIndexOf(".") == query.length - 1) {
+      return true; // file extension omitted
+    }
+
+    return false;
+  });
   if (files.length > 0) {
     if (files.length > 1) {
       console.warn(
-        "Multiple candidates for case-insensitive search, no exact matches",
+        "Multiple candidates for fuzzy search, no exact matches",
         path,
         files
       );
