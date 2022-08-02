@@ -105,6 +105,7 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
   canvas.width = bin.width;
   canvas.height = bin.height;
   const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = false;
 
   for (const result of bin.rects) {
     const bitmap = result.data.bitmap;
@@ -112,118 +113,101 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
     ctx.drawImage(bitmap, result.x, result.y);
 
     // "extend" image borders to get sharp edges?
-    if (result.x - MARGIN > 0 && result.y - MARGIN > 0)
-      // Top Left
-      ctx.drawImage(
-        bitmap,
-        0,
-        0,
-        1,
-        1,
-        result.x - MARGIN,
-        result.y - MARGIN,
-        MARGIN,
-        MARGIN
-      );
-    if (
-      result.x + result.width + MARGIN < canvas.width - 1 &&
-      result.y - MARGIN > 0
-    )
-      // Top Right
-      ctx.drawImage(
-        bitmap,
-        bitmap.width - 1,
-        0,
-        1,
-        1,
-        result.x + result.width,
-        result.y - MARGIN,
-        MARGIN,
-        MARGIN
-      );
-    if (
-      result.x - MARGIN > 0 &&
-      result.y + result.height + MARGIN < canvas.height - 1
-    )
-      // Bottom Left
-      ctx.drawImage(
-        bitmap,
-        0,
-        bitmap.height - 1,
-        1,
-        1,
-        result.x - MARGIN,
-        result.y + result.height,
-        MARGIN,
-        MARGIN
-      );
-    if (
-      result.x + result.width + MARGIN < canvas.width - 1 &&
-      result.y + result.height + MARGIN < canvas.height - 1
-    )
-      // Bottom Right
-      ctx.drawImage(
-        bitmap,
-        bitmap.width - 1,
-        bitmap.height - 1,
-        1,
-        1,
-        result.x + result.width,
-        result.y + result.height,
-        MARGIN,
-        MARGIN
-      );
-    if (result.x - MARGIN > 0)
-      // Left
-      ctx.drawImage(
-        bitmap,
-        0,
-        0,
-        1,
-        bitmap.height,
-        result.x - MARGIN,
-        result.y,
-        MARGIN,
-        result.height
-      );
-    if (result.x + result.width + MARGIN < canvas.width - 1)
-      // Right
-      ctx.drawImage(
-        bitmap,
-        bitmap.width - 1,
-        0,
-        1,
-        bitmap.height,
-        result.x + result.width,
-        result.y,
-        MARGIN,
-        result.height
-      );
-    if (result.y - MARGIN > 0)
-      // Top
-      ctx.drawImage(
-        bitmap,
-        0,
-        0,
-        bitmap.width,
-        1,
-        result.x,
-        result.y - MARGIN,
-        result.width,
-        MARGIN
-      );
-    if (result.y + result.height + MARGIN < canvas.height - 1)
-      ctx.drawImage(
-        bitmap,
-        0,
-        bitmap.height - 1,
-        bitmap.width,
-        1,
-        result.x,
-        result.y + result.height,
-        result.width,
-        MARGIN
-      ); // Bottom
+    // Top Left
+    ctx.drawImage(
+      bitmap,
+      0,
+      0,
+      1,
+      1,
+      result.x - MARGIN,
+      result.y - MARGIN,
+      MARGIN,
+      MARGIN
+    );
+    // Top Right
+    ctx.drawImage(
+      bitmap,
+      bitmap.width - 1,
+      0,
+      1,
+      1,
+      result.x + result.width,
+      result.y - MARGIN,
+      MARGIN,
+      MARGIN
+    );
+    // Bottom Left
+    ctx.drawImage(
+      bitmap,
+      0,
+      bitmap.height - 1,
+      1,
+      1,
+      result.x - MARGIN,
+      result.y + result.height,
+      MARGIN,
+      MARGIN
+    );
+    // Bottom Right
+    ctx.drawImage(
+      bitmap,
+      bitmap.width - 1,
+      bitmap.height - 1,
+      1,
+      1,
+      result.x + result.width,
+      result.y + result.height,
+      MARGIN,
+      MARGIN
+    );
+    // Left
+    ctx.drawImage(
+      bitmap,
+      0,
+      0,
+      1,
+      bitmap.height,
+      result.x - MARGIN,
+      result.y,
+      MARGIN,
+      result.height
+    );
+    // Right
+    ctx.drawImage(
+      bitmap,
+      bitmap.width - 1,
+      0,
+      1,
+      bitmap.height,
+      result.x + result.width,
+      result.y,
+      MARGIN,
+      result.height
+    );
+    // Top
+    ctx.drawImage(
+      bitmap,
+      0,
+      0,
+      bitmap.width,
+      1,
+      result.x,
+      result.y - MARGIN,
+      result.width,
+      MARGIN
+    );
+    ctx.drawImage(
+      bitmap,
+      0,
+      bitmap.height - 1,
+      bitmap.width,
+      1,
+      result.x,
+      result.y + result.height,
+      result.width,
+      MARGIN
+    ); // Bottom
   }
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -234,8 +218,8 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
     {
       scaleMode: SCALE_MODES.LINEAR,
       mipmap: MIPMAP_MODES.OFF,
-      alphaMode: ALPHA_MODES.PREMULTIPLY_ON_UPLOAD
-    },
+      alphaMode: ALPHA_MODES.PREMULTIPLY_ON_UPLOAD,
+    }
   );
 
   for (const result of bin.rects) {
