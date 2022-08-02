@@ -69,7 +69,6 @@ export async function generateAtlases(
 
         packer.addArray(sprites);
 
-        console.log(packer.bins);
         console.log(
           `Packed ${sprites.length} sprites into ${
             packer.bins.filter((bin) => !bin.rects[0].oversized).length
