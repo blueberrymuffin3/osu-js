@@ -291,7 +291,7 @@ export const loadBeatmapStep =
 
             const videoFile = getFileWinCompat(loaded.zip!, videoFilename);
             if (!videoFile) {
-              console.error(`Video file "${videoFile}" not found in archive`);
+              console.error(`Video file "${videoFilename}" not found in archive`);
             } else if (videoFilename.endsWith(".mp4")) {
               console.log(`Using original "${videoFilename}"`);
               loaded.videoUrl = await blobUrlFromFile(videoFile);
