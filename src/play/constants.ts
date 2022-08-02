@@ -21,7 +21,7 @@ export const OSU_PIXELS_SCREEN_SIZE: Size = {
 };
 
 export const OSU_PIXELS_PLAY_AREA_SIZE: Size = {
-  width: 512,
+  width: 510,
   height: 384,
 };
 
