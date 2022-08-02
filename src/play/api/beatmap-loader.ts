@@ -36,7 +36,10 @@ function getFileWinCompat(zip: JSZip, path: string): JSZip.JSZipObject | null {
     }
 
     query = query + ".";
-    if (candidatePath.startsWith(query) && candidatePath.lastIndexOf(".") == query.length - 1) {
+    if (
+      candidatePath.startsWith(query) &&
+      candidatePath.lastIndexOf(".") == query.length - 1
+    ) {
       return true; // file extension omitted
     }
 
@@ -184,10 +187,13 @@ export const loadBeatmapStep =
             loaded.data = decodeBeatmap(osuString);
           }
 
-          const osbFile: JSZip.JSZipObject | null = loaded.zip!.filter((path) =>
-            path.endsWith(".osb")
-          )[0];
-          const osbString = await osbFile?.async("string");
+          const osbFiles = loaded.zip!.filter((path) => path.endsWith(".osb"));
+          if (osbFiles.length > 1) {
+            console.warn(
+              `${osbFiles.length} osb files found in archive, choosing "${osbFiles[0].name}"`
+            );
+          }
+          const osbString = await osbFiles[0]?.async("string");
           const storyboard = loadStoryboard(osuString!, osbString);
           if (storyboard) {
             loaded.storyboard = storyboard;
