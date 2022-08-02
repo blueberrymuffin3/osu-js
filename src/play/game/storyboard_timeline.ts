@@ -41,7 +41,7 @@ import {
 
 // TODO: What is the overlay layer? Does anyone use it?
 
-const VISIBLE_LAYERS = ["Background", "Pass", "Foreground"] as const;
+const VISIBLE_LAYERS = ["Background", "Pass", "Foreground", "Overlay"] as const;
 
 // Dimming each sprite individually allows for "overexposure" with additive blending
 const STORYBOARD_BRIGHTNESS = 0.2;
@@ -77,25 +77,25 @@ const ORIGIN_MAP = new Map<Origins, IPointData>([
   [Origins.BottomRight,  { x: 1  , y: 1   }],
 ]);
 
-type LayerMap<T> = {
-  [key in typeof VISIBLE_LAYERS[number]]: T;
-};
-
-export class StoryboardTimeline extends Container {
+export class StoryboardLayerTimeline extends Container {
   private backgroundSprite: Sprite | null = null;
-  private timelines: LayerMap<DisplayObjectTimeline>;
+  private timeline: DisplayObjectTimeline;
   private storyboardResources: Map<string, Texture>;
 
-  public constructor({
-    storyboardResources,
-    storyboard,
-    background,
-    data: beatmap,
-  }: LoadedBeatmap) {
+  public constructor(
+    {
+      storyboardResources,
+      storyboard,
+      background,
+      data: beatmap,
+    }: LoadedBeatmap,
+    layer: typeof VISIBLE_LAYERS[number]
+  ) {
     super();
     this.storyboardResources = storyboardResources;
 
     if (
+      layer === "Background" &&
       background &&
       beatmap.events.background &&
       !storyboardResources.has(beatmap.events.background)
@@ -123,34 +123,25 @@ export class StoryboardTimeline extends Container {
       this.mask = STORYBOARD_STANDARD_MASK;
     }
 
-    this.timelines = Object.fromEntries<DisplayObjectTimeline>(
-      VISIBLE_LAYERS.map((layer) => [
-        layer,
-        new DisplayObjectTimeline(storyboard[layer].map(this.createElement)),
-      ])
-    ) as LayerMap<DisplayObjectTimeline>;
+    const elements = storyboard[layer]
+      .map(this.createElement)
+      .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
-    for (const layer of VISIBLE_LAYERS) {
-      this.addChild(this.timelines[layer]);
-    }
+    this.timeline = new DisplayObjectTimeline(elements);
+
+    this.addChild(this.timeline);
   }
 
-  private sortChildrenRequired = false;
+  private childOrderDirty = false;
 
   private createElement = (
     object: StoryboardObject,
     index: number
-  ): TimelineElement<DOTimelineInstance> => {
+  ): TimelineElement<DOTimelineInstance> | null => {
     if (object.commands.length === 0) {
       console.warn("Object has no commands", object);
 
-      return {
-        startTimeMs: -1,
-        endTimeMs: -1,
-        build: () => {
-          throw new Error("unreachable");
-        },
-      };
+      return null;
     }
 
     let startTimeMs = object.commands
@@ -166,7 +157,7 @@ export class StoryboardTimeline extends Container {
         startTimeMs,
         endTimeMs,
         build: () => {
-          this.sortChildrenRequired = true;
+          this.childOrderDirty = true;
 
           const animation = new StoryboardAnimationRenderer(
             this.storyboardResources,
@@ -181,7 +172,7 @@ export class StoryboardTimeline extends Container {
         startTimeMs,
         endTimeMs,
         build: () => {
-          this.sortChildrenRequired = true;
+          this.childOrderDirty = true;
 
           const sprite = new StoryboardSpriteRenderer(
             this.storyboardResources,
@@ -194,23 +185,15 @@ export class StoryboardTimeline extends Container {
     } else {
       console.warn("Unknown storyboard element", object);
 
-      return {
-        startTimeMs: -1,
-        endTimeMs: -1,
-        build: () => {
-          throw new Error("unreachable");
-        },
-      };
+      return null;
     }
   };
 
   public update(timeMs: number) {
-    for (const layer of VISIBLE_LAYERS) {
-      this.sortChildrenRequired = false;
-      this.timelines[layer].update(timeMs);
-      if (this.sortChildrenRequired) {
-        this.timelines[layer].sortChildren();
-      }
+    this.childOrderDirty = false;
+    this.timeline.update(timeMs);
+    if (this.childOrderDirty) {
+      this.timeline.sortChildren();
     }
   }
 }
