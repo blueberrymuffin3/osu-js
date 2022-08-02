@@ -39,8 +39,6 @@ import {
   TimelineElement,
 } from "./timeline";
 
-// TODO: What is the overlay layer? Does anyone use it?
-
 const VISIBLE_LAYERS = ["Background", "Pass", "Foreground", "Overlay"] as const;
 
 // Dimming each sprite individually allows for "overexposure" with additive blending
