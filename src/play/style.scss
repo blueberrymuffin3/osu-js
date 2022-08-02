@@ -23,7 +23,7 @@ $info-width: 40rem;
   position: relative;
   margin: 2rem auto;
   width: $info-width;
-  min-height: 27.5rem;
+  min-height: 30.5rem;
   background-color: #4e4e4e;
   border-radius: 2rem;
   overflow: hidden;
@@ -81,6 +81,11 @@ $info-width: 40rem;
     margin: 0rem 2rem 2rem 2rem;
     color: #eeeeee;
 
+    svg {
+      width: 1rem;
+      transform: translate(0, 0.2rem);
+    }
+
     .stats {
       display: flex;
       font-size: 0.8rem;
@@ -90,11 +95,6 @@ $info-width: 40rem;
 
       div {
         margin-bottom: 1rem;
-
-        svg {
-          width: 1rem;
-          transform: translate(0, 0.2rem);
-        }
 
         .stars {
           svg {
@@ -118,10 +118,15 @@ $info-width: 40rem;
     }
     .mapper {
       font-size: 0.8rem;
+      margin-bottom: 1.25rem;
       em {
         font-style: normal;
         opacity: 0.7;
       }
+    }
+    .link {
+      font-size: 0.8rem;
+      color: inherit;
     }
     .loading {
       position: relative;
