@@ -1072,10 +1072,10 @@ osu-standard-stable@^2.3.1:
   dependencies:
     osu-classes "^0.9.1"
 
-osu-storyboard-parser@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/osu-storyboard-parser/-/osu-storyboard-parser-0.2.0.tgz#61040553ec286f40e57c6678a3cc4bbbf3d14e3f"
-  integrity sha512-P7yxil5WCkSivRGsUSRPe1hWOJ5MNB58XB5HCcm0VSsIJMIXqJyIUYrz+HP/om3/TV7lIVc2qQokAfjKgLSBag==
+osu-storyboard-parser@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/osu-storyboard-parser/-/osu-storyboard-parser-0.2.1.tgz#d5344fe396d880a46495313ddfa9708aa7703b95"
+  integrity sha512-/wfH6bvcEv7dPCLPjmmvw6sXqMYZL4U/++KIOdcaFVJ4nFZqQ3trijxfVDYXu8bkPs+cv/MknbneO9khgpA4Og==
   dependencies:
     osu-classes "^0.9.1"
 
