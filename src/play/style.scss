@@ -1,6 +1,11 @@
+@font-face {
+  font-family: "Exo 2";
+  src: url("./Exo2.0-Regular.woff");
+}
+
 html {
   font-size: min(2vw, 2vh);
-  font-family: sans-serif;
+  font-family: "Exo 2",sans-serif;
 }
 
 body {
