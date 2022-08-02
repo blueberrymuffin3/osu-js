@@ -22,7 +22,7 @@ export const OSU_PIXELS_SCREEN_SIZE: Size = {
 
 export const OSU_PIXELS_PLAY_AREA_SIZE: Size = {
   width: 510,
-  height: 384,
+  height: 385,
 };
 
 // Formula from https://github.com/Damnae/storybrew/blob/0cf685a24ca53860d809cb7202aab134599d5b15/common/Mapset/OsuHitObject.cs#L14
