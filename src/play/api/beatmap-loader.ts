@@ -21,7 +21,7 @@ const ffmpeg = createFFmpeg({
 //   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
 
 function getFileWinCompat(zip: JSZip, path: string): JSZip.JSZipObject | null {
-  path = path.replaceAll("\\", "/");
+  path = path.replaceAll(/\\+/g, "/");
 
   const file = zip.file(path);
   if (file) {
