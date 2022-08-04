@@ -1,5 +1,6 @@
 import JSZip from "jszip";
-import { BeatmapDecoder } from "osu-parsers-web";
+import { Storyboard, StoryboardAnimation, StoryboardSprite } from "osu-classes";
+import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "../loader";
@@ -8,7 +9,6 @@ import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
-import { loadStoryboard, Storyboard } from "osu-storyboard-parser";
 import { generateAtlases } from "../sprite_atlas";
 
 const ffmpeg = createFFmpeg({
@@ -21,7 +21,7 @@ const ffmpeg = createFFmpeg({
 //   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
 
 function getFileWinCompat(zip: JSZip, path: string): JSZip.JSZipObject | null {
-  path = path.replaceAll("\\", "/");
+  path = path.replaceAll(/\\+/g, "/");
 
   const file = zip.file(path);
   if (file) {
@@ -103,7 +103,7 @@ export interface LoadedBeatmap {
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
   const beatmapDecoded = new BeatmapDecoder().decodeFromString(
     beatmapString,
-    false
+    false,
   );
 
   if (beatmapDecoded.mode !== 0) {
@@ -194,7 +194,7 @@ export const loadBeatmapStep =
             );
           }
           const osbString = await osbFiles[0]?.async("string");
-          const storyboard = loadStoryboard(osuString!, osbString);
+          const storyboard = new StoryboardDecoder().decodeFromString(osuString!, osbString);
           if (storyboard) {
             loaded.storyboard = storyboard;
           }
@@ -210,19 +210,21 @@ export const loadBeatmapStep =
           cb(0, "Loading Storyboard Images");
 
           const allObjects = ALL_LAYERS.flatMap(
-            (layer) => loaded.storyboard![layer]
+            (layer) => loaded.storyboard!.getLayerByName(layer).elements
           );
 
           const allImagePaths = new Set(
             allObjects.flatMap((object) => {
-              if (object.type === "Animation") {
+              if (object instanceof StoryboardAnimation) {
                 return getAllFramePaths(object);
-              } else if (object.type === "Sprite") {
-                return object.filepath;
-              } else {
-                console.warn("Unknown object type", object);
-                return [];
               }
+              
+              if (object instanceof StoryboardSprite) {
+                return object.filePath;
+              } 
+              
+              console.warn("Unknown object type", object);
+              return [];
             })
           );
 
