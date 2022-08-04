@@ -1,13 +1,22 @@
 import { EasingFunction } from "bezier-easing";
-import { Easing, Vector2 } from "osu-classes";
-import { Color } from "osu-storyboard-parser";
+import { Easing, Vector2, Color4 } from "osu-classes";
 
 export const clamp01 = (p: number) => Math.max(0, Math.min(1, p));
 
 export const lerp = (p: number, a: number, b: number) => lerpUnclamped(clamp01(p), a, b);
 export const lerpUnclamped = (p: number, a: number, b: number) => a * (1 - p) + b * p;
-export const lerp2D = (p: number, a: Vector2, b: Vector2) => new Vector2(lerp(p, a.x, b.x), lerp(p, a.y, b.y));
-export const lerpRGB = (p: number, a: Color, b: Color): Color => ({r: lerp(p, a.r, b.r), g: lerp(p, a.g, b.g), b: lerp(p, a.b, b.b)});
+
+export const lerp2D = (p: number, a: Vector2, b: Vector2) => {
+  return new Vector2(lerp(p, a.x, b.x), lerp(p, a.y, b.y))
+};
+export const lerpRGB = (p: number, a: Color4, b: Color4): Color4 => {
+  return new Color4(
+    lerp(p, a.red, b.red), 
+    lerp(p, a.green, b.green), 
+    lerp(p, a.blue, b.blue),
+    255
+  );
+};
 
 export const clampEase =
   (fn: EasingFunction): EasingFunction =>
