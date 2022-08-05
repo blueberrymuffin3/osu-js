@@ -58,105 +58,48 @@ export async function getAPITokenHeader(env: ENV): Promise<HeadersInit> {
   };
 }
 
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-  }
-
-  return array;
-}
-
 export async function cachedApiResponseHelper(
-  originUrls: string | string[],
+  originUrl: string,
   {
     waitUntil,
     ttl,
     fetchHeaders,
-    cacheKey,
-    magicBytes,
   }: {
     waitUntil: (promise: Promise<any>) => void;
     ttl: number;
     fetchHeaders?: HeadersInit | undefined;
-    cacheKey?: string | undefined;
-    magicBytes?: Uint8Array | undefined;
   }
 ): Promise<Response> {
   const cacheHeaders = {
     "Cache-Control": `max-age=${ttl}`,
   };
 
-  if (typeof originUrls === "string") {
-    originUrls = [originUrls];
-  }
-
-  if (originUrls.length > 1 && !cacheKey) {
-    throw new Error("Cache key required with redundant origins");
-  }
-
-  if (!cacheKey) {
-    cacheKey = originUrls[0];
-  }
-
   const cache = await caches.open("api-cache");
-  const cachedResponse = await cache.match(cacheKey);
+  const cachedResponse = await cache.match(originUrl);
 
   if (cachedResponse) {
-    console.log(`[HIT] ${cacheKey}`);
+    console.log(`[HIT] ${originUrl}`);
     return cachedResponse;
   } else {
-    console.log(`[MISS] ${cacheKey}`);
+    console.log(`[MISS] ${originUrl}`);
   }
 
-  requestLoop: for (const originUrl of shuffleArray(originUrls)) {
-    try {
-      const res = await fetch(originUrl, { headers: fetchHeaders });
+  const res = await fetch(originUrl, { headers: fetchHeaders });
+  if (res.status == 200) {
+    const response = new Response(await res.blob(), {
+      headers: cacheHeaders,
+    });
 
-      if (res.status == 200) {
-        const blob = await res.blob();
-
-        if (magicBytes) {
-          if (blob.size < magicBytes.length) {
-            console.warn(
-              `Error fetching "${originUrl}": not enough magic bytes`
-            );
-          }
-
-          const sample = new DataView(await blob.arrayBuffer());
-          for (let i = 0; i < magicBytes.length; i++) {
-            if (sample.getUint8(i) !== magicBytes[i]) {
-              console.warn(
-                `Error fetching "${originUrl}": magic bytes invalid`
-              );
-
-              continue requestLoop;
-            }
-          }
-        }
-
-        const response = new Response(blob, {
-          headers: cacheHeaders,
-        });
-
-        console.log(`Fetched "${originUrl}"`);
-
-        // cache.put respects Cache-Control in cloudflare workers
-        waitUntil(cache.put(cacheKey, response.clone()));
-        return response;
-      } else {
-        console.warn(`Error fetching "${originUrl}": got code ${res.status}`);
-        continue;
-      }
-    } catch (error) {
-      console.error(`Error fetching "${originUrl}": error caught`);
-      console.error(error);
-    }
+    // cache.put respects Cache-Control in cloudflare workers
+    waitUntil(cache.put(originUrl, response.clone()));
+    return response;
+  } else if (res.status == 404) {
+    return new Response("Not found", {
+      status: 404,
+    });
+  } else {
+    return new Response(`Error fetching: got code ${res.status}`, {
+      status: 500,
+    });
   }
-
-  return new Response("Bad Gateway", {
-    status: 502,
-  });
 }
