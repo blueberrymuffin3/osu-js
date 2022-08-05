@@ -13,6 +13,7 @@ import {
   StoryboardAnimation,
   StoryboardVideo,
   IStoryboardElementWithDuration,
+  IHasCommands,
 } from "osu-classes";
 
 import {
@@ -68,6 +69,20 @@ export class StoryboardLayerTimeline extends Container {
     index: number
   ): TimelineElement<DOTimelineInstance> | null => {
     const durationObj = object as IStoryboardElementWithDuration;
+    const commandsObj = object as IStoryboardElement & IHasCommands;
+
+    // Not every storyboard element can have command timelines.
+    // This optional chaining is needed in case 
+    // if IHasCommands properties are undefined. 
+    const hasCommands = commandsObj.timelineGroup?.commands.length > 0;
+    const hasLoops = commandsObj.loops?.length > 0;
+    const hasTriggers = commandsObj.triggers?.length > 0;
+
+    if (!hasCommands && !hasLoops && !hasTriggers) {
+      console.warn("Object has no commands", object);
+
+      return null;
+    }
 
     const startTimeMs = object.startTime;
     const endTimeMs = durationObj.endTime ?? object.startTime;

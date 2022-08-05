@@ -112,11 +112,7 @@ export class StandardGame extends Container {
   }
 
   protected tick() {
-    adaptiveScaleDisplayObject(
-      this.app.screen, 
-      VIRTUAL_SCREEN, 
-      this
-    );
+    adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
 
     this.frameTimes?.push(this.app.ticker.elapsedMS);
     if (
