@@ -7,94 +7,52 @@
  */
 
 import {
-  Command,
-  CommandLoop,
-  CommandType,
-  IHasCommands,
   IStoryboardElement,
-  LoopType,
-  Origins,
-  ParameterType,
-  StoryboardAnimation,
+  LayerType,
   StoryboardSprite,
-  Vector2,
+  StoryboardAnimation,
+  StoryboardVideo,
+  IStoryboardElementWithDuration,
 } from "osu-classes";
 
 import {
-  BLEND_MODES,
   Container,
-  Graphics,
-  IPointData,
-  Rectangle,
-  Sprite,
   Texture,
-  utils,
 } from "pixi.js";
-import { POLICY } from "../adaptive-scale";
-import { EasingFunctions, lerp, lerpRGB } from "../anim";
-import { LoadedBeatmap } from "../api/beatmap-loader";
-import {
-  adaptiveScaleDisplayObject,
-  getAllFramePaths,
-  OSU_PIXELS_SCREEN_SIZE,
-} from "../constants";
+
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
-  IUpdatable,
-  Timeline,
   TimelineElement,
 } from "./timeline";
 
+import { 
+  STORYBOARD_STANDARD_MASK, 
+} from "../constants";
+
+import { DrawableStoryboardAnimation } from "../render/common/storyboard_animation";
+import { DrawableStoryboardSprite } from "../render/common/storyboard_sprite";
+import { DrawableStoryboardVideo } from "../render/common/storyboard_video";
+import { LoadedBeatmap } from "../api/beatmap-loader";
+
 export class StoryboardLayerTimeline extends Container {
-  private backgroundSprite: Sprite | null = null;
   private timeline: DisplayObjectTimeline;
   private storyboardResources: Map<string, Texture>;
 
-  public constructor(
-    {
-      storyboardResources,
-      storyboard,
-      background,
-      data: beatmap,
-    }: LoadedBeatmap,
-    layer: keyof typeof LayerType
-  ) {
+  constructor(beatmap: LoadedBeatmap, layer: keyof typeof LayerType) {
     super();
-    this.storyboardResources = storyboardResources;
 
-    if (
-      layer === "Background" &&
-      background &&
-      beatmap.events.background &&
-      !storyboardResources.has(beatmap.events.background)
-    ) {
-      // Background not referenced in storyboard, so it should always be rendered behind everything else
-      this.backgroundSprite = new Sprite(background);
-      adaptiveScaleDisplayObject(
-        STORYBOARD_STANDARD_RECT,
-        background,
-        this.backgroundSprite,
-        POLICY.FullHeight
-      );
+    this.storyboardResources = beatmap.storyboardResources;
 
-      this.backgroundSprite.tint = utils.rgb2hex([
-        STORYBOARD_BRIGHTNESS,
-        STORYBOARD_BRIGHTNESS,
-        STORYBOARD_BRIGHTNESS,
-      ]);
-
-      this.addChild(this.backgroundSprite);
-    }
-
-    if (!beatmap.general.widescreenStoryboard) {
+    // Mask all storyboard layers except "Video" layer if storyboard is 4:3.
+    if (!beatmap.data.general.widescreenStoryboard && layer !== 'Video') {
       STORYBOARD_STANDARD_MASK.setParent(this);
       this.mask = STORYBOARD_STANDARD_MASK;
     }
 
-    const elements = storyboard
+    const elements = beatmap.storyboard
       .getLayerByName(layer)
-      .elements.map(this.createElement)
+      .elements.map((el, index) => this.createElement(el, beatmap, index))
       .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
     this.timeline = new DisplayObjectTimeline(elements);
@@ -106,19 +64,13 @@ export class StoryboardLayerTimeline extends Container {
 
   private createElement = (
     object: IStoryboardElement,
+    beatmap: LoadedBeatmap,
     index: number
   ): TimelineElement<DOTimelineInstance> | null => {
-    const commandObject = object as IStoryboardElement & IHasCommands;
+    const durationObj = object as IStoryboardElementWithDuration;
 
-    // Not every storyboard element has command timelines.
-    if (!commandObject.timelineGroup?.commands.length) {
-      console.warn("Object has no commands", object);
-
-      return null;
-    }
-
-    const startTimeMs = commandObject.timelineGroup.commandsStartTime;
-    const endTimeMs = commandObject.timelineGroup.commandsEndTime;
+    const startTimeMs = object.startTime;
+    const endTimeMs = durationObj.endTime ?? object.startTime;
 
     if (object instanceof StoryboardAnimation) {
       return {
@@ -127,9 +79,9 @@ export class StoryboardLayerTimeline extends Container {
         build: () => {
           this.childOrderDirty = true;
 
-          const animation = new StoryboardAnimationRenderer(
+          const animation = new DrawableStoryboardAnimation(
+            object,
             this.storyboardResources,
-            object
           );
           animation.zIndex = index;
           return animation;
@@ -144,12 +96,26 @@ export class StoryboardLayerTimeline extends Container {
         build: () => {
           this.childOrderDirty = true;
 
-          const sprite = new StoryboardSpriteRenderer(
+          const sprite = new DrawableStoryboardSprite(
+            object,
             this.storyboardResources,
-            object
           );
           sprite.zIndex = index;
           return sprite;
+        },
+      };
+    }
+
+    if (object instanceof StoryboardVideo) {
+      return {
+        startTimeMs,
+        endTimeMs: durationObj.endTime ?? Infinity,
+        build: () => {
+          this.childOrderDirty = true;
+
+          const video = new DrawableStoryboardVideo(object, beatmap);
+          video.zIndex = index;
+          return video;
         },
       };
     }

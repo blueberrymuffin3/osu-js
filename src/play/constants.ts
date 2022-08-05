@@ -9,6 +9,17 @@ export interface Size {
   height: number;
 }
 
+export const VIRTUAL_SCREEN = new Rectangle(0, 0, 1920, 1080);
+export const VIRTUAL_SCREEN_MASK = new Graphics();
+VIRTUAL_SCREEN_MASK.beginFill();
+VIRTUAL_SCREEN_MASK.drawRect(
+  VIRTUAL_SCREEN.x,
+  VIRTUAL_SCREEN.y,
+  VIRTUAL_SCREEN.width,
+  VIRTUAL_SCREEN.height
+);
+VIRTUAL_SCREEN_MASK.endFill();
+
 export const TEXTURE_PIXELS_SCREEN_SIZE: Size = {
   width: 1366,
   height: 768,
