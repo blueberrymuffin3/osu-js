@@ -46,42 +46,6 @@ import {
   TimelineElement,
 } from "./timeline";
 
-const VISIBLE_LAYERS = ["Background", "Pass", "Foreground", "Overlay"] as const;
-
-// Dimming each sprite individually allows for "overexposure" with additive blending
-const STORYBOARD_BRIGHTNESS = 0.2;
-
-const STORYBOARD_STANDARD_RECT = new Rectangle(
-  0,
-  0,
-  OSU_PIXELS_SCREEN_SIZE.width,
-  OSU_PIXELS_SCREEN_SIZE.height
-);
-
-const STORYBOARD_STANDARD_MASK = new Graphics();
-STORYBOARD_STANDARD_MASK.beginFill();
-STORYBOARD_STANDARD_MASK.drawRect(
-  STORYBOARD_STANDARD_RECT.x,
-  STORYBOARD_STANDARD_RECT.y,
-  STORYBOARD_STANDARD_RECT.width,
-  STORYBOARD_STANDARD_RECT.height
-);
-STORYBOARD_STANDARD_MASK.endFill();
-
-// prettier-ignore
-const ORIGIN_MAP = new Map<Origins, IPointData>([
-  [Origins.Custom,       { x: 0  , y: 0   }],
-  [Origins.TopLeft,      { x: 0  , y: 0   }],
-  [Origins.CentreLeft,   { x: 0  , y: 0.5 }],
-  [Origins.BottomLeft,   { x: 0  , y: 1   }],
-  [Origins.TopCentre,    { x: 0.5, y: 0   }],
-  [Origins.Centre,       { x: 0.5, y: 0.5 }],
-  [Origins.BottomCentre, { x: 0.5, y: 1   }],
-  [Origins.TopRight,     { x: 1  , y: 0   }],
-  [Origins.CentreRight,  { x: 1  , y: 0.5 }],
-  [Origins.BottomRight,  { x: 1  , y: 1   }],
-]);
-
 export class StoryboardLayerTimeline extends Container {
   private backgroundSprite: Sprite | null = null;
   private timeline: DisplayObjectTimeline;
@@ -94,7 +58,7 @@ export class StoryboardLayerTimeline extends Container {
       background,
       data: beatmap,
     }: LoadedBeatmap,
-    layer: typeof VISIBLE_LAYERS[number]
+    layer: keyof typeof LayerType
   ) {
     super();
     this.storyboardResources = storyboardResources;

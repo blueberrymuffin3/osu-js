@@ -1,6 +1,6 @@
 import { getScaledRect, POLICY } from "./adaptive-scale";
-import { BeatmapDifficultySection, StoryboardAnimation } from "osu-classes";
-import type { DisplayObject } from "pixi.js";
+import { BeatmapDifficultySection, Origins, StoryboardAnimation } from "osu-classes";
+import { DisplayObject, Graphics, IPointData, Rectangle } from "pixi.js";
 
 export type TimeMsProvider = () => number;
 
@@ -37,6 +37,41 @@ export const OSU_DEFAULT_COMBO_COLORS = [
 ];
 
 export const OSU_DEFAULT_SLIDER_BORDER_COLOR = 0xffffff;
+
+// Dimming each sprite individually allows for "overexposure" with additive blending
+export const STORYBOARD_BRIGHTNESS = 0.2;
+
+export const STORYBOARD_STANDARD_RECT = new Rectangle(
+  0,
+  0,
+  OSU_PIXELS_SCREEN_SIZE.width,
+  OSU_PIXELS_SCREEN_SIZE.height
+);
+
+export const STORYBOARD_STANDARD_MASK = new Graphics();
+
+STORYBOARD_STANDARD_MASK.beginFill();
+STORYBOARD_STANDARD_MASK.drawRect(
+  STORYBOARD_STANDARD_RECT.x,
+  STORYBOARD_STANDARD_RECT.y,
+  STORYBOARD_STANDARD_RECT.width,
+  STORYBOARD_STANDARD_RECT.height
+);
+STORYBOARD_STANDARD_MASK.endFill();
+
+// prettier-ignore
+export const STORYBOARD_ORIGIN_MAP = new Map<Origins, IPointData>([
+  [Origins.Custom,       { x: 0  , y: 0   }],
+  [Origins.TopLeft,      { x: 0  , y: 0   }],
+  [Origins.CentreLeft,   { x: 0  , y: 0.5 }],
+  [Origins.BottomLeft,   { x: 0  , y: 1   }],
+  [Origins.TopCentre,    { x: 0.5, y: 0   }],
+  [Origins.Centre,       { x: 0.5, y: 0.5 }],
+  [Origins.BottomCentre, { x: 0.5, y: 1   }],
+  [Origins.TopRight,     { x: 1  , y: 0   }],
+  [Origins.CentreRight,  { x: 1  , y: 0.5 }],
+  [Origins.BottomRight,  { x: 1  , y: 1   }],
+]);
 
 export const diameterFromCs = (CS: number) => 54.4 - 4.48 * CS;
 
