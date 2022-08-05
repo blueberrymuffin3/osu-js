@@ -240,6 +240,8 @@ export const loadBeatmapStep =
             osuString!,
             osbString
           );
+
+          loaded.data.events.storyboard = loaded.storyboard;
         },
       },
       {
