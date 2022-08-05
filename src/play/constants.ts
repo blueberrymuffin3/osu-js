@@ -27,6 +27,17 @@ export const OSU_PIXELS_SCREEN_WIDESCREEN: Rectangle = new Rectangle(
   OSU_PIXELS_SCREEN_SIZE.height
 );
 
+export const VIRTUAL_SCREEN = new Rectangle(0, 0, 1920, 1080);
+export const VIRTUAL_SCREEN_MASK = new Graphics();
+VIRTUAL_SCREEN_MASK.beginFill();
+VIRTUAL_SCREEN_MASK.drawRect(
+  VIRTUAL_SCREEN.x,
+  VIRTUAL_SCREEN.y,
+  VIRTUAL_SCREEN.width,
+  VIRTUAL_SCREEN.height
+);
+VIRTUAL_SCREEN_MASK.endFill();
+
 export const OSU_PIXELS_SCREEN_WIDESCREEN_MASK = new Graphics();
 OSU_PIXELS_SCREEN_WIDESCREEN_MASK.beginFill();
 OSU_PIXELS_SCREEN_WIDESCREEN_MASK.drawRect(
