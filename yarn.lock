@@ -1063,15 +1063,10 @@ osu-classes@^0.10.1, osu-classes@^0.10.2:
   resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.10.2.tgz#f68e2c6e8d9f58e621734cf1519f545369316025"
   integrity sha512-IuM5rK6CyVOZfHHeR0XqientAF5tYV9YCJqdI2KNaUkdt8I+ZNrHUUTFq5suu6avse8HFHwTrfe1YR0sNtemlg==
 
-osu-classes@^0.10.3:
-  version "0.10.3"
-  resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.10.3.tgz#668a763c822c76c02dc122b3a1f8a7cbe250bf31"
-  integrity sha512-Ub7lHxWhn1c5PKvK83p/V9+A8l/coQdwXE42vbMfHFjQhskrpSXJmeWAqUzt95/75RWL0GDq7tDVbP46bh0w3g==
-
-osu-parsers@^2.5.1:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/osu-parsers/-/osu-parsers-2.5.1.tgz#f1c2bd94fa490670b3718814acd9c5ad70d368de"
-  integrity sha512-Vc6j1SCWAfuFHZqHww3ruNgZSx75VBh8pLR+ESozvg2m0my8mDvQ4nYb0W4e4RREKbNtl0hV/KGWU0U1hoAhBA==
+osu-parsers@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/osu-parsers/-/osu-parsers-2.5.0.tgz#90ae08cdaa56613dce8f1fdcffa182de1d4676a9"
+  integrity sha512-b6MaM7FmM81RJSyrggrzOKe5htxvb2XYy63x+jM+Ecv/+NbJqcZyHWLDXs4tvth75PPXGw3uFDOO2fmyFxPYuQ==
   dependencies:
     buffer "^6.0.3"
     lzma-js-simple "^1.1.0"

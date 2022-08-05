@@ -41,6 +41,8 @@ export class StoryboardLayerTimeline extends Container {
 
   constructor(beatmap: LoadedBeatmap, layer: keyof typeof LayerType) {
     super();
+    const { storyboardResources, storyboard, background, data } = loadedBeatmap;
+
 
     this.storyboardResources = beatmap.storyboardResources;
 
