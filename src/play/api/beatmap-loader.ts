@@ -236,13 +236,10 @@ export const loadBeatmapStep =
             );
           }
           const osbString = await osbFiles[0]?.async("string");
-          const storyboard = new StoryboardDecoder().decodeFromString(
+          loaded.storyboard = new StoryboardDecoder().decodeFromString(
             osuString!,
             osbString
           );
-          if (storyboard) {
-            loaded.storyboard = storyboard;
-          }
         },
       },
       {

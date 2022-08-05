@@ -1,9 +1,11 @@
 import { POLICY } from "../adaptive-scale";
 import { Sprite, Texture } from "pixi.js";
 import { LoadedBeatmap } from "../api/beatmap-loader";
-import { adaptiveScaleDisplayObject } from "../constants";
+import {
+  adaptiveScaleDisplayObject,
+  OSU_PIXELS_SCREEN_WIDESCREEN,
+} from "../constants";
 import { IUpdatable } from "./timeline";
-import { VIRTUAL_SCREEN } from "./standard_game";
 
 const MAX_VIDEO_SKEW_SPEED = 0.05;
 const MAX_VIDEO_SKEW_SEEK = 0.5;
@@ -54,11 +56,14 @@ export class Background extends Sprite implements IUpdatable {
     const timeElapsed = timeMs / 1000;
 
     adaptiveScaleDisplayObject(
-      VIRTUAL_SCREEN,
+      OSU_PIXELS_SCREEN_WIDESCREEN,
       this.texture,
       this,
       POLICY.FullHeight
     );
+
+    this.position.x += OSU_PIXELS_SCREEN_WIDESCREEN.x;
+    this.position.y += OSU_PIXELS_SCREEN_WIDESCREEN.y;
 
     if (this.video && timeElapsed >= this.videoStartTime!) {
       if (!this.videoStarted) {

@@ -1,6 +1,6 @@
 import { getScaledRect, POLICY } from "./adaptive-scale";
 import { BeatmapDifficultySection, StoryboardAnimation } from "osu-classes";
-import type { DisplayObject } from "pixi.js";
+import { DisplayObject, Rectangle } from "pixi.js";
 
 export type TimeMsProvider = () => number;
 
@@ -19,6 +19,14 @@ export const OSU_PIXELS_SCREEN_SIZE: Size = {
   height: 480,
 };
 
+const osuPixelsScreenWidescreenWidth = OSU_PIXELS_SCREEN_SIZE.height * (16 / 9);
+export const OSU_PIXELS_SCREEN_WIDESCREEN: Rectangle = new Rectangle(
+  -(osuPixelsScreenWidescreenWidth - OSU_PIXELS_SCREEN_SIZE.width) * 0.5,
+  0,
+  osuPixelsScreenWidescreenWidth,
+  OSU_PIXELS_SCREEN_SIZE.height
+);
+
 export const OSU_PIXELS_PLAY_AREA_SIZE: Size = {
   width: 510,
   height: 385,
@@ -27,7 +35,9 @@ export const OSU_PIXELS_PLAY_AREA_SIZE: Size = {
 // Formula from https://github.com/Damnae/storybrew/blob/0cf685a24ca53860d809cb7202aab134599d5b15/common/Mapset/OsuHitObject.cs#L14
 export const OSU_PIXELS_PLAY_AREA_OFFSET = {
   x: (OSU_PIXELS_SCREEN_SIZE.width - OSU_PIXELS_PLAY_AREA_SIZE.width) * 0.5,
-  y: (OSU_PIXELS_SCREEN_SIZE.height - OSU_PIXELS_PLAY_AREA_SIZE.height) * 0.75 - 16,
+  y:
+    (OSU_PIXELS_SCREEN_SIZE.height - OSU_PIXELS_PLAY_AREA_SIZE.height) * 0.75 -
+    16,
 };
 
 export const OSU_HIT_OBJECT_RADIUS = 64;

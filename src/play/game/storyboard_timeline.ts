@@ -38,6 +38,7 @@ import {
   getAllFramePaths,
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
+import { Background } from "./background";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
@@ -83,47 +84,37 @@ const ORIGIN_MAP = new Map<Origins, IPointData>([
 ]);
 
 export class StoryboardLayerTimeline extends Container {
-  private backgroundSprite: Sprite | null = null;
+  private background: Background | null = null;
   private timeline: DisplayObjectTimeline;
   private storyboardResources: Map<string, Texture>;
 
   public constructor(
-    {
-      storyboardResources,
-      storyboard,
-      background,
-      data: beatmap,
-    }: LoadedBeatmap,
+    loadedBeatmap: LoadedBeatmap,
     layer: typeof VISIBLE_LAYERS[number]
   ) {
     super();
+    const { storyboardResources, storyboard, background, data } = loadedBeatmap;
+
     this.storyboardResources = storyboardResources;
 
     if (
       layer === "Background" &&
       background &&
-      beatmap.events.background &&
-      !storyboardResources.has(beatmap.events.background)
+      data.events.background &&
+      !storyboardResources.has(data.events.background)
     ) {
       // Background not referenced in storyboard, so it should always be rendered behind everything else
-      this.backgroundSprite = new Sprite(background);
-      adaptiveScaleDisplayObject(
-        STORYBOARD_STANDARD_RECT,
-        background,
-        this.backgroundSprite,
-        POLICY.FullHeight
-      );
-
-      this.backgroundSprite.tint = utils.rgb2hex([
+      this.background = new Background(loadedBeatmap);
+      this.background.tint = utils.rgb2hex([
         STORYBOARD_BRIGHTNESS,
         STORYBOARD_BRIGHTNESS,
         STORYBOARD_BRIGHTNESS,
       ]);
 
-      this.addChild(this.backgroundSprite);
+      this.addChild(this.background);
     }
 
-    if (!beatmap.general.widescreenStoryboard) {
+    if (!data.general.widescreenStoryboard) {
       STORYBOARD_STANDARD_MASK.setParent(this);
       this.mask = STORYBOARD_STANDARD_MASK;
     }
@@ -200,6 +191,7 @@ export class StoryboardLayerTimeline extends Container {
     if (this.childOrderDirty) {
       this.timeline.sortChildren();
     }
+    this.background?.update(timeMs);
   }
 }
 
