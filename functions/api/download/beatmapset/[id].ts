@@ -4,7 +4,8 @@ export const onRequestGet: PagesFunction = async ({ params }) => {
   if (isNaN(id) || Math.floor(id) !== id || id <= 0) {
     return new Response("Bad Request", { status: 400 });
   }
-  const res = await fetch(`https://chimu.moe/d/${id}`);
+  // TODO: find a faster mirror
+  const res = await fetch(`https://catboy.best/d/${id}`);
   if (res.status === 200) {
     return new Response(res.body, {
       headers: {
