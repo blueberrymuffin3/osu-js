@@ -1,4 +1,4 @@
-import { BeatmapColoursSection, Colour } from "osu-classes";
+import { BeatmapColorSection, Color4 } from "osu-classes";
 import { Circle, Slider, StandardBeatmap, StandardHitObject } from "osu-standard-stable";
 import { OSU_DEFAULT_COMBO_COLORS, OSU_DEFAULT_SLIDER_BORDER_COLOR } from "../constants";
 import { CirclePiece } from "../render/circle";
@@ -15,11 +15,11 @@ interface IBeatmapColors {
   sliderTrack: number | null;
 }
 
-function getBeatmapColors(colors: BeatmapColoursSection): IBeatmapColors {
-  const colorToNum = (c: Colour) => (c.red << 16) | (c.green << 8) | c.blue;
+function getBeatmapColors(colors: BeatmapColorSection): IBeatmapColors {
+  const colorToNum = (c: Color4) => (c.red << 16) | (c.green << 8) | c.blue;
   
-  const combo = colors.comboColours.length > 0 
-    ? colors.comboColours.map(colorToNum) 
+  const combo = colors.comboColors.length > 0 
+    ? colors.comboColors.map(colorToNum) 
     : OSU_DEFAULT_COMBO_COLORS;
 
   const sliderBorder = colors.sliderBorderColor
@@ -83,7 +83,7 @@ function generateTimelineElement(
 
 export class HitObjectTimeline extends DisplayObjectTimeline {
   public constructor(beatmap: StandardBeatmap) {
-    const beatmapColors = getBeatmapColors(beatmap.colours);
+    const beatmapColors = getBeatmapColors(beatmap.colors);
 
     const timelineElements = beatmap.hitObjects.flatMap((hitObject) => {   
       return generateTimelineElement(hitObject, beatmapColors);
