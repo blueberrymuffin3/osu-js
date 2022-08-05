@@ -16,5 +16,11 @@ export class Background extends Sprite {
 
     this.texture = beatmap.background;
 
+    adaptiveScaleDisplayObject(
+      VIRTUAL_SCREEN,
+      this.texture,
+      this,
+      POLICY.ExactFit
+    );
   }
 }
