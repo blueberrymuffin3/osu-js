@@ -12,6 +12,7 @@ import {
   CommandType,
   IHasCommands,
   IStoryboardElement,
+  LoopType,
   Origins,
   ParameterType,
   StoryboardAnimation,
@@ -460,7 +461,7 @@ class StoryboardAnimationRenderer extends StoryboardRendererBase<StoryboardAnima
 
     // TODO: When does this start?
     let frameNumber = Math.floor((timeMs - 0) / this.object.frameDelay);
-    if (this.object.loops) {
+    if (this.object.loopType === LoopType.LoopForever) {
       frameNumber = frameNumber % this.frames.length;
     } else {
       frameNumber = Math.min(frameNumber, this.frames.length - 1);
