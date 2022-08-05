@@ -357,8 +357,8 @@ export const loadBeatmapStep =
                   cb(ratio, `Remuxing Video (${(ratio * 100).toFixed(0)}%)`)
                 );
                 await ffmpeg.run(
-                  "-fflags",
-                  "+genpts+nofillin+ignidx",
+                  // "-fflags",
+                  // "+genpts+nofillin+ignidx",
                   "-i",
                   ffmpegInputFilename,
                   "-vcodec",
