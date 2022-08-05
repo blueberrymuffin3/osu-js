@@ -94,9 +94,7 @@ export class StoryboardLayerTimeline extends Container {
 
     const elements = storyboard
       .getLayerByName(layer)
-      .elements.map((e, i) =>
-        this.createElement(e as IStoryboardElement & IHasCommands, i)
-      )
+      .elements.map(this.createElement)
       .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
     this.timeline = new DisplayObjectTimeline(elements);
@@ -107,17 +105,20 @@ export class StoryboardLayerTimeline extends Container {
   private childOrderDirty = false;
 
   private createElement = (
-    object: IStoryboardElement & IHasCommands,
+    object: IStoryboardElement,
     index: number
   ): TimelineElement<DOTimelineInstance> | null => {
-    if (!object.timelineGroup.commands.length) {
+    const commandObject = object as IStoryboardElement & IHasCommands;
+
+    // Not every storyboard element has command timelines.
+    if (!commandObject.timelineGroup?.commands.length) {
       console.warn("Object has no commands", object);
 
       return null;
     }
 
-    const startTimeMs = object.timelineGroup.commandsStartTime;
-    const endTimeMs = object.timelineGroup.commandsEndTime;
+    const startTimeMs = commandObject.timelineGroup.commandsStartTime;
+    const endTimeMs = commandObject.timelineGroup.commandsEndTime;
 
     if (object instanceof StoryboardAnimation) {
       return {
