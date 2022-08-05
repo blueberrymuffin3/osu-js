@@ -1,5 +1,6 @@
 import JSZip from "jszip";
-import { BeatmapDecoder } from "osu-parsers-web";
+import { Storyboard, StoryboardAnimation, StoryboardSprite } from "osu-classes";
+import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "../loader";
@@ -8,7 +9,6 @@ import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
-import { loadStoryboard, Storyboard } from "osu-storyboard-parser";
 import { generateAtlases } from "../sprite_atlas";
 
 const ffmpeg = createFFmpeg({
@@ -194,7 +194,10 @@ export const loadBeatmapStep =
             );
           }
           const osbString = await osbFiles[0]?.async("string");
-          const storyboard = loadStoryboard(osuString!, osbString);
+          const storyboard = new StoryboardDecoder().decodeFromString(
+            osuString!,
+            osbString
+          );
           if (storyboard) {
             loaded.storyboard = storyboard;
           }
@@ -210,19 +213,21 @@ export const loadBeatmapStep =
           cb(0, "Loading Storyboard Images");
 
           const allObjects = ALL_LAYERS.flatMap(
-            (layer) => loaded.storyboard![layer]
+            (layer) => loaded.storyboard!.getLayerByName(layer).elements
           );
 
           const allImagePaths = new Set(
             allObjects.flatMap((object) => {
-              if (object.type === "Animation") {
+              if (object instanceof StoryboardAnimation) {
                 return getAllFramePaths(object);
-              } else if (object.type === "Sprite") {
-                return object.filepath;
-              } else {
-                console.warn("Unknown object type", object);
-                return [];
               }
+
+              if (object instanceof StoryboardSprite) {
+                return object.filePath;
+              }
+
+              console.warn("Unknown object type", object);
+              return [];
             })
           );
 
@@ -291,7 +296,9 @@ export const loadBeatmapStep =
 
             const videoFile = getFileWinCompat(loaded.zip!, videoFilename);
             if (!videoFile) {
-              console.error(`Video file "${videoFilename}" not found in archive`);
+              console.error(
+                `Video file "${videoFilename}" not found in archive`
+              );
             } else if (videoFilename.endsWith(".mp4")) {
               console.log(`Using original "${videoFilename}"`);
               loaded.videoUrl = await blobUrlFromFile(videoFile);

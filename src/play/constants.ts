@@ -1,7 +1,6 @@
 import { getScaledRect, POLICY } from "./adaptive-scale";
-import { BeatmapDifficultySection } from "osu-classes";
+import { BeatmapDifficultySection, StoryboardAnimation } from "osu-classes";
 import type { DisplayObject } from "pixi.js";
-import { AnimationObject } from "osu-storyboard-parser";
 
 export type TimeMsProvider = () => number;
 
@@ -65,10 +64,10 @@ export function adaptiveScaleDisplayObject(
   object.y = scaled.y;
 }
 
-export const getAllFramePaths = (element: AnimationObject) => {
-  const extensionDotIndex = element.filepath.lastIndexOf(".");
-  const prefix = element.filepath.substring(0, extensionDotIndex);
-  const suffix = element.filepath.substring(extensionDotIndex);
+export const getAllFramePaths = (element: StoryboardAnimation) => {
+  const extensionDotIndex = element.filePath.lastIndexOf(".");
+  const prefix = element.filePath.substring(0, extensionDotIndex);
+  const suffix = element.filePath.substring(extensionDotIndex);
   const paths = [];
   for (let i = 0; i < element.frameCount; i++) {
     paths.push(prefix + i + suffix);
