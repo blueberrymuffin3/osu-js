@@ -31,6 +31,12 @@ export abstract class DrawableStoryboardElement<T extends IStoryboardElement>
   constructor(object: T) {
     super();
     this.object = object;
+
+    this.tint = utils.rgb2hex([
+      STORYBOARD_BRIGHTNESS,
+      STORYBOARD_BRIGHTNESS,
+      STORYBOARD_BRIGHTNESS,
+    ]);
   }
   
   abstract update(timeMs: number): void;
@@ -59,17 +65,12 @@ export abstract class DrawableStoryboardElementWithCommands
     
     // TODO: Triggers
     this.commandTimeline = new Timeline(
-    timelineCommands.map(this.createElement),
-    () => {},
-    this.updateCommand,
-    this.finalizeCommand,
-    false
+      timelineCommands.map(this.createElement),
+      () => {},
+      this.updateCommand,
+      this.finalizeCommand,
+      false
     );
-    this.tint = utils.rgb2hex([
-      STORYBOARD_BRIGHTNESS,
-      STORYBOARD_BRIGHTNESS,
-      STORYBOARD_BRIGHTNESS,
-    ]);
     
     // Setup default values
     for (const classTypes of BACKTRACK_DEFAULT_VALUE_CLASSES) {
