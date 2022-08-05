@@ -2,6 +2,7 @@ import {
   Command,
   CommandLoop,
   CommandType,
+  IStoryboardElement,
   ParameterType,
   StoryboardSprite,
   Vector2,
@@ -21,9 +22,23 @@ const BACKTRACK_DEFAULT_VALUE_CLASSES = [
   ["F"],
 ] as readonly CommandType[][];
 
-export abstract class DrawableStoryboardElement<T extends StoryboardSprite>
+export abstract class DrawableStoryboardElement<T extends IStoryboardElement>
   extends Sprite
   implements IUpdatable
+{
+  protected object: T;
+
+  constructor(object: T) {
+    super();
+    this.object = object;
+  }
+  
+  abstract update(timeMs: number): void;
+}
+
+export abstract class DrawableStoryboardElementWithCommands
+  <T extends StoryboardSprite>
+  extends DrawableStoryboardElement<T>
 {
   private commandTimeline: Timeline<Command>;
   private scalePositive = new Vector2(1, 1);
@@ -34,30 +49,28 @@ export abstract class DrawableStoryboardElement<T extends StoryboardSprite>
     V: false,
   };
 
-  protected object: T;
-
   constructor(object: T) {
-    super();
-    this.object = object;
+    super(object);
+
     this.position.copyFrom(object.startPosition);
     this.anchor.copyFrom(STORYBOARD_ORIGIN_MAP.get(object.origin)!);
 
     const timelineCommands = this.getTimelineCommands();
-
+    
     // TODO: Triggers
     this.commandTimeline = new Timeline(
-      timelineCommands.map(this.createElement),
-      () => {},
-      this.updateCommand,
-      this.finalizeCommand,
-      false
+    timelineCommands.map(this.createElement),
+    () => {},
+    this.updateCommand,
+    this.finalizeCommand,
+    false
     );
     this.tint = utils.rgb2hex([
       STORYBOARD_BRIGHTNESS,
       STORYBOARD_BRIGHTNESS,
       STORYBOARD_BRIGHTNESS,
     ]);
-
+    
     // Setup default values
     for (const classTypes of BACKTRACK_DEFAULT_VALUE_CLASSES) {
       for (const command of timelineCommands) {
@@ -91,7 +104,7 @@ export abstract class DrawableStoryboardElement<T extends StoryboardSprite>
           yPosSet = true;
         }
       }
-
+      
       if (xPosSet && yPosSet) {
         break;
       }
