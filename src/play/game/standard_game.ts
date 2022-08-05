@@ -74,7 +74,9 @@ export class StandardGame extends Container {
         "Foreground"
       );
       this.storyboardOverlay = new StoryboardLayerTimeline(beatmap, "Overlay");
-    } else {
+    }
+
+    if (!beatmap.data.events.isBackgroundReplaced) {
       this.background = new Background(beatmap);
       this.addChild(this.background);
     }
