@@ -112,11 +112,6 @@ export class StoryboardLayerTimeline extends Container {
       this.addChild(this.background);
     }
 
-    if (!data.general.widescreenStoryboard) {
-      STORYBOARD_STANDARD_MASK.setParent(this);
-      this.mask = STORYBOARD_STANDARD_MASK;
-    }
-
     const elements = storyboard
       .getLayerByName(layer)
       .elements.map((e, i) =>
@@ -125,6 +120,11 @@ export class StoryboardLayerTimeline extends Container {
       .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
     this.timeline = new DisplayObjectTimeline(elements);
+
+    if (!data.general.widescreenStoryboard) {
+      STORYBOARD_STANDARD_MASK.setParent(this);
+      this.timeline.mask = STORYBOARD_STANDARD_MASK;
+    }
 
     this.addChild(this.timeline);
   }
