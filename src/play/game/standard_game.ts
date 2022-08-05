@@ -62,6 +62,10 @@ export class StandardGame extends Container {
     if (beatmap.storyboard) {
       this.storyboardBackground = new StoryboardLayerTimeline(
         beatmap,
+        "Video",
+      );
+      this.storyboardBackground = new StoryboardLayerTimeline(
+        beatmap,
         "Background"
       );
       this.storyboardPass = new StoryboardLayerTimeline(beatmap, "Pass");
