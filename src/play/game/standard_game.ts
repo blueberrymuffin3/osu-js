@@ -22,11 +22,11 @@ import CursorAutoplay from "../render/standard/cursor_autoplay";
 export class StandardGame extends Container {
   private app: Application;
 
-  private storyboardVideo?: StoryboardLayerTimeline;
-  private storyboardBackground?: StoryboardLayerTimeline;
-  private storyboardPass?: StoryboardLayerTimeline;
-  private storyboardForeground?: StoryboardLayerTimeline;
-  private storyboardOverlay?: StoryboardLayerTimeline;
+  private storyboardVideo: StoryboardLayerTimeline;
+  private storyboardBackground: StoryboardLayerTimeline;
+  private storyboardPass: StoryboardLayerTimeline;
+  private storyboardForeground: StoryboardLayerTimeline;
+  private storyboardOverlay: StoryboardLayerTimeline;
   private background?: Background;
 
   private sound: Sound | null = null;
@@ -48,25 +48,23 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
-    VIRTUAL_SCREEN_MASK.setParent(this);
-    this.mask = VIRTUAL_SCREEN_MASK;
+    OSU_PIXELS_SCREEN_WIDESCREEN_MASK.setParent(this);
+    this.mask = OSU_PIXELS_SCREEN_WIDESCREEN_MASK;
 
-    if (beatmap.storyboard) {
-      this.storyboardVideo = new StoryboardLayerTimeline(
-        beatmap,
-        "Video",
-      );
-      this.storyboardBackground = new StoryboardLayerTimeline(
-        beatmap,
-        "Background"
-      );
-      this.storyboardPass = new StoryboardLayerTimeline(beatmap, "Pass");
-      this.storyboardForeground = new StoryboardLayerTimeline(
-        beatmap,
-        "Foreground"
-      );
-      this.storyboardOverlay = new StoryboardLayerTimeline(beatmap, "Overlay");
-    }
+    this.storyboardVideo = new StoryboardLayerTimeline(
+      beatmap,
+      "Video",
+    );
+    this.storyboardBackground = new StoryboardLayerTimeline(
+      beatmap,
+      "Background"
+    );
+    this.storyboardPass = new StoryboardLayerTimeline(beatmap, "Pass");
+    this.storyboardForeground = new StoryboardLayerTimeline(
+      beatmap,
+      "Foreground"
+    );
+    this.storyboardOverlay = new StoryboardLayerTimeline(beatmap, "Overlay");
 
     if (!beatmap.data.events.isBackgroundReplaced && !beatmap.videoUrl) {
       this.background = new Background(beatmap);
@@ -89,19 +87,15 @@ export class StandardGame extends Container {
     this.hitObjectTimeline.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
     cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
-    if (beatmap.storyboard) {
-      this.gameContainer.addChild(
-        this.storyboardVideo!,
-        this.storyboardBackground!,
-        this.storyboardPass!,
-        this.storyboardForeground!,
-        this.hitObjectTimeline,
-        this.storyboardOverlay!,
-        cursorContainer
-      );
-    } else {
-      this.gameContainer.addChild(this.hitObjectTimeline, cursorContainer);
-    }
+    this.gameContainer.addChild(
+      this.storyboardVideo!,
+      this.storyboardBackground!,
+      this.storyboardPass!,
+      this.storyboardForeground!,
+      this.hitObjectTimeline,
+      this.storyboardOverlay!,
+      cursorContainer
+    );
 
     this.addChild(this.gameContainer);
 
@@ -154,8 +148,8 @@ export class StandardGame extends Container {
     }
 
     if (!this.mediaInstance || !this.sound) {
-      this.storyboardVideo?.update(0);
-      this.storyboardBackground?.update(0);
+      this.storyboardVideo.update(0);
+      this.storyboardBackground.update(0);
       return;
     }
 
@@ -164,11 +158,11 @@ export class StandardGame extends Container {
 
     this.hitObjectTimeline.update(timeElapsedMs);
     this.cursorAutoplay.update(timeElapsedMs);
-    this.storyboardVideo?.update(timeElapsedMs);
-    this.storyboardBackground?.update(timeElapsedMs);
-    this.storyboardPass?.update(timeElapsedMs);
-    this.storyboardForeground?.update(timeElapsedMs);
-    this.storyboardOverlay?.update(timeElapsedMs);
+    this.storyboardVideo.update(timeElapsedMs);
+    this.storyboardBackground.update(timeElapsedMs);
+    this.storyboardPass.update(timeElapsedMs);
+    this.storyboardForeground.update(timeElapsedMs);
+    this.storyboardOverlay.update(timeElapsedMs);
   }
 
   destroy(options?: IDestroyOptions | boolean) {
