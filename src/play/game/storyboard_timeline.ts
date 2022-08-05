@@ -391,7 +391,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
     // TODO: Triggers
     const timelineCommands = [
       ...this.object.timelineGroup.commands,
-      ...this.object.loops.map(this.unrollLoopCommand).flat(),
+      ...this.object.loops.flatMap(this.unrollLoopCommand),
     ];
 
     return timelineCommands.sort((a, b) => a.startTime - b.startTime);
