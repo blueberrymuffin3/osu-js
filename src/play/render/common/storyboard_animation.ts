@@ -1,17 +1,17 @@
 import { LoopType, StoryboardAnimation } from "osu-classes";
 import { Texture } from "pixi.js";
-import { DrawableStoryboardElement } from "./storyboard_element";
+import { DrawableStoryboardElementWithCommands } from "./storyboard_element";
 import { getAllFramePaths } from "../../constants";
 
 export class DrawableStoryboardAnimation
-  extends DrawableStoryboardElement<StoryboardAnimation> 
+  extends DrawableStoryboardElementWithCommands<StoryboardAnimation> 
 {
   private frames: Texture[];
   protected startTime: number;
 
   public constructor(
+    object: StoryboardAnimation,
     storyboardResources: Map<string, Texture>,
-    object: StoryboardAnimation
   ) {
     super(object);
 

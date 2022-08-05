@@ -1,13 +1,13 @@
 import { StoryboardSprite } from "osu-classes";
 import { Texture } from "pixi.js";
-import { DrawableStoryboardElement } from "./storyboard_element";
+import { DrawableStoryboardElementWithCommands } from "./storyboard_element";
 
 export class DrawableStoryboardSprite 
-  extends DrawableStoryboardElement<StoryboardSprite> 
+  extends DrawableStoryboardElementWithCommands<StoryboardSprite> 
 {
   constructor(
+    object: StoryboardSprite,
     storyboardResources: Map<string, Texture>,
-    object: StoryboardSprite
   ) {
     super(object);
     this.texture = storyboardResources.get(object.filePath) ?? Texture.EMPTY;
