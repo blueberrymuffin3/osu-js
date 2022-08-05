@@ -8,8 +8,8 @@ import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
-  OSU_PIXELS_SCREEN_WIDESCREEN,
-  OSU_PIXELS_SCREEN_WIDESCREEN_MASK,
+  VIRTUAL_SCREEN,
+  VIRTUAL_SCREEN_MASK,
 } from "../constants";
 
 import { IMediaInstance, Sound } from "@pixi/sound";
@@ -48,8 +48,8 @@ export class StandardGame extends Container {
 
     this.sound = Sound.from(beatmap.audioData);
 
-    OSU_PIXELS_SCREEN_WIDESCREEN_MASK.setParent(this);
-    this.mask = OSU_PIXELS_SCREEN_WIDESCREEN_MASK;
+    VIRTUAL_SCREEN_MASK.setParent(this);
+    this.mask = VIRTUAL_SCREEN_MASK;
 
     this.storyboardVideo = new StoryboardLayerTimeline(
       beatmap,
@@ -66,17 +66,20 @@ export class StandardGame extends Container {
     );
     this.storyboardOverlay = new StoryboardLayerTimeline(beatmap, "Overlay");
 
-    if (!beatmap.data.events.isBackgroundReplaced && !beatmap.videoUrl) {
-      this.background = new Background(beatmap);
-      this.addChild(this.background);
-    }
-
     this.gameContainer = new Container();
+
     adaptiveScaleDisplayObject(
-      OSU_PIXELS_SCREEN_WIDESCREEN,
+      VIRTUAL_SCREEN,
       OSU_PIXELS_SCREEN_SIZE,
       this.gameContainer
     );
+
+    if (!beatmap.data.events.isBackgroundReplaced && !beatmap.videoUrl) {
+      this.background = new Background(beatmap);
+      this.addChild(this.background);
+    } else {
+      this.addChild(this.storyboardVideo);
+    }
 
     this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
 
@@ -88,12 +91,11 @@ export class StandardGame extends Container {
     cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
     this.gameContainer.addChild(
-      this.storyboardVideo!,
-      this.storyboardBackground!,
-      this.storyboardPass!,
-      this.storyboardForeground!,
+      this.storyboardBackground,
+      this.storyboardPass,
+      this.storyboardForeground,
       this.hitObjectTimeline,
-      this.storyboardOverlay!,
+      this.storyboardOverlay,
       cursorContainer
     );
 
@@ -112,7 +114,7 @@ export class StandardGame extends Container {
   protected tick() {
     adaptiveScaleDisplayObject(
       this.app.screen, 
-      OSU_PIXELS_SCREEN_WIDESCREEN, 
+      VIRTUAL_SCREEN, 
       this
     );
 
