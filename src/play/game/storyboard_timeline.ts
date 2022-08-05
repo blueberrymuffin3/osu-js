@@ -6,7 +6,18 @@
  * Commands from the .osb file take precedence over those from the .osu file within the layers, as if the commands from the .osb were appended to the end of the .osu commands. This does not overrule the four layers mentioned above. Example: https://osu.ppy.sh/community/forums/topics/1869?n=103.
  */
 
-import { Command, CommandType, IHasCommands, IStoryboardElement, Origins, ParameterType, StoryboardAnimation, StoryboardSprite, Vector2 } from "osu-classes";
+import { 
+  Command, 
+  CommandLoop, 
+  CommandType, 
+  IHasCommands, 
+  IStoryboardElement, 
+  Origins, 
+  ParameterType, 
+  StoryboardAnimation, 
+  StoryboardSprite, 
+  Vector2,
+} from "osu-classes";
 
 import {
   BLEND_MODES,
@@ -218,11 +229,11 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
     this.position.copyFrom(object.startPosition);
     this.anchor.copyFrom(ORIGIN_MAP.get(object.origin)!);
 
-    const commandsDefault = object.timelineGroup.commands;
+    const timelineCommands = this.getTimelineCommands();
     
     // TODO: Triggers
     this.commandTimeline = new Timeline(
-      commandsDefault.map(this.createElement),
+      timelineCommands.map(this.createElement),
       () => {},
       this.updateCommand,
       this.finalizeCommand,
@@ -236,7 +247,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
 
     // Setup default values
     for (const classTypes of BACKTRACK_DEFAULT_VALUE_CLASSES) {
-      for (const command of commandsDefault) {
+      for (const command of timelineCommands) {
         if (classTypes.includes(command.type)) {
           this.updateCommand(command, 0);
           break;
@@ -247,7 +258,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
     // Setup default position
     let xPosSet = false;
     let yPosSet = false;
-    for (const command of commandsDefault) {
+    for (const command of timelineCommands) {
       if (command.type === CommandType.Movement) {
         if (!xPosSet) {
           this.x = command.startValue.x;
@@ -281,15 +292,15 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
   });
 
   private updateCommand = (command: Command, timeMs: number) => {
-    if (command.endTime > command.startTime) {
-      const p =
-        (timeMs - command.startTime) / (command.endTime - command.startTime);
-      this.applyCommand(
-        command,
-        EasingFunctions.getEasingFn(command.easing)(p)
-      );
+    const { startTime, endTime, easing } = command;
+    
+    if (endTime > startTime) {
+      const p = (timeMs - startTime) / (endTime - startTime);
+      const easingFn = EasingFunctions.getEasingFn(easing);
+
+      this.applyCommand(command, easingFn(p));
     } else {
-      this.applyCommand(command, timeMs >= command.startTime ? 1 : 0);
+      this.applyCommand(command, timeMs >= startTime ? 1 : 0);
     }
   };
 
@@ -298,57 +309,58 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
   };
 
   private applyCommand(command: Command, p: number) {
+    const { startTime, endTime, startValue, endValue, parameter } = command;
+
     switch (command.type) {
       case CommandType.Parameter: {
         // BlendingCommand, HorizontalFlipCommand, and VerticalFlipCommand
         // Active for the duration of the command
         // If endTime == startTime, it's applied forever (?)
-        this.isParameterActive[command.parameter] =
-          p < 1 || command.startTime === command.endTime;
-        
+        this.isParameterActive[parameter] = p < 1 || startTime === endTime;
         return;
       }
       case CommandType.Color: {
-        const { red, green, blue } = lerpRGB(p, command.startValue, command.endValue);
+        const { red, green, blue } = lerpRGB(p, startValue, endValue);
 
         this.tint = utils.rgb2hex([
           (red / 255) * STORYBOARD_BRIGHTNESS,
           (green / 255) * STORYBOARD_BRIGHTNESS,
           (blue / 255) * STORYBOARD_BRIGHTNESS,
         ]);
+
         return;
       }
       case CommandType.Fade: {
-        this.alpha = lerp(p, command.startValue, command.endValue);
+        this.alpha = lerp(p, startValue, endValue);
         return;
       }
       case CommandType.Movement: {
-        this.x = lerp(p, command.startValue.x, command.endValue.x);
-        this.y = lerp(p, command.startValue.y, command.endValue.y);
+        this.x = lerp(p, startValue.x, endValue.x);
+        this.y = lerp(p, startValue.y, endValue.y);
         return;
       }
       case CommandType.MovementX: {
-        this.x = lerp(p, command.startValue, command.endValue);
+        this.x = lerp(p, startValue, endValue);
         return;
       }
       case CommandType.MovementY: {
-        this.y = lerp(p, command.startValue, command.endValue);
+        this.y = lerp(p, startValue, endValue);
         return;
       }
       case CommandType.Rotation: {
-        this.rotation = lerp(p, command.startValue, command.endValue);
+        this.rotation = lerp(p, startValue, endValue);
         return;
       }
       case CommandType.Scale: {
-        const scale = lerp(p, command.startValue, command.endValue);
+        const scale = lerp(p, startValue, endValue);
         
         this.scalePositive.x = scale;
         this.scalePositive.y = scale;
         return;
       }
       case CommandType.VectorScale: {
-        this.scalePositive.x = lerp(p, command.startValue.x, command.endValue.x);
-        this.scalePositive.y = lerp(p, command.startValue.y, command.endValue.y);
+        this.scalePositive.x = lerp(p, startValue.x, endValue.x);
+        this.scalePositive.y = lerp(p, startValue.y, endValue.y);
         return;
       }
     }
@@ -369,6 +381,44 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
     this.blendMode = this.isParameterActive.A
       ? BLEND_MODES.ADD
       : BLEND_MODES.NORMAL;
+  }
+
+  private getTimelineCommands(): Command[] {
+    // Combine all commands, loops and triggers into one action timeline.
+    // TODO: Triggers
+    const timelineCommands = [
+      ...this.object.timelineGroup.commands,
+      ...this.object.loops.map(this.unrollLoopCommand).flat(),
+    ];
+
+    return timelineCommands.sort((a, b) => a.startTime - b.startTime)
+  }
+
+  private unrollLoopCommand(loop: CommandLoop): Command[] {
+    const baseCommands = loop.commands;
+
+    if (baseCommands.length == 0) {
+      console.warn("Loop has no valid commands");
+      return [];
+    }
+
+    const unrolledCommands: Command[][] = [];
+
+    for (let i = 0; i < loop.totalIterations; i++) {
+      const iterationStartTime = loop.loopStartTime + i * loop.commandsDuration;
+
+      const cloned = baseCommands.map((command) => {
+        return new Command({
+          ...command,
+          startTime: command.startTime + iterationStartTime,
+          endTime: command.endTime + iterationStartTime,
+        });
+      });
+      
+      unrolledCommands.push(cloned);
+    }
+
+    return unrolledCommands.flat();
   }
 }
 
