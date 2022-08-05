@@ -11,6 +11,9 @@ import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
 import { generateAtlases } from "../sprite_atlas";
 
+const BEATMAP_CACHE_TTL = 3600;
+const CACHE_HEADER_TIMESTAMP = "x-cache-timestamp";
+
 const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
   corePath: "/assets/ffmpeg-core/ffmpeg-core.js",
@@ -131,17 +134,45 @@ export const loadBeatmapStep =
         async execute(cb) {
           cb(0, "Downloading Beatmap");
 
+          const url = `/api/download/beatmapset/${info.beatmapset_id}`;
+          let cache: Cache | null = null;
+          try {
+            cache = await caches.open("cache");
+            const cachedRes = await cache.match(url);
+
+            if (cachedRes) {
+              console.log(cachedRes);
+              const timestamp = cachedRes.headers.get(CACHE_HEADER_TIMESTAMP);
+              const age = (Date.now() - Number(timestamp)) / 1000;
+              if (!timestamp || age > BEATMAP_CACHE_TTL) {
+                //prettier-ignore
+                console.log(`Purging stale cache entry for "${url}" (Age: ${age.toFixed(0)}s)`);
+                // TODO: Also purge cache entries for other beatmapsets
+                await cache.delete(url);
+              } else {
+                //prettier-ignore
+                console.log(`Using cached beatmapset from "${url}" (Age: ${age.toFixed(0)}s)`);
+                blob = await cachedRes.blob();
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error getting beatmapset from cache", error);
+          }
+
           const interceptor = fetchProgress({
             onProgress(progress) {
+              const speed = `${(progress.speed / 1048576).toFixed(2)} MiB/s`;
               if (progress.total) {
                 const prop = progress.transferred / progress.total;
-                cb(prop, `Downloading Beatmap (${(prop * 100).toFixed(0)}%)`);
+                //prettier-ignore
+                cb(prop, `Downloading Beatmap (${(prop * 100).toFixed(0)}%, ${speed})`);
+              } else {
+                cb(0.5, `Downloading Beatmap (${speed})`);
               }
             },
           });
-          let response = await interceptor(
-            await fetch(`/api/download/beatmapset/${info.beatmapset_id}`)
-          );
+          let response = await interceptor(await fetch(url));
 
           if (!response.ok) {
             throw new Error(
@@ -149,6 +180,17 @@ export const loadBeatmapStep =
             );
           } else {
             blob = await response.blob();
+
+            const headers = new Headers();
+            headers.set(CACHE_HEADER_TIMESTAMP, Date.now().toString());
+            try {
+              await cache?.put(
+                new Request(url),
+                new Response(blob, { headers })
+              );
+            } catch (error) {
+              console.error("Error saving beatmapset to cache", error);
+            }
           }
         },
       },
