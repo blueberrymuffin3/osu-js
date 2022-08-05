@@ -1,8 +1,8 @@
 import { BeatmapColorSection, Color4 } from "osu-classes";
 import { Circle, Slider, StandardBeatmap, StandardHitObject } from "osu-standard-stable";
 import { OSU_DEFAULT_COMBO_COLORS, OSU_DEFAULT_SLIDER_BORDER_COLOR } from "../constants";
-import { CirclePiece } from "../render/circle";
-import { SliderPiece } from "../render/slider";
+import { CirclePiece } from "../render/standard/circle";
+import { SliderPiece } from "../render/standard/slider";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
