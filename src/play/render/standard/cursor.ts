@@ -1,11 +1,11 @@
 import { EasingFunction } from "bezier-easing";
 import { Container, Sprite } from "pixi.js";
-import { EasingFunctions, lerpUnclamped } from "../anim";
-import { IUpdatable } from "../game/timeline";
+import { EasingFunctions, lerpUnclamped } from "../../anim";
+import { IUpdatable } from "../../game/timeline";
 import {
   TEXTURE_CURSOR_INNER,
   TEXTURE_CURSOR_OUTER,
-} from "../resources/textures";
+} from "../../resources/textures";
 
 const SCALE_DEFAULT = 0.25;
 const SCALE_EXPANDED = SCALE_DEFAULT * 1.2;

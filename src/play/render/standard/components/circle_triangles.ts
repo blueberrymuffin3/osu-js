@@ -6,10 +6,10 @@ import {
   Renderer,
 } from "pixi.js";
 import { hex2rgb } from "@pixi/utils";
-import { lerp } from "../../anim";
-import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../resources/textures";
+import { lerp } from "../../../anim";
+import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../../resources/textures";
 import TRIANGLES_FS_RAW from "./circle_triangles.frag?raw";
-import { IUpdatable } from "../../game/timeline";
+import { IUpdatable } from "../../../game/timeline";
 
 const TRIANGLE_COUNT = 20;
 const TRIANGLES_FS = TRIANGLES_FS_RAW.replace(

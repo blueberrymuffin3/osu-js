@@ -1,10 +1,10 @@
 import { Container, Sprite } from "pixi.js";
-import { EasingFunctions, lerp } from "../../anim";
-import { IUpdatable } from "../../game/timeline";
+import { EasingFunctions, lerp } from "../../../anim";
+import { IUpdatable } from "../../../game/timeline";
 import {
   TEXTURE_SLIDER_TICK_INNER,
   TEXTURE_SLIDER_TICK_OUTER,
-} from "../../resources/textures";
+} from "../../../resources/textures";
 
 const SCALE_IN = 0.5;
 const SCALE_OUT = 1.2;
