@@ -30,11 +30,9 @@ import {
   Texture,
   utils,
 } from "pixi.js";
-import { POLICY } from "../adaptive-scale";
 import { EasingFunctions, lerp, lerpRGB } from "../anim";
 import { LoadedBeatmap } from "../api/beatmap-loader";
 import {
-  adaptiveScaleDisplayObject,
   getAllFramePaths,
   OSU_PIXELS_SCREEN_SIZE,
 } from "../constants";
