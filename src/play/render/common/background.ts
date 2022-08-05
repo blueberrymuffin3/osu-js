@@ -1,7 +1,10 @@
 import { Sprite } from "pixi.js";
 import { POLICY } from "../../adaptive-scale";
 import { LoadedBeatmap } from "../../api/beatmap-loader";
-import { adaptiveScaleDisplayObject, VIRTUAL_SCREEN } from "../../constants";
+import { 
+  adaptiveScaleDisplayObject, 
+  OSU_PIXELS_SCREEN_WIDESCREEN 
+} from "../../constants";
 
 export class Background extends Sprite {
   constructor(beatmap: LoadedBeatmap) {
@@ -17,7 +20,7 @@ export class Background extends Sprite {
     this.texture = beatmap.background;
 
     adaptiveScaleDisplayObject(
-      VIRTUAL_SCREEN,
+      OSU_PIXELS_SCREEN_WIDESCREEN,
       this.texture,
       this,
       POLICY.ExactFit

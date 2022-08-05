@@ -9,17 +9,6 @@ export interface Size {
   height: number;
 }
 
-export const VIRTUAL_SCREEN = new Rectangle(0, 0, 1920, 1080);
-export const VIRTUAL_SCREEN_MASK = new Graphics();
-VIRTUAL_SCREEN_MASK.beginFill();
-VIRTUAL_SCREEN_MASK.drawRect(
-  VIRTUAL_SCREEN.x,
-  VIRTUAL_SCREEN.y,
-  VIRTUAL_SCREEN.width,
-  VIRTUAL_SCREEN.height
-);
-VIRTUAL_SCREEN_MASK.endFill();
-
 export const TEXTURE_PIXELS_SCREEN_SIZE: Size = {
   width: 1366,
   height: 768,
@@ -37,6 +26,16 @@ export const OSU_PIXELS_SCREEN_WIDESCREEN: Rectangle = new Rectangle(
   osuPixelsScreenWidescreenWidth,
   OSU_PIXELS_SCREEN_SIZE.height
 );
+
+export const OSU_PIXELS_SCREEN_WIDESCREEN_MASK = new Graphics();
+OSU_PIXELS_SCREEN_WIDESCREEN_MASK.beginFill();
+OSU_PIXELS_SCREEN_WIDESCREEN_MASK.drawRect(
+  OSU_PIXELS_SCREEN_WIDESCREEN.x,
+  OSU_PIXELS_SCREEN_WIDESCREEN.y,
+  OSU_PIXELS_SCREEN_WIDESCREEN.width,
+  OSU_PIXELS_SCREEN_WIDESCREEN.height
+);
+OSU_PIXELS_SCREEN_WIDESCREEN_MASK.endFill();
 
 export const OSU_PIXELS_PLAY_AREA_SIZE: Size = {
   width: 510,

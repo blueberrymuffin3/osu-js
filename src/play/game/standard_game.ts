@@ -8,8 +8,8 @@ import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
-  VIRTUAL_SCREEN,
-  VIRTUAL_SCREEN_MASK,
+  OSU_PIXELS_SCREEN_WIDESCREEN,
+  OSU_PIXELS_SCREEN_WIDESCREEN_MASK,
 } from "../constants";
 
 import { IMediaInstance, Sound } from "@pixi/sound";
@@ -75,7 +75,7 @@ export class StandardGame extends Container {
 
     this.gameContainer = new Container();
     adaptiveScaleDisplayObject(
-      VIRTUAL_SCREEN,
+      OSU_PIXELS_SCREEN_WIDESCREEN,
       OSU_PIXELS_SCREEN_SIZE,
       this.gameContainer
     );
@@ -116,7 +116,11 @@ export class StandardGame extends Container {
   }
 
   protected tick() {
-    adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
+    adaptiveScaleDisplayObject(
+      this.app.screen, 
+      OSU_PIXELS_SCREEN_WIDESCREEN, 
+      this
+    );
 
     this.frameTimes?.push(this.app.ticker.elapsedMS);
     if (

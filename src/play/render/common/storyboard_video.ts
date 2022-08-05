@@ -2,8 +2,11 @@ import { StoryboardVideo } from "osu-classes";
 import { Texture } from "pixi.js";
 import { DrawableStoryboardElement } from "./storyboard_element";
 import { LoadedBeatmap } from "../../api/beatmap-loader";
-import { adaptiveScaleDisplayObject, VIRTUAL_SCREEN } from "../../constants";
 import { POLICY } from "../../adaptive-scale";
+import { 
+  adaptiveScaleDisplayObject, 
+  OSU_PIXELS_SCREEN_WIDESCREEN 
+} from "../../constants";
 
 const MAX_VIDEO_SKEW_SPEED = 0.05;
 const MAX_VIDEO_SKEW_SEEK = 0.5;
@@ -27,8 +30,8 @@ export class DrawableStoryboardVideo
     if (!beatmap.videoUrl) return;
 
     this.video = document.createElement("video");
-    this.video.width = VIRTUAL_SCREEN.width;
-    this.video.height = VIRTUAL_SCREEN.height;
+    this.video.width = OSU_PIXELS_SCREEN_WIDESCREEN.width;
+    this.video.height = OSU_PIXELS_SCREEN_WIDESCREEN.height;
     this.video.src = beatmap.videoUrl;
     this.video.muted = true;
     this.video.autoplay = false;
@@ -49,13 +52,6 @@ export class DrawableStoryboardVideo
     if (this.videoStartTime < 0) {
       this.video.currentTime = -this.videoStartTime;
     }
-
-    adaptiveScaleDisplayObject(
-      VIRTUAL_SCREEN,
-      this.texture,
-      this,
-      POLICY.ExactFit
-    );
   }
 
   update(timeMs: number): void {
@@ -99,7 +95,7 @@ export class DrawableStoryboardVideo
     }
 
     adaptiveScaleDisplayObject(
-      VIRTUAL_SCREEN,
+      OSU_PIXELS_SCREEN_WIDESCREEN,
       this.texture,
       this,
       POLICY.ExactFit
