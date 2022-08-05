@@ -6,16 +6,16 @@
  * Commands from the .osb file take precedence over those from the .osu file within the layers, as if the commands from the .osb were appended to the end of the .osu commands. This does not overrule the four layers mentioned above. Example: https://osu.ppy.sh/community/forums/topics/1869?n=103.
  */
 
-import { 
-  Command, 
-  CommandLoop, 
-  CommandType, 
-  IHasCommands, 
-  IStoryboardElement, 
-  Origins, 
-  ParameterType, 
-  StoryboardAnimation, 
-  StoryboardSprite, 
+import {
+  Command,
+  CommandLoop,
+  CommandType,
+  IHasCommands,
+  IStoryboardElement,
+  Origins,
+  ParameterType,
+  StoryboardAnimation,
+  StoryboardSprite,
   Vector2,
 } from "osu-classes";
 
@@ -127,8 +127,11 @@ export class StoryboardLayerTimeline extends Container {
       this.mask = STORYBOARD_STANDARD_MASK;
     }
 
-    const elements = storyboard.getLayerByName(layer).elements
-      .map((e, i) => this.createElement(e as IStoryboardElement & IHasCommands, i))
+    const elements = storyboard
+      .getLayerByName(layer)
+      .elements.map((e, i) =>
+        this.createElement(e as IStoryboardElement & IHasCommands, i)
+      )
       .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
     this.timeline = new DisplayObjectTimeline(elements);
@@ -142,7 +145,7 @@ export class StoryboardLayerTimeline extends Container {
     object: IStoryboardElement & IHasCommands,
     index: number
   ): TimelineElement<DOTimelineInstance> | null => {
-    if (!object.timelineGroup.commands?.length) {
+    if (!object.timelineGroup.commands.length) {
       console.warn("Object has no commands", object);
 
       return null;
@@ -167,7 +170,7 @@ export class StoryboardLayerTimeline extends Container {
         },
       };
     }
-    
+
     if (object instanceof StoryboardSprite) {
       return {
         startTimeMs,
@@ -183,8 +186,8 @@ export class StoryboardLayerTimeline extends Container {
           return sprite;
         },
       };
-    } 
-      
+    }
+
     console.warn("Unknown storyboard element", object);
 
     return null;
@@ -230,7 +233,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
     this.anchor.copyFrom(ORIGIN_MAP.get(object.origin)!);
 
     const timelineCommands = this.getTimelineCommands();
-    
+
     // TODO: Triggers
     this.commandTimeline = new Timeline(
       timelineCommands.map(this.createElement),
@@ -293,7 +296,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
 
   private updateCommand = (command: Command, timeMs: number) => {
     const { startTime, endTime, easing } = command;
-    
+
     if (endTime > startTime) {
       const p = (timeMs - startTime) / (endTime - startTime);
       const easingFn = EasingFunctions.getEasingFn(easing);
@@ -353,7 +356,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
       }
       case CommandType.Scale: {
         const scale = lerp(p, startValue, endValue);
-        
+
         this.scalePositive.x = scale;
         this.scalePositive.y = scale;
         return;
@@ -364,7 +367,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
         return;
       }
     }
-    
+
     console.warn("Unknown command", command);
   }
 
@@ -391,7 +394,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
       ...this.object.loops.map(this.unrollLoopCommand).flat(),
     ];
 
-    return timelineCommands.sort((a, b) => a.startTime - b.startTime)
+    return timelineCommands.sort((a, b) => a.startTime - b.startTime);
   }
 
   private unrollLoopCommand(loop: CommandLoop): Command[] {
@@ -414,7 +417,7 @@ abstract class StoryboardRendererBase<T extends StoryboardSprite>
           endTime: command.endTime + iterationStartTime,
         });
       });
-      
+
       unrolledCommands.push(cloned);
     }
 

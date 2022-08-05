@@ -103,7 +103,7 @@ export interface LoadedBeatmap {
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
   const beatmapDecoded = new BeatmapDecoder().decodeFromString(
     beatmapString,
-    false,
+    false
   );
 
   if (beatmapDecoded.mode !== 0) {
@@ -194,7 +194,10 @@ export const loadBeatmapStep =
             );
           }
           const osbString = await osbFiles[0]?.async("string");
-          const storyboard = new StoryboardDecoder().decodeFromString(osuString!, osbString);
+          const storyboard = new StoryboardDecoder().decodeFromString(
+            osuString!,
+            osbString
+          );
           if (storyboard) {
             loaded.storyboard = storyboard;
           }
@@ -218,11 +221,11 @@ export const loadBeatmapStep =
               if (object instanceof StoryboardAnimation) {
                 return getAllFramePaths(object);
               }
-              
+
               if (object instanceof StoryboardSprite) {
                 return object.filePath;
-              } 
-              
+              }
+
               console.warn("Unknown object type", object);
               return [];
             })
@@ -293,7 +296,9 @@ export const loadBeatmapStep =
 
             const videoFile = getFileWinCompat(loaded.zip!, videoFilename);
             if (!videoFile) {
-              console.error(`Video file "${videoFilename}" not found in archive`);
+              console.error(
+                `Video file "${videoFilename}" not found in archive`
+              );
             } else if (videoFilename.endsWith(".mp4")) {
               console.log(`Using original "${videoFilename}"`);
               loaded.videoUrl = await blobUrlFromFile(videoFile);
