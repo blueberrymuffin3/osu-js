@@ -74,14 +74,12 @@ export class StandardGame extends Container {
       this.gameContainer
     );
 
-    const isBackgroundReplaced = beatmap.data.events.isBackgroundReplaced;
-
-    if (!isBackgroundReplaced && !beatmap.videoURLs.size) {
+    if (!beatmap.data.events.isBackgroundReplaced) {
       this.background = new Background(beatmap);
       this.addChild(this.background);
-    } else {
-      this.addChild(this.storyboardVideo);
     }
+      
+    this.addChild(this.storyboardVideo);
 
     this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
 
