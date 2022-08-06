@@ -50,40 +50,43 @@ export class DrawableStoryboardVideo
 
   update(timeMs: number): void {
     const timeElapsed = timeMs / 1000;
+    const targetVideoTime = timeElapsed - this.videoStartTime!;
 
-    if (this.video && timeElapsed >= this.videoStartTime!) {
-      if (!this.videoStarted) {
-        this.videoStarted = true;
-
-        this.texture = Texture.from(this.video);
-        this.video.play();
+    // Video is ended.
+    if (this.video && targetVideoTime > this.video.duration) {
+      this.video = null;
+      if (this.backgroundTexture) {
+        this.texture = this.backgroundTexture;
       }
+    }
 
-      const targetVideoTime = timeElapsed - this.videoStartTime!;
+    // Video hasn't been loaded yet.
+    if (!this.video || timeElapsed < this.videoStartTime!) {
+      return;
+    }
 
-      if (targetVideoTime > this.video.duration) {
-        this.video = null;
-        if (this.backgroundTexture) {
-          this.texture = this.backgroundTexture;
-        }
-      }
+    // Do this only once at the video start
+    if (!this.videoStarted) {
+      this.texture = Texture.from(this.video);
+      this.video.play();
+      this.videoStarted = true;
+    }
 
-      const skew = this.video!.currentTime - targetVideoTime;
-
-      if (Math.abs(skew) > MAX_VIDEO_SKEW_SEEK) {
-        this.video!.currentTime = targetVideoTime;
-        this.video!.playbackRate = 1;
-        console.warn("Video skew high, seeking");
-      } else if (Math.abs(skew) > MAX_VIDEO_SKEW_SPEED) {
-        console.warn("Video skew high, changing playbackRate");
-        if (skew > 0) {
-          this.video!.playbackRate = 0.5;
-        } else {
-          this.video!.playbackRate = 2;
-        }
+    const skew = this.video!.currentTime - targetVideoTime;
+    
+    if (Math.abs(skew) > MAX_VIDEO_SKEW_SEEK) {
+      this.video!.currentTime = targetVideoTime;
+      this.video!.playbackRate = 1;
+      console.warn("Video skew high, seeking");
+    } else if (Math.abs(skew) > MAX_VIDEO_SKEW_SPEED) {
+      console.warn("Video skew high, changing playbackRate");
+      if (skew > 0) {
+        this.video!.playbackRate = 0.5;
       } else {
-        this.video!.playbackRate = 1;
+        this.video!.playbackRate = 2;
       }
+    } else {
+      this.video!.playbackRate = 1;
     }
 
     adaptiveScaleDisplayObject(
