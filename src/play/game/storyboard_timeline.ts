@@ -34,7 +34,7 @@ import {
 import { DrawableStoryboardAnimation } from "../render/common/storyboard_animation";
 import { DrawableStoryboardSprite } from "../render/common/storyboard_sprite";
 import { DrawableStoryboardVideo } from "../render/common/storyboard_video";
-import { LoadedBeatmap } from "../api/beatmap-loader";
+import { LoadedBeatmap } from "../loader/util";
 
 export class StoryboardLayerTimeline extends Container {
   private timeline: DisplayObjectTimeline;

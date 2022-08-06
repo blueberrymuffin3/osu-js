@@ -3,14 +3,12 @@ import { Application, ENV, Loader, settings, UPDATE_PRIORITY } from "pixi.js";
 import * as PIXI from "pixi.js";
 import { SoundLoader } from "@pixi/sound";
 import { BinaryFontLoader } from "./resources/fonts";
-import {
-  executeSteps,
-  LoadCallback,
-  loadResources as loadResourcesStep,
-} from "./loader";
+import { executeSteps, LoadCallback } from "./loader/executor";
+import { loadResourcesStep } from "./loader/resource-loader";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
-import { loadBeatmapStep, LoadedBeatmap } from "./api/beatmap-loader";
 import { StandardGame } from "./game/standard_game";
+import { LoadedBeatmap } from "./loader/util";
+import { loadBeatmapStep } from "./loader/beatmap-loader";
 
 Loader.registerPlugin(SoundLoader);
 Loader.registerPlugin(BinaryFontLoader);

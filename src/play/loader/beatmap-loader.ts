@@ -1,89 +1,18 @@
 import JSZip from "jszip";
-import { Storyboard, StoryboardAnimation, StoryboardSprite } from "osu-classes";
+import { StoryboardAnimation, StoryboardSprite } from "osu-classes";
 import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers";
-import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
-import { executeSteps, LoadCallback } from "../loader";
+import { executeSteps, LoadCallback } from "./executor";
 import fetchProgress from "fetch-progress";
 import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
-import { BaseTexture, ImageResource, Texture } from "pixi.js";
 import { getAllFramePaths } from "../constants";
-import { generateAtlases } from "../sprite_atlas";
+import { generateAtlases } from "./atlas-loader";
+import { getFileWinCompat, LoadedBeatmap, textureFromFile } from "./util";
+import { loadVideosStep } from "./video-loader";
 
 const BEATMAP_CACHE_TTL = 3600;
 const CACHE_HEADER_TIMESTAMP = "x-cache-timestamp";
-
-const ffmpeg = createFFmpeg({
-  logger: ({ type, message }) => console.debug(`[${type}]`, message),
-  corePath: "/assets/ffmpeg-core/ffmpeg-core.js",
-});
-
-// CORS Blocked
-// const getBeatmapRequest = (setId: number) =>
-//   new Request(`https://osu.ppy.sh/beatmapsets/${setId}/download`);
-
-function getFileWinCompat(zip: JSZip, path: string): JSZip.JSZipObject | null {
-  path = path.replaceAll(/\\+/g, "/");
-
-  const file = zip.file(path);
-  if (file) {
-    return file; // Exact match
-  }
-
-  const files = zip.filter((candidatePath) => {
-    candidatePath = candidatePath.toLocaleLowerCase();
-    let query = path.toLowerCase();
-    if (candidatePath == query) {
-      return true; // case-insensitive
-    }
-
-    query = query + ".";
-    if (
-      candidatePath.startsWith(query) &&
-      candidatePath.lastIndexOf(".") == query.length - 1
-    ) {
-      return true; // file extension omitted
-    }
-
-    return false;
-  });
-  if (files.length > 0) {
-    if (files.length > 1) {
-      console.warn(
-        "Multiple candidates for fuzzy search, no exact matches",
-        path,
-        files
-      );
-    }
-    console.log(`Fuzzy match: "${files[0].name}" for "${path}"`);
-    return files[0];
-  }
-
-  return null;
-}
-
-async function blobUrlFromFile(file: JSZip.JSZipObject | null) {
-  if (!file) return undefined;
-  const blob = await file.async("blob");
-  return URL.createObjectURL(blob);
-}
-
-async function textureFromFile(
-  zip: JSZip,
-  path: string
-): Promise<Texture | undefined> {
-  const file = getFileWinCompat(zip, path);
-  if (!file) {
-    console.warn(`Image "${path}" not found in osz archive`);
-    return undefined;
-  }
-
-  const blob = await file.async("blob");
-  const imageResource = new ImageResource(URL.createObjectURL(blob));
-  await imageResource.load();
-  return new Texture(new BaseTexture(imageResource));
-}
 
 const ALL_LAYERS = [
   "Background",
@@ -92,16 +21,6 @@ const ALL_LAYERS = [
   "Foreground",
   "Overlay",
 ] as const;
-
-export interface LoadedBeatmap {
-  data: StandardBeatmap;
-  storyboard: Storyboard;
-  storyboardResources: Map<string, Texture>;
-  audioData: ArrayBuffer;
-  background?: Texture;
-  videoURLs: Map<string, string | null>;
-  zip: JSZip;
-}
 
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
   const beatmapDecoded = new BeatmapDecoder().decodeFromString(
@@ -115,66 +34,6 @@ function decodeBeatmap(beatmapString: string): StandardBeatmap {
     );
   }
   return new StandardRuleset().applyToBeatmap(beatmapDecoded);
-}
-
-async function loadVideo(
-  videoFilename: string, 
-  zip: JSZip,
-  cb: LoadCallback,
-): Promise<string | null> {
-  const videoFile = getFileWinCompat(zip, videoFilename);
-
-  if (!videoFile) {
-    console.error(
-      `Video file "${videoFilename}" not found in archive`
-    );
-
-    return null;
-  }
-  
-  if (videoFilename.endsWith(".mp4")) {
-    console.log(`Using original "${videoFilename}"`);
-    return (await blobUrlFromFile(videoFile)) ?? null;
-  } 
-
-  console.log(`Remuxing "${videoFilename}" with FFmpeg`);
-  cb(0, "Remuxing Video (initializing)");
-  const ffmpegInputFilename = "input_" + videoFile.name;
-
-  ffmpeg.FS(
-    "writeFile",
-    ffmpegInputFilename,
-    await videoFile.async("uint8array")
-  );
-
-  try {
-    ffmpeg.setProgress(({ ratio }) =>
-      cb(ratio, `Remuxing Video (${(ratio * 100).toFixed(0)}%)`)
-    );
-    await ffmpeg.run(
-      // "-fflags",
-      // "+genpts+nofillin+ignidx",
-      "-i",
-      ffmpegInputFilename,
-      "-vcodec",
-      "copy",
-      "-an",
-      "output.mp4"
-    );
-
-    ffmpeg.FS("unlink", ffmpegInputFilename);
-    const output = ffmpeg.FS("readFile", "output.mp4");
-    ffmpeg.FS("unlink", "output.mp4");
-
-    return URL.createObjectURL(
-      new Blob([output], {
-        type: "video/mp4",
-      })
-    );
-  } catch (e) {
-    console.error("Error remuxing video", e);
-    return null;
-  }
 }
 
 export const loadBeatmapStep =
@@ -342,27 +201,10 @@ export const loadBeatmapStep =
             }
           }
           loaded.storyboardResources = await generateAtlases(blobMap, cb);
-
-          // let loadedCount = 0;
-          // for (const imagePath of allImagePaths) {
-          //   cb(
-          //     loadedCount / allImagePaths.size,
-          //     `Loading Storyboard Images (${loadedCount + 1}/${
-          //       allImagePaths.size + 1
-          //     })`
-          //   );
-          //   loadedCount++;
-
-          //   const texture = await textureFromFile(loaded.zip!, imagePath);
-
-          //   if (texture) {
-          //     loaded.storyboardResources!.set(imagePath, texture);
-          //   }
-          // }
         },
       },
       {
-        weight: 3,
+        weight: 0.5,
         async execute(cb) {
           cb(0, "Loading Media");
 
@@ -387,33 +229,11 @@ export const loadBeatmapStep =
               backgroundFilename
             );
           }
-
-          const videoLayer = loaded.storyboard!.getLayerByName('Video');
-          const videoFilenames = videoLayer.elements.map((e) => e.filePath);
-
-          if (!videoFilenames.length) return;
-  
-          if (!window.SharedArrayBuffer) {
-            console.warn("Ignoring video, SharedArrayBuffer is undefined");
-            return;
-          }
-
-          loaded.videoURLs ??= new Map();
-
-          await ffmpeg.load();
-          
-          for (const filename of videoFilenames) {
-            const url = await loadVideo(filename, loaded.zip!, cb);
-
-            loaded.videoURLs!.set(filename, url);
-          }
-
-          try {
-            ffmpeg.exit();
-          } catch (error) {
-            console.warn(error);
-          }
         },
+      },
+      {
+        weight: 2,
+        execute: loadVideosStep(loaded),
       },
     ]);
 

@@ -1058,7 +1058,7 @@ osu-api-v2@^0.0.17:
   dependencies:
     node-fetch "^2.6.7"
 
-osu-classes@^0.10.3:
+osu-classes@^0.10.1, osu-classes@^0.10.2, osu-classes@^0.10.3:
   version "0.10.3"
   resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.10.3.tgz#668a763c822c76c02dc122b3a1f8a7cbe250bf31"
   integrity sha512-Ub7lHxWhn1c5PKvK83p/V9+A8l/coQdwXE42vbMfHFjQhskrpSXJmeWAqUzt95/75RWL0GDq7tDVbP46bh0w3g==

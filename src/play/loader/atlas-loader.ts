@@ -7,7 +7,7 @@ import {
   SCALE_MODES,
   Texture,
 } from "pixi.js";
-import { executeSteps, LoadCallback } from "./loader";
+import { executeSteps, LoadCallback } from "./executor";
 
 const MAX_ATLAS_SIZE = Math.min(2048, getMaxWebGlTextureSize());
 const MARGIN = 2;

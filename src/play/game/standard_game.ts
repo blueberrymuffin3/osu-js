@@ -15,9 +15,9 @@ import {
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { HitObjectTimeline } from "./hitobject_timeline";
 import { StoryboardLayerTimeline } from "./storyboard_timeline";
-import { LoadedBeatmap } from "../api/beatmap-loader";
 import { Background } from "../render/common/background";
 import CursorAutoplay from "../render/standard/cursor_autoplay";
+import { LoadedBeatmap } from "../loader/util";
 
 export class StandardGame extends Container {
   private app: Application;

@@ -1,9 +1,9 @@
 import { StoryboardVideo } from "osu-classes";
 import { Texture } from "pixi.js";
 import { DrawableStoryboardElement } from "./storyboard_element";
-import { LoadedBeatmap } from "../../api/beatmap-loader";
 import { POLICY } from "../../adaptive-scale";
 import { adaptiveScaleDisplayObject, VIRTUAL_SCREEN } from "../../constants";
+import { LoadedBeatmap } from "../../loader/util";
 
 const MAX_VIDEO_SKEW_SPEED = 0.05;
 const MAX_VIDEO_SKEW_SEEK = 0.5;

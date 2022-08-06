@@ -1,7 +1,7 @@
 import { Sprite, utils } from "pixi.js";
 import { POLICY } from "../../adaptive-scale";
-import { LoadedBeatmap } from "../../api/beatmap-loader";
 import { adaptiveScaleDisplayObject, STORYBOARD_BRIGHTNESS, VIRTUAL_SCREEN } from "../../constants";
+import { LoadedBeatmap } from "../../loader/util";
 
 export class Background extends Sprite {
   constructor(beatmap: LoadedBeatmap) {
