@@ -45,14 +45,16 @@ export class StoryboardLayerTimeline extends Container {
 
     this.storyboardResources = beatmap.storyboardResources;
 
-    // Mask all storyboard layers except "Video" layer if storyboard is 4:3.
-    if (!beatmap.data.general.widescreenStoryboard && layer !== 'Video') {
+    const currentLayer = beatmap.storyboard.getLayerByName(layer);
+    const isWidescreen = beatmap.data.general.widescreenStoryboard;
+
+    // Mask all storyboard layers that require masking if storyboard is 4:3.
+    if (!isWidescreen && currentLayer.masking) {
       STORYBOARD_STANDARD_MASK.setParent(this);
       this.mask = STORYBOARD_STANDARD_MASK;
     }
 
-    const elements = beatmap.storyboard
-      .getLayerByName(layer)
+    const elements = currentLayer
       .elements.map((el, index) => this.createElement(el, beatmap, index))
       .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
