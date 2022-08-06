@@ -90,7 +90,7 @@ export class DrawableStoryboardVideo
       VIRTUAL_SCREEN,
       this.texture,
       this,
-      POLICY.ExactFit
+      POLICY.FullWidth
     );
   }
 }

@@ -19,7 +19,7 @@ export class Background extends Sprite {
       VIRTUAL_SCREEN,
       this.texture,
       this,
-      POLICY.ExactFit
+      POLICY.FullWidth
     );
   }
 }
