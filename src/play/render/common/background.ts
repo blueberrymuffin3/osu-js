@@ -1,15 +1,17 @@
-import { Sprite } from "pixi.js";
+import { Sprite, utils } from "pixi.js";
 import { POLICY } from "../../adaptive-scale";
 import { LoadedBeatmap } from "../../api/beatmap-loader";
-import { adaptiveScaleDisplayObject, VIRTUAL_SCREEN } from "../../constants";
+import { adaptiveScaleDisplayObject, STORYBOARD_BRIGHTNESS, VIRTUAL_SCREEN } from "../../constants";
 
 export class Background extends Sprite {
   constructor(beatmap: LoadedBeatmap) {
     super();
 
-    // Dim by a fixed amount
-    // TODO: Dim automatically
-    this.tint = 0x333333;
+    this.tint = utils.rgb2hex([
+      STORYBOARD_BRIGHTNESS,
+      STORYBOARD_BRIGHTNESS,
+      STORYBOARD_BRIGHTNESS,
+    ]);
 
     if (!beatmap.background) return;
 
