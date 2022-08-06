@@ -1,8 +1,8 @@
 import { SliderRepeat } from "osu-standard-stable";
 import { BLEND_MODES, Sprite, Texture } from "pixi.js";
-import { EasingFunctions, lerp } from "../../anim";
-import { IUpdatable } from "../../game/timeline";
-import { TEXTURE_SLIDER_REVERSE_ARROW } from "../../resources/textures";
+import { EasingFunctions, lerp } from "../../../anim";
+import { IUpdatable } from "../../../game/timeline";
+import { TEXTURE_SLIDER_REVERSE_ARROW } from "../../../resources/textures";
 
 const SCALE_IN = 0.5;
 const SCALE_OUT = 1.5;

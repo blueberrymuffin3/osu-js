@@ -5,7 +5,7 @@ import {
   StandardHitObject,
 } from "osu-standard-stable";
 import { Cursor } from "./cursor";
-import { EasingFunctions, lerp2D } from "../anim";
+import { EasingFunctions, lerp2D } from "../../anim";
 import { IPointData } from "pixi.js";
 
 const MAX_CLICK_PROPORTION = 0.5;

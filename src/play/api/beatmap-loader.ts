@@ -99,7 +99,7 @@ export interface LoadedBeatmap {
   storyboardResources: Map<string, Texture>;
   audioData: ArrayBuffer;
   background?: Texture;
-  videoUrl?: string;
+  videoURLs: Map<string, string | null>;
   zip: JSZip;
 }
 
@@ -115,6 +115,66 @@ function decodeBeatmap(beatmapString: string): StandardBeatmap {
     );
   }
   return new StandardRuleset().applyToBeatmap(beatmapDecoded);
+}
+
+async function loadVideo(
+  videoFilename: string, 
+  zip: JSZip,
+  cb: LoadCallback,
+): Promise<string | null> {
+  const videoFile = getFileWinCompat(zip, videoFilename);
+
+  if (!videoFile) {
+    console.error(
+      `Video file "${videoFilename}" not found in archive`
+    );
+
+    return null;
+  }
+  
+  if (videoFilename.endsWith(".mp4")) {
+    console.log(`Using original "${videoFilename}"`);
+    return (await blobUrlFromFile(videoFile)) ?? null;
+  } 
+
+  console.log(`Remuxing "${videoFilename}" with FFmpeg`);
+  cb(0, "Remuxing Video (initializing)");
+  const ffmpegInputFilename = "input_" + videoFile.name;
+
+  ffmpeg.FS(
+    "writeFile",
+    ffmpegInputFilename,
+    await videoFile.async("uint8array")
+  );
+
+  try {
+    ffmpeg.setProgress(({ ratio }) =>
+      cb(ratio, `Remuxing Video (${(ratio * 100).toFixed(0)}%)`)
+    );
+    await ffmpeg.run(
+      // "-fflags",
+      // "+genpts+nofillin+ignidx",
+      "-i",
+      ffmpegInputFilename,
+      "-vcodec",
+      "copy",
+      "-an",
+      "output.mp4"
+    );
+
+    ffmpeg.FS("unlink", ffmpegInputFilename);
+    const output = ffmpeg.FS("readFile", "output.mp4");
+    ffmpeg.FS("unlink", "output.mp4");
+
+    return URL.createObjectURL(
+      new Blob([output], {
+        type: "video/mp4",
+      })
+    );
+  } catch (e) {
+    console.error("Error remuxing video", e);
+    return null;
+  }
 }
 
 export const loadBeatmapStep =
@@ -240,6 +300,8 @@ export const loadBeatmapStep =
             osuString!,
             osbString
           );
+
+          loaded.data.events.storyboard = loaded.storyboard;
         },
       },
       {
@@ -326,65 +388,30 @@ export const loadBeatmapStep =
             );
           }
 
-          const videoFilename = loaded.data.events.video;
-          if (videoFilename) {
-            if (!window.SharedArrayBuffer) {
-              console.warn("Ignoring video, SharedArrayBuffer is undefined");
-              return;
-            }
+          const videoLayer = loaded.storyboard!.getLayerByName('Video');
+          const videoFilenames = videoLayer.elements.map((e) => e.filePath);
 
-            const videoFile = getFileWinCompat(loaded.zip!, videoFilename);
-            if (!videoFile) {
-              console.error(
-                `Video file "${videoFilename}" not found in archive`
-              );
-            } else if (videoFilename.endsWith(".mp4")) {
-              console.log(`Using original "${videoFilename}"`);
-              loaded.videoUrl = await blobUrlFromFile(videoFile);
-            } else {
-              console.log(`Remuxing "${videoFilename}" with FFmpeg`);
-              cb(0, "Remuxing Video (initializing)");
-              await ffmpeg.load();
-              const ffmpegInputFilename = "input_" + videoFile.name;
+          if (!videoFilenames.length) return;
+  
+          if (!window.SharedArrayBuffer) {
+            console.warn("Ignoring video, SharedArrayBuffer is undefined");
+            return;
+          }
 
-              ffmpeg.FS(
-                "writeFile",
-                ffmpegInputFilename,
-                await videoFile.async("uint8array")
-              );
-              try {
-                ffmpeg.setProgress(({ ratio }) =>
-                  cb(ratio, `Remuxing Video (${(ratio * 100).toFixed(0)}%)`)
-                );
-                await ffmpeg.run(
-                  // "-fflags",
-                  // "+genpts+nofillin+ignidx",
-                  "-i",
-                  ffmpegInputFilename,
-                  "-vcodec",
-                  "copy",
-                  "-an",
-                  "output.mp4"
-                );
+          loaded.videoURLs ??= new Map();
 
-                ffmpeg.FS("unlink", ffmpegInputFilename);
-                const output = ffmpeg.FS("readFile", "output.mp4");
-                ffmpeg.FS("unlink", "output.mp4");
-                loaded.videoUrl = URL.createObjectURL(
-                  new Blob([output], {
-                    type: "video/mp4",
-                  })
-                );
-                try {
-                  ffmpeg.exit();
-                } catch (error) {
-                  console.warn(error);
-                }
-              } catch (e) {
-                console.error("Error remuxing video", e);
-                loaded.videoUrl = undefined;
-              }
-            }
+          await ffmpeg.load();
+          
+          for (const filename of videoFilenames) {
+            const url = await loadVideo(filename, loaded.zip!, cb);
+
+            loaded.videoURLs!.set(filename, url);
+          }
+
+          try {
+            ffmpeg.exit();
+          } catch (error) {
+            console.warn(error);
           }
         },
       },

@@ -1,39 +1,33 @@
 import {
   Application,
   Container,
-  Graphics,
   IDestroyOptions,
-  Rectangle,
 } from "pixi.js";
+
 import {
   adaptiveScaleDisplayObject,
   OSU_PIXELS_PLAY_AREA_OFFSET,
   OSU_PIXELS_SCREEN_SIZE,
+  VIRTUAL_SCREEN,
+  VIRTUAL_SCREEN_MASK,
 } from "../constants";
-import { IMediaInstance, Sound } from "@pixi/sound";
-import { LoadedBeatmap } from "../api/beatmap-loader";
-import { HitObjectTimeline } from "./hitobject_timeline";
-import CursorAutoplay from "../render/cursor_autoplay";
-import { StoryboardLayerTimeline } from "./storyboard_timeline";
 
-export const VIRTUAL_SCREEN = new Rectangle(0, 0, 1920, 1080);
-export const VIRTUAL_SCREEN_MASK = new Graphics();
-VIRTUAL_SCREEN_MASK.beginFill();
-VIRTUAL_SCREEN_MASK.drawRect(
-  VIRTUAL_SCREEN.x,
-  VIRTUAL_SCREEN.y,
-  VIRTUAL_SCREEN.width,
-  VIRTUAL_SCREEN.height
-);
-VIRTUAL_SCREEN_MASK.endFill();
+import { IMediaInstance, Sound } from "@pixi/sound";
+import { HitObjectTimeline } from "./hitobject_timeline";
+import { StoryboardLayerTimeline } from "./storyboard_timeline";
+import { LoadedBeatmap } from "../api/beatmap-loader";
+import { Background } from "../render/common/background";
+import CursorAutoplay from "../render/standard/cursor_autoplay";
 
 export class StandardGame extends Container {
   private app: Application;
 
+  private storyboardVideo: StoryboardLayerTimeline;
   private storyboardBackground: StoryboardLayerTimeline;
   private storyboardPass: StoryboardLayerTimeline;
   private storyboardForeground: StoryboardLayerTimeline;
   private storyboardOverlay: StoryboardLayerTimeline;
+  private background?: Background;
 
   private sound: Sound | null = null;
   private mediaInstance: IMediaInstance | null = null;
@@ -57,6 +51,10 @@ export class StandardGame extends Container {
     VIRTUAL_SCREEN_MASK.setParent(this);
     this.mask = VIRTUAL_SCREEN_MASK;
 
+    this.storyboardVideo = new StoryboardLayerTimeline(
+      beatmap,
+      "Video",
+    );
     this.storyboardBackground = new StoryboardLayerTimeline(
       beatmap,
       "Background"
@@ -69,11 +67,19 @@ export class StandardGame extends Container {
     this.storyboardOverlay = new StoryboardLayerTimeline(beatmap, "Overlay");
 
     this.gameContainer = new Container();
+
     adaptiveScaleDisplayObject(
       VIRTUAL_SCREEN,
       OSU_PIXELS_SCREEN_SIZE,
       this.gameContainer
     );
+
+    if (!beatmap.data.events.isBackgroundReplaced) {
+      this.background = new Background(beatmap);
+      this.addChild(this.background);
+    }
+      
+    this.addChild(this.storyboardVideo);
 
     this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
 
@@ -85,9 +91,9 @@ export class StandardGame extends Container {
     cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
     this.gameContainer.addChild(
-      this.storyboardBackground!,
-      this.storyboardPass!,
-      this.storyboardForeground!,
+      this.storyboardBackground,
+      this.storyboardPass,
+      this.storyboardForeground,
       this.hitObjectTimeline,
       this.storyboardOverlay,
       cursorContainer
@@ -140,6 +146,7 @@ export class StandardGame extends Container {
     }
 
     if (!this.mediaInstance || !this.sound) {
+      this.storyboardVideo.update(0);
       this.storyboardBackground.update(0);
       return;
     }
@@ -149,6 +156,7 @@ export class StandardGame extends Container {
 
     this.hitObjectTimeline.update(timeElapsedMs);
     this.cursorAutoplay.update(timeElapsedMs);
+    this.storyboardVideo.update(timeElapsedMs);
     this.storyboardBackground.update(timeElapsedMs);
     this.storyboardPass.update(timeElapsedMs);
     this.storyboardForeground.update(timeElapsedMs);

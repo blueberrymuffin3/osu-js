@@ -1,17 +1,17 @@
 import { SliderPath } from "osu-classes";
 import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
-import { clamp01, EasingFunctions, lerp } from "../anim";
+import { clamp01, EasingFunctions, lerp } from "../../anim";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
   IUpdatable,
   TimelineElement,
-} from "../game/timeline";
+} from "../../game/timeline";
 import {
   TEXTURE_FOLLOW_CIRCLE,
   TEXTURE_SLIDER_BALL,
-} from "../resources/textures";
+} from "../../resources/textures";
 import { SliderPathSprite } from "./components/slider_path";
 import { SliderReverseArrowSprite } from "./components/slider_reverse_arrow";
 import { SliderTickSprite } from "./components/slider_tick";

@@ -7,16 +7,16 @@ import {
   IBitmapTextStyle,
   BLEND_MODES,
 } from "pixi.js";
-import { clamp01, lerp } from "../anim";
-import { IUpdatable } from "../game/timeline";
-import { FONT_VENERA_FACE } from "../resources/fonts";
+import { clamp01, lerp } from "../../anim";
+import { IUpdatable } from "../../game/timeline";
+import { FONT_VENERA_FACE } from "../../resources/fonts";
 import {
   TEXTURE_FLASH,
   TEXTURE_NUMBER_GLOW,
   TEXTURE_OSU_RING,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
-} from "../resources/textures";
+} from "../../resources/textures";
 import { CircleTriangles } from "./components/circle_triangles";
 
 const NUMBER_STYLE: Partial<IBitmapTextStyle> = {

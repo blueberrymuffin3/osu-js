@@ -18,7 +18,7 @@ import {
 import SDF_LINE_VERT from "./slider_path.vert?raw";
 import SDF_LINE_FRAG from "./slider_path.frag?raw";
 import { Slider } from "osu-standard-stable";
-import { VIRTUAL_SCREEN_MASK } from "../../game/standard_game";
+import { VIRTUAL_SCREEN_MASK } from "../../../constants";
 
 // https://www.shadertoy.com/view/lsdBDS Quadratic Bezier SDF
 // https://gamedev.stackexchange.com/a/164816 Bezier AABB
@@ -112,6 +112,7 @@ export class SliderPathSprite extends Container {
 
     const mask = new Bounds();
     const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
+
     mask.addFrameMatrix(
       this.worldTransform.clone().invert(),
       virtualScreenRect.left,
