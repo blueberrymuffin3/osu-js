@@ -71,17 +71,16 @@ export class StoryboardLayerTimeline extends Container {
     const durationObj = object as IStoryboardElementWithDuration;
     const commandsObj = object as IStoryboardElement & IHasCommands;
 
-    // Not every storyboard element can have command timelines.
-    // This optional chaining is needed in case 
-    // if IHasCommands properties are undefined. 
-    const hasCommands = commandsObj.timelineGroup?.commands.length > 0;
-    const hasLoops = commandsObj.loops?.length > 0;
-    const hasTriggers = commandsObj.triggers?.length > 0;
+    if (commandsObj.timelineGroup) {
+      const hasCommands = commandsObj.timelineGroup.commands.length > 0;
+      const hasLoops = commandsObj.loops.length > 0;
+      const hasTriggers = commandsObj.triggers.length > 0;
 
-    if (!hasCommands && !hasLoops && !hasTriggers) {
-      console.warn("Object has no commands", object);
+      if (!hasCommands && !hasLoops && !hasTriggers) {
+        console.warn("Object has no commands", object);
 
-      return null;
+        return null;
+      }
     }
 
     const startTimeMs = object.startTime;
