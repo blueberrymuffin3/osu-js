@@ -125,7 +125,7 @@ export class StoryboardLayerTimeline extends Container {
     if (object instanceof StoryboardVideo) {
       return {
         startTimeMs,
-        endTimeMs: durationObj.endTime ?? Infinity,
+        endTimeMs: Infinity,
         build: () => {
           this.childOrderDirty = true;
 
