@@ -12,28 +12,38 @@ const MAX_VIDEO_SKEW_SEEK = 0.5;
 export class DrawableStoryboardVideo 
   extends DrawableStoryboardElement<StoryboardVideo> 
 {
+  private static video: HTMLVideoElement | null = null;
+
+  private video: HTMLVideoElement;
   private videoStartTime: number | null = null;
   private videoStarted = false;
-  private video: HTMLVideoElement | null = null;
 
   private backgroundTexture: Texture | null = null;
   
   constructor(object: StoryboardVideo, beatmap: LoadedBeatmap) {
     super(object);
 
+    // Use a single HTML video element for all storyboard videos.
+    if (!DrawableStoryboardVideo.video) {
+      DrawableStoryboardVideo.video = document.createElement("video");
+    }
+    
+    this.video = DrawableStoryboardVideo.video;
     this.backgroundTexture = beatmap.background ?? null;
-  
-    if (!beatmap.videoUrl) return;
+    
+    const videoUrl = beatmap.videoURLs.get(object.filePath)
+    
+    if (!videoUrl) return;
 
-    this.video = document.createElement("video");
-    this.video.src = beatmap.videoUrl;
+    this.video.src = videoUrl;
     this.video.muted = true;
     this.video.autoplay = false;
     this.video.addEventListener(
       "error",
       (error) => {
         console.error("Error playing video", error.error || error);
-        this.video = null;
+        this.video.removeAttribute('src');
+        
         if (this.backgroundTexture) {
           this.texture = this.backgroundTexture;
         }
@@ -50,19 +60,20 @@ export class DrawableStoryboardVideo
 
   update(timeMs: number): void {
     const timeElapsed = timeMs / 1000;
+    
+    // Video hasn't been started yet.
+    if (timeElapsed < this.videoStartTime!) {
+      return;
+    }
+    
     const targetVideoTime = timeElapsed - this.videoStartTime!;
 
-    // Video is ended.
-    if (this.video && targetVideoTime > this.video.duration) {
-      this.video = null;
+    // Current video is ended.
+    if (targetVideoTime > this.video.duration) {
+      this.video.removeAttribute('src');
       if (this.backgroundTexture) {
         this.texture = this.backgroundTexture;
       }
-    }
-
-    // Video hasn't been loaded yet.
-    if (!this.video || timeElapsed < this.videoStartTime!) {
-      return;
     }
 
     // Do this only once at the video start
