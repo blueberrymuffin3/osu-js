@@ -139,7 +139,6 @@ async function loadVideo(
 
   console.log(`Remuxing "${videoFilename}" with FFmpeg`);
   cb(0, "Remuxing Video (initializing)");
-  await ffmpeg.load();
   const ffmpegInputFilename = "input_" + videoFile.name;
 
   ffmpeg.FS(
@@ -166,12 +165,6 @@ async function loadVideo(
     ffmpeg.FS("unlink", ffmpegInputFilename);
     const output = ffmpeg.FS("readFile", "output.mp4");
     ffmpeg.FS("unlink", "output.mp4");
-
-    try {
-      ffmpeg.exit();
-    } catch (error) {
-      console.warn(error);
-    }
 
     return URL.createObjectURL(
       new Blob([output], {
@@ -407,10 +400,18 @@ export const loadBeatmapStep =
 
           loaded.videoURLs ??= new Map();
 
+          await ffmpeg.load();
+          
           for (const filename of videoFilenames) {
             const url = await loadVideo(filename, loaded.zip!, cb);
 
             loaded.videoURLs!.set(filename, url);
+          }
+
+          try {
+            ffmpeg.exit();
+          } catch (error) {
+            console.warn(error);
           }
         },
       },
