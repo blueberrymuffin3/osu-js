@@ -2,7 +2,7 @@ import { StoryboardVideo } from "osu-classes";
 import { Texture } from "pixi.js";
 import { DrawableStoryboardElement } from "./storyboard_element";
 import { POLICY } from "../../adaptive-scale";
-import { adaptiveScaleDisplayObject, VIRTUAL_SCREEN } from "../../constants";
+import { adaptiveScaleDisplayObject, OSU_PIXELS_SCREEN_SIZE, OSU_PIXELS_SCREEN_WIDESCREEN, VIRTUAL_SCREEN } from "../../constants";
 import { LoadedBeatmap } from "../../loader/util";
 
 const MAX_VIDEO_SKEW_SPEED = 0.05;
@@ -53,11 +53,13 @@ export class DrawableStoryboardVideo
 
   update(timeMs: number): void {
     adaptiveScaleDisplayObject(
-      VIRTUAL_SCREEN,
+      OSU_PIXELS_SCREEN_WIDESCREEN,
       this.texture,
       this,
       POLICY.FullWidth
     );
+    this.x += OSU_PIXELS_SCREEN_WIDESCREEN.x;
+    this.y += OSU_PIXELS_SCREEN_WIDESCREEN.y;
 
     if (this.video === null) return;
 

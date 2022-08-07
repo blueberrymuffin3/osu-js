@@ -78,8 +78,6 @@ export class StandardGame extends Container {
       this.background = new Background(beatmap);
       this.addChild(this.background);
     }
-      
-    this.addChild(this.storyboardVideo);
 
     this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
 
@@ -91,6 +89,7 @@ export class StandardGame extends Container {
     cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
     this.gameContainer.addChild(
+      this.storyboardVideo,
       this.storyboardBackground,
       this.storyboardPass,
       this.storyboardForeground,
