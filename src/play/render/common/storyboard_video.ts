@@ -23,7 +23,7 @@ export class StoryboardVideoLayer extends Container implements IUpdatable {
 
   constructor({ background, videoURLs, storyboard, data }: LoadedBeatmap) {
     super();
-    if (!data.events.isBackgroundReplaced && background) {
+    if (background && !data.events.isBackgroundReplaced) {
       this.background = Sprite.from(background);
       this.background.tint = utils.rgb2hex([
         STORYBOARD_BRIGHTNESS,
@@ -50,7 +50,7 @@ export class StoryboardVideoLayer extends Container implements IUpdatable {
       if (this.activeVideoPlayer.destroyed) {
         this.activeVideoPlayer = null;
         this.activeVideoObject = null;
-        if (this.background) this.background.visible = false;
+        if (this.background) this.background.visible = true;
       } else {
         adaptiveScaleDisplayObject(
           VIRTUAL_SCREEN,
