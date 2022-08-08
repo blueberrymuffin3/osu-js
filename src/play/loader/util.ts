@@ -2,12 +2,13 @@ import JSZip from "jszip";
 import { Storyboard } from "osu-classes";
 import { StandardBeatmap } from "osu-standard-stable";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
+import { Howl } from "howler";
 
 export interface LoadedBeatmap {
   data: StandardBeatmap;
   storyboard: Storyboard;
   storyboardResources: Map<string, Texture>;
-  audioData: ArrayBuffer;
+  audio: Howl;
   background?: Texture;
   videoURLs: Map<string, string | null>;
   zip: JSZip;

@@ -1,4 +1,5 @@
 import { Application, Container, IDestroyOptions } from "pixi.js";
+import { Howl } from "howler";
 
 import {
   adaptiveScaleDisplayObject,
@@ -8,7 +9,6 @@ import {
   VIRTUAL_SCREEN_MASK,
 } from "../constants";
 
-import { IMediaInstance, Sound } from "@pixi/sound";
 import { HitObjectTimeline } from "./hitobject_timeline";
 import { StoryboardLayerTimeline } from "./storyboard_timeline";
 import CursorAutoplay from "../render/standard/cursor_autoplay";
@@ -24,12 +24,11 @@ export class StandardGame extends Container {
   private storyboardForeground: StoryboardLayerTimeline;
   private storyboardOverlay: StoryboardLayerTimeline;
 
-  private sound: Sound | null = null;
-  private mediaInstance: IMediaInstance | null = null;
+  private audio: Howl;
+  private audioDurationMs: number;
+  private timeElapsedMs = 0;
 
   private gameContainer: Container;
-
-  private timeElapsed = 0;
 
   private hitObjectTimeline: HitObjectTimeline;
   private cursorAutoplay: CursorAutoplay;
@@ -41,7 +40,9 @@ export class StandardGame extends Container {
 
     this.app = app;
 
-    this.sound = Sound.from(beatmap.audioData);
+    this.app = app;
+    this.audio = beatmap.audio;
+    this.audioDurationMs = this.audio.duration() * 1000;
 
     VIRTUAL_SCREEN_MASK.setParent(this);
     this.mask = VIRTUAL_SCREEN_MASK;
@@ -89,22 +90,19 @@ export class StandardGame extends Container {
     this.interactive = true;
     this.interactiveChildren = false;
 
-    (async () => {
-      this.mediaInstance = await this.sound!.play();
-    })();
-
     app.ticker.add(this.tick, this);
+
+    this.audio.play();
   }
 
   protected tick() {
     adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
 
+    this.timeElapsedMs = this.audio.seek() * 1000;
+    
     this.frameTimes?.push(this.app.ticker.elapsedMS);
-    if (
-      this.frameTimes &&
-      this.mediaInstance &&
-      this.mediaInstance.progress == 1
-    ) {
+
+    if (this.frameTimes && this.timeElapsedMs >= this.audioDurationMs) {
       console.log("Rendered", this.frameTimes.length, "frames");
       this.frameTimes.sort((a, b) => a - b);
       const Ps = [50, 90, 99, 99.9, 99.99];
@@ -130,21 +128,13 @@ export class StandardGame extends Container {
       this.frameTimes = null;
     }
 
-    if (!this.mediaInstance || !this.sound) {
-      this.storyboardVideo.update(0);
-      return;
-    }
-
-    this.timeElapsed = this.mediaInstance.progress * this.sound.duration;
-    const timeElapsedMs = this.timeElapsed * 1000;
-
-    this.hitObjectTimeline.update(timeElapsedMs);
-    this.cursorAutoplay.update(timeElapsedMs);
-    this.storyboardVideo.update(timeElapsedMs);
-    this.storyboardBackground.update(timeElapsedMs);
-    this.storyboardPass.update(timeElapsedMs);
-    this.storyboardForeground.update(timeElapsedMs);
-    this.storyboardOverlay.update(timeElapsedMs);
+    this.hitObjectTimeline.update(this.timeElapsedMs);
+    this.cursorAutoplay.update(this.timeElapsedMs);
+    this.storyboardVideo.update(this.timeElapsedMs);
+    this.storyboardBackground.update(this.timeElapsedMs);
+    this.storyboardPass.update(this.timeElapsedMs);
+    this.storyboardForeground.update(this.timeElapsedMs);
+    this.storyboardOverlay.update(this.timeElapsedMs);
   }
 
   destroy(options?: IDestroyOptions | boolean) {

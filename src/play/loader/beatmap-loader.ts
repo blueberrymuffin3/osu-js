@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { Howl } from "howler";
 import { StoryboardAnimation, StoryboardSprite } from "osu-classes";
 import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
@@ -8,7 +9,12 @@ import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 import { getAllFramePaths } from "../constants";
 import { generateAtlases } from "./atlas-loader";
-import { getFileWinCompat, LoadedBeatmap, textureFromFile } from "./util";
+import { 
+  blobUrlFromFile, 
+  getFileWinCompat, 
+  LoadedBeatmap, 
+  textureFromFile 
+} from "./util";
 import { loadVideosStep } from "./video-loader";
 
 const BEATMAP_CACHE_TTL = 3600;
@@ -220,7 +226,11 @@ export const loadBeatmapStep =
             throw new Error("Audio file not found in archive");
           }
 
-          loaded.audioData = await audioFile.async("arraybuffer");
+          loaded.audio = new Howl({
+            src: await blobUrlFromFile(audioFile) as string,
+            html5: true,
+            preload: "metadata",
+          });
 
           const backgroundFilename = loaded.data.events.background;
           if (backgroundFilename) {
