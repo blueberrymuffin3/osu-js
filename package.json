@@ -19,7 +19,7 @@
     "wrangler": "^2.0.8"
   },
   "dependencies": {
-    "@blueberrymuffin3/ffmpeg-core": "^0.12.1",
+    "@blueberrymuffin3/ffmpeg-core": "^0.12.2",
     "@ffmpeg/ffmpeg": "^0.10.1",
     "@pixi/sound": "^4.2.0",
     "autoprefixer": "^10.4.7",
