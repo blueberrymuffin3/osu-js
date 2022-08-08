@@ -1,8 +1,4 @@
-import {
-  Application,
-  Container,
-  IDestroyOptions,
-} from "pixi.js";
+import { Application, Container, IDestroyOptions } from "pixi.js";
 
 import {
   adaptiveScaleDisplayObject,
@@ -15,19 +11,18 @@ import {
 import { IMediaInstance, Sound } from "@pixi/sound";
 import { HitObjectTimeline } from "./hitobject_timeline";
 import { StoryboardLayerTimeline } from "./storyboard_timeline";
-import { Background } from "../render/common/background";
 import CursorAutoplay from "../render/standard/cursor_autoplay";
 import { LoadedBeatmap } from "../loader/util";
+import { StoryboardVideoLayer } from "../render/common/storyboard_video";
 
 export class StandardGame extends Container {
   private app: Application;
 
-  private storyboardVideo: StoryboardLayerTimeline;
+  private storyboardVideo: StoryboardVideoLayer;
   private storyboardBackground: StoryboardLayerTimeline;
   private storyboardPass: StoryboardLayerTimeline;
   private storyboardForeground: StoryboardLayerTimeline;
   private storyboardOverlay: StoryboardLayerTimeline;
-  private background?: Background;
 
   private sound: Sound | null = null;
   private mediaInstance: IMediaInstance | null = null;
@@ -51,10 +46,7 @@ export class StandardGame extends Container {
     VIRTUAL_SCREEN_MASK.setParent(this);
     this.mask = VIRTUAL_SCREEN_MASK;
 
-    this.storyboardVideo = new StoryboardLayerTimeline(
-      beatmap,
-      "Video",
-    );
+    this.storyboardVideo = new StoryboardVideoLayer(beatmap);
     this.storyboardBackground = new StoryboardLayerTimeline(
       beatmap,
       "Background"
@@ -74,11 +66,6 @@ export class StandardGame extends Container {
       this.gameContainer
     );
 
-    if (!beatmap.data.events.isBackgroundReplaced) {
-      this.background = new Background(beatmap);
-      this.addChild(this.background);
-    }
-
     this.hitObjectTimeline = new HitObjectTimeline(beatmap.data);
 
     this.cursorAutoplay = new CursorAutoplay(beatmap.data.hitObjects);
@@ -89,7 +76,6 @@ export class StandardGame extends Container {
     cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
     this.gameContainer.addChild(
-      this.storyboardVideo,
       this.storyboardBackground,
       this.storyboardPass,
       this.storyboardForeground,
@@ -98,7 +84,7 @@ export class StandardGame extends Container {
       cursorContainer
     );
 
-    this.addChild(this.gameContainer);
+    this.addChild(this.storyboardVideo, this.gameContainer);
 
     this.interactive = true;
     this.interactiveChildren = false;
@@ -146,7 +132,6 @@ export class StandardGame extends Container {
 
     if (!this.mediaInstance || !this.sound) {
       this.storyboardVideo.update(0);
-      this.storyboardBackground.update(0);
       return;
     }
 

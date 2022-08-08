@@ -47,18 +47,18 @@ export function start(container: HTMLElement) {
   app.stage.addChild(new StandardGame(app, loadedBeatmap));
 
   if (import.meta.env.DEV) {
-    import("spectorjs").then((SPECTOR) => {
-      const style = document.createElement("style");
-      style.innerText = `
-      .captureMenuComponent, .captureMenuLogComponent {
-        margin-left: 0 !important;
-        left: 5px !important;
-      }
-      `;
-      document.head.appendChild(style);
+    // import("spectorjs").then((SPECTOR) => {
+    //   const style = document.createElement("style");
+    //   style.innerText = `
+    //   .captureMenuComponent, .captureMenuLogComponent {
+    //     margin-left: 0 !important;
+    //     left: 5px !important;
+    //   }
+    //   `;
+    //   document.head.appendChild(style);
 
-      new SPECTOR.Spector().displayUI();
-    });
+    //   new SPECTOR.Spector().displayUI();
+    // });
 
     import("pixi-stats").then(({ addStats }) => {
       const style = document.createElement("style");

@@ -11,15 +11,11 @@ import {
   LayerType,
   StoryboardSprite,
   StoryboardAnimation,
-  StoryboardVideo,
   IStoryboardElementWithDuration,
   IHasCommands,
 } from "osu-classes";
 
-import {
-  Container,
-  Texture,
-} from "pixi.js";
+import { Container, Texture } from "pixi.js";
 
 import {
   DisplayObjectTimeline,
@@ -27,13 +23,10 @@ import {
   TimelineElement,
 } from "./timeline";
 
-import { 
-  STORYBOARD_STANDARD_MASK, 
-} from "../constants";
+import { STORYBOARD_STANDARD_MASK } from "../constants";
 
 import { DrawableStoryboardAnimation } from "../render/common/storyboard_animation";
 import { DrawableStoryboardSprite } from "../render/common/storyboard_sprite";
-import { DrawableStoryboardVideo } from "../render/common/storyboard_video";
 import { LoadedBeatmap } from "../loader/util";
 
 export class StoryboardLayerTimeline extends Container {
@@ -54,8 +47,8 @@ export class StoryboardLayerTimeline extends Container {
       this.mask = STORYBOARD_STANDARD_MASK;
     }
 
-    const elements = currentLayer
-      .elements.map((el, index) => this.createElement(el, beatmap, index))
+    const elements = currentLayer.elements
+      .map((el, index) => this.createElement(el, index))
       .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
 
     this.timeline = new DisplayObjectTimeline(elements);
@@ -67,7 +60,6 @@ export class StoryboardLayerTimeline extends Container {
 
   private createElement = (
     object: IStoryboardElement,
-    beatmap: LoadedBeatmap,
     index: number
   ): TimelineElement<DOTimelineInstance> | null => {
     const durationObj = object as IStoryboardElementWithDuration;
@@ -97,7 +89,7 @@ export class StoryboardLayerTimeline extends Container {
 
           const animation = new DrawableStoryboardAnimation(
             object,
-            this.storyboardResources,
+            this.storyboardResources
           );
           animation.zIndex = index;
           return animation;
@@ -114,24 +106,10 @@ export class StoryboardLayerTimeline extends Container {
 
           const sprite = new DrawableStoryboardSprite(
             object,
-            this.storyboardResources,
+            this.storyboardResources
           );
           sprite.zIndex = index;
           return sprite;
-        },
-      };
-    }
-
-    if (object instanceof StoryboardVideo) {
-      return {
-        startTimeMs,
-        endTimeMs: Infinity,
-        build: () => {
-          this.childOrderDirty = true;
-
-          const video = new DrawableStoryboardVideo(object, beatmap);
-          video.zIndex = index;
-          return video;
         },
       };
     }

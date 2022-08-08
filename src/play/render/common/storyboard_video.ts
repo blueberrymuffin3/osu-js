@@ -1,114 +1,99 @@
-import { StoryboardVideo } from "osu-classes";
-import { Texture } from "pixi.js";
-import { DrawableStoryboardElement } from "./storyboard_element";
+import { Container, Sprite, utils } from "pixi.js";
 import { POLICY } from "../../adaptive-scale";
-import { adaptiveScaleDisplayObject, OSU_PIXELS_SCREEN_SIZE } from "../../constants";
+import {
+  adaptiveScaleDisplayObject,
+  STORYBOARD_BRIGHTNESS,
+  VIRTUAL_SCREEN,
+} from "../../constants";
 import { LoadedBeatmap } from "../../loader/util";
+import { IUpdatable } from "../../game/timeline";
+import { LayerType, StoryboardVideo } from "osu-classes";
+import { VideoPlayerFFmpeg } from "./video/video_player_ffmpeg";
+import { VideoPlayerHTML5 } from "./video/video_player_html5";
 
-const MAX_VIDEO_SKEW_SPEED = 0.05;
-const MAX_VIDEO_SKEW_SEEK = 0.5;
+const VIDEO_PRELOAD_TIME_MS = 1000;
 
-// TODO: Use WebCodecs in supported browsers
-export class DrawableStoryboardVideo 
-  extends DrawableStoryboardElement<StoryboardVideo> 
-{
-  private background: Texture | null = null;
-  private video: HTMLVideoElement | null = null;
-  private videoStartTime: number | null = null;
-  private videoStarted = false;
-  
-  constructor(object: StoryboardVideo, beatmap: LoadedBeatmap) {
-    super(object);
+export class StoryboardVideoLayer extends Container implements IUpdatable {
+  private background: Sprite | undefined;
+  private videoURLs: Map<string, string | null>;
+  private videoObjects: StoryboardVideo[];
 
-    this.background = beatmap.background ?? null;
+  private activeVideoObject: StoryboardVideo | null = null;
+  private activeVideoPlayer: (Sprite & IUpdatable) | null = null;
 
-    const videoUrl = beatmap.videoURLs.get(object.filePath)
-    
-    if (!videoUrl) {
-      this.switchToBackground();
-      return;
-    };
-
-    this.video = document.createElement("video");
-    this.videoStartTime = object.startTime / 1000;
-
-    if (this.videoStartTime < 0) {
-      this.video.currentTime = -this.videoStartTime;
+  constructor({ background, videoURLs, storyboard, data }: LoadedBeatmap) {
+    super();
+    if (!data.events.isBackgroundReplaced && background) {
+      this.background = Sprite.from(background);
+      this.background.tint = utils.rgb2hex([
+        STORYBOARD_BRIGHTNESS,
+        STORYBOARD_BRIGHTNESS,
+        STORYBOARD_BRIGHTNESS,
+      ]);
+      adaptiveScaleDisplayObject(
+        VIRTUAL_SCREEN,
+        this.background.texture,
+        this.background,
+        POLICY.ShowAll
+      );
+      this.addChild(this.background);
     }
-
-    this.video.muted = true;
-    this.video.autoplay = false;
-
-    this.video.addEventListener(
-      "error",
-      (error) => {
-        console.error("Error playing video", error.error || error);
-        this.switchToBackground();
-      },
-      true
-    );
-    
-    this.video.src = videoUrl;
+    this.videoURLs = videoURLs;
+    this.videoObjects = storyboard
+      .getLayerByType(LayerType.Video)
+      .elements.slice();
+    this.videoObjects.sort((a, b) => a.startTime - b.startTime);
   }
 
   update(timeMs: number): void {
-    adaptiveScaleDisplayObject(
-      OSU_PIXELS_SCREEN_SIZE,
-      this.texture,
-      this,
-      POLICY.NoBorder
-    );
-
-    if (this.video === null) return;
-
-    // Current video is ended.
-    if (this.video.ended) {
-      return this.switchToBackground();
+    if (this.activeVideoPlayer) {
+      if (this.activeVideoPlayer.destroyed) {
+        this.activeVideoPlayer = null;
+        this.activeVideoObject = null;
+        if (this.background) this.background.visible = false;
+      } else {
+        adaptiveScaleDisplayObject(
+          VIRTUAL_SCREEN,
+          this.activeVideoPlayer.texture,
+          this.activeVideoPlayer,
+          POLICY.NoBorder
+        );
+        if (timeMs > this.activeVideoObject!.startTime) {
+          if (this.background) this.background.visible = false;
+          this.activeVideoPlayer.visible = true;
+          this.activeVideoPlayer.update(
+            timeMs - this.activeVideoObject!.startTime
+          );
+        }
+      }
     }
 
-    const timeElapsed = timeMs / 1000;
-    
-    // Video hasn't been started yet.
-    if (timeElapsed < this.videoStartTime!) {
-      return;
-    }
-    
-    const targetVideoTime = timeElapsed - this.videoStartTime!;
-
-    // Do this only once at the start of the video
-    if (!this.videoStarted) {
-      this.texture = Texture.from(this.video);
-      this.video.play();
-      this.videoStarted = true;
-    }
-
-    const skew = this.video.currentTime - targetVideoTime;
-    
-    if (Math.abs(skew) > MAX_VIDEO_SKEW_SEEK) {
-      this.video.currentTime = targetVideoTime;
-      this.video.playbackRate = 1;
-      // console.warn("Video skew high, seeking");
-      return;
-    }
-    
-    if (Math.abs(skew) > MAX_VIDEO_SKEW_SPEED) {
-      this.video.playbackRate = skew > 0 ? 0.5 : 2;
-      // console.warn("Video skew high, changing playbackRate");
-      return;
-    }
-    
-    this.video.playbackRate = 1;
-  }
-
-  switchToBackground(): void {
-    if (this.video !== null) {
-      this.video.pause();
-      this.video.removeAttribute('src');
-      this.video = null;
-    }
-
-    if (this.background !== null) {
-      this.texture = this.background;
+    if (
+      !this.activeVideoPlayer &&
+      this.videoObjects.length > 0 &&
+      timeMs + VIDEO_PRELOAD_TIME_MS > this.videoObjects[0].startTime
+    ) {
+      this.activeVideoObject = this.videoObjects.shift()!;
+      const url = this.videoURLs.get(this.activeVideoObject.filePath);
+      if (url) {
+        if (url.startsWith("file:")) {
+          // FFmpeg
+          this.activeVideoPlayer = new VideoPlayerFFmpeg(url);
+        } else {
+          // HTML5
+          this.activeVideoPlayer = new VideoPlayerHTML5(url);
+        }
+        this.activeVideoPlayer.visible = false;
+        this.activeVideoPlayer.tint = utils.rgb2hex([
+          STORYBOARD_BRIGHTNESS,
+          STORYBOARD_BRIGHTNESS,
+          STORYBOARD_BRIGHTNESS,
+        ]);
+        this.addChild(this.activeVideoPlayer);
+      } else {
+        console.warn("No url found for video");
+        this.activeVideoObject = null;
+      }
     }
   }
 }

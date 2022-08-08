@@ -3,10 +3,12 @@ import JSZip from "jszip";
 import { executeSteps, LoadCallback } from "./executor";
 import { blobUrlFromFile, getFileWinCompat, LoadedBeatmap } from "./util";
 
-const ffmpeg = createFFmpeg({
+export const ffmpeg = createFFmpeg({
   logger: ({ type, message }) => console.debug(`[${type}]`, message),
   corePath: "/assets/ffmpeg-core/ffmpeg-core.js",
 });
+
+let id = 0;
 
 async function loadVideo(
   videoFilename: string,
@@ -21,8 +23,10 @@ async function loadVideo(
     return null;
   }
 
+  // TODO: Use somthing like mediainfo.js to verify that it's H.264
   if (videoFilename.endsWith(".mp4")) {
     console.log(`Using original "${videoFilename}"`);
+    cb(0.5, `Decompressing`);
     return (await blobUrlFromFile(videoFile)) ?? null;
   }
 
@@ -31,9 +35,8 @@ async function loadVideo(
     await ffmpeg.load();
   }
 
-  console.log(`Remuxing "${videoFilename}" with FFmpeg`);
-  cb(0, "initializing");
-  const ffmpegInputFilename = "input_" + videoFile.name;
+  cb(0.5, "Decompressing");
+  const ffmpegInputFilename = "input_" + id++;
 
   ffmpeg.FS(
     "writeFile",
@@ -41,34 +44,9 @@ async function loadVideo(
     await videoFile.async("uint8array")
   );
 
-  try {
-    ffmpeg.setProgress(({ ratio }) =>
-      cb(ratio, (ratio * 100).toFixed(0) + "%")
-    );
-    await ffmpeg.run(
-      // "-fflags",
-      // "+genpts+nofillin+ignidx",
-      "-i",
-      ffmpegInputFilename,
-      "-vcodec",
-      "copy",
-      "-an",
-      "output.mp4"
-    );
+  console.log(`Copied "${videoFilename}" to "${ffmpegInputFilename}"`);
 
-    ffmpeg.FS("unlink", ffmpegInputFilename);
-    const output = ffmpeg.FS("readFile", "output.mp4");
-    ffmpeg.FS("unlink", "output.mp4");
-
-    return URL.createObjectURL(
-      new Blob([output], {
-        type: "video/mp4",
-      })
-    );
-  } catch (e) {
-    console.error("Error remuxing video", e);
-    return null;
-  }
+  return "file:" + ffmpegInputFilename;
 }
 
 export const loadVideosStep =
@@ -100,12 +78,4 @@ export const loadVideosStep =
         },
       }))
     );
-
-    if (ffmpeg.isLoaded()) {
-      try {
-        ffmpeg.exit();
-      } catch (error) {
-        console.warn(error);
-      }
-    }
   };
