@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@blueberrymuffin3/ffmpeg-core@^0.12.2":
-  version "0.12.2"
-  resolved "https://registry.yarnpkg.com/@blueberrymuffin3/ffmpeg-core/-/ffmpeg-core-0.12.2.tgz#874739f22fd788ac194818a8d42be48e4badb314"
-  integrity sha512-fwXAvRoPoZJNDM/2t4oZVw8YrBXKZc0jvTHRv0DSxjBqnq0GuaxN76Z8VRAhlEyKnGP697tuNH4VRSR1tc1+XA==
+"@blueberrymuffin3/ffmpeg-core@^0.12.3":
+  version "0.12.3"
+  resolved "https://registry.yarnpkg.com/@blueberrymuffin3/ffmpeg-core/-/ffmpeg-core-0.12.3.tgz#e58f6b9f4e92c57a920b24d19718134c3b0dfd0a"
+  integrity sha512-Oib/JVNPpNQ/GI1flW6CDdfas8ZVym7ZAWfCk5Ls6Wmaiycm35XMeak3gb+mD0IjZMLFDnDI8/NQSD4D84vI7A==
 
 "@cloudflare/kv-asset-handler@^0.2.0":
   version "0.2.0"
