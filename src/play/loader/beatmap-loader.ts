@@ -9,11 +9,11 @@ import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
 import { getAllFramePaths } from "../constants";
 import { generateAtlases } from "./atlas-loader";
-import { 
-  blobUrlFromFile, 
-  getFileWinCompat, 
-  LoadedBeatmap, 
-  textureFromFile 
+import {
+  blobUrlFromFile,
+  getFileWinCompat,
+  LoadedBeatmap,
+  textureFromFile,
 } from "./util";
 import { loadVideosStep } from "./video-loader";
 
@@ -210,29 +210,42 @@ export const loadBeatmapStep =
         },
       },
       {
-        weight: 0.5,
+        weight: 0.25,
         async execute(cb) {
-          cb(0, "Loading Media");
-
-          if (!loaded.data) {
-            throw new Error("!data");
-          }
+          cb(0, "Loading Audio");
 
           const audioFile = getFileWinCompat(
             loaded.zip!,
-            loaded.data.general.audioFilename
+            loaded.data!.general.audioFilename
           );
           if (!audioFile) {
             throw new Error("Audio file not found in archive");
           }
 
           loaded.audio = new Howl({
-            src: await blobUrlFromFile(audioFile) as string,
+            src: (await blobUrlFromFile(audioFile)) as string,
             html5: true,
             preload: "metadata",
+            format: audioFile.name.substring(
+              audioFile.name.lastIndexOf(".") + 1
+            ),
           });
 
-          const backgroundFilename = loaded.data.events.background;
+          const loadedPromise = new Promise((resolve, reject) => {
+            loaded.audio!.on("load", resolve);
+            loaded.audio!.on("loaderror", (_id, error) => reject(error));
+          });
+          loaded.audio.load();
+
+          await loadedPromise;
+        },
+      },
+      {
+        weight: 0.25,
+        async execute(cb) {
+          cb(0, "Loading Background");
+
+          const backgroundFilename = loaded.data!.events.backgroundPath;
           if (backgroundFilename) {
             loaded.background = await textureFromFile(
               loaded.zip!,
