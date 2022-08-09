@@ -15,6 +15,9 @@ import CursorAutoplay from "../render/standard/cursor_autoplay";
 import { LoadedBeatmap } from "../loader/util";
 import { StoryboardVideoLayer } from "../render/common/storyboard_video";
 
+const isUsingFirefox = navigator.userAgent.includes("Firefox");
+const firefoxMaxTimeBetweenUpdates = 0.1; // Time should update about once every 40ms
+
 export class StandardGame extends Container {
   private app: Application;
 
@@ -26,6 +29,9 @@ export class StandardGame extends Container {
 
   private audio: Howl;
   private audioDurationMs: number;
+  private lastSeekTime = 0;
+  private lastTimeUpdateMs = 0;
+  private trueTimeElapsedMs = 0;
   private timeElapsedMs = 0;
 
   private gameContainer: Container;
@@ -98,8 +104,28 @@ export class StandardGame extends Container {
   protected tick() {
     adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
 
-    this.timeElapsedMs = this.audio.seek() * 1000;
-    
+    if (isUsingFirefox) {
+      // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=587465
+
+      const seekTime = this.audio.seek();
+      if (seekTime != this.lastSeekTime) {
+        this.trueTimeElapsedMs = seekTime * 1000;
+        this.lastTimeUpdateMs = this.trueTimeElapsedMs;
+        this.lastSeekTime = seekTime;
+      } else if (
+        this.trueTimeElapsedMs - this.lastTimeUpdateMs <
+        firefoxMaxTimeBetweenUpdates
+      ) {
+        // Only update if the audio isn't paused
+        this.trueTimeElapsedMs += this.app.ticker.elapsedMS;
+      }
+
+      // Ensure time is monotonic
+      this.timeElapsedMs = Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
+    } else {
+      this.timeElapsedMs = this.audio.seek() * 1000;
+    }
+
     this.frameTimes?.push(this.app.ticker.elapsedMS);
 
     if (this.frameTimes && this.timeElapsedMs >= this.audioDurationMs) {
