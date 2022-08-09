@@ -1,6 +1,5 @@
-import { EasingFunction } from "bezier-easing";
 import { Container, Sprite } from "pixi.js";
-import { EasingFunctions, lerpUnclamped } from "../../anim";
+import { EasingFunction, EasingFunctions, lerpUnclamped } from "../../anim";
 import { IUpdatable } from "../../game/timeline";
 import {
   TEXTURE_CURSOR_INNER,

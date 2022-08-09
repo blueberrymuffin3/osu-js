@@ -1,4 +1,3 @@
-import { EasingFunction } from "bezier-easing";
 import { Easing, Vector2, Color4 } from "osu-classes";
 
 export const clamp01 = (p: number) => Math.max(0, Math.min(1, p));
@@ -17,6 +16,8 @@ export const lerpRGB = (p: number, a: Color4, b: Color4): Color4 => {
     255
   );
 };
+
+export type EasingFunction = (p: number) => number;
 
 export const clampEase =
   (fn: EasingFunction): EasingFunction =>
