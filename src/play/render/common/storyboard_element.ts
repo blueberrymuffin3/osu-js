@@ -13,15 +13,6 @@ import { EasingFunctions, lerp, lerpRGB } from "../../anim";
 import { STORYBOARD_BRIGHTNESS, STORYBOARD_ORIGIN_MAP } from "../../constants";
 import { IUpdatable, Timeline, TimelineElement } from "../../game/timeline";
 
-const BACKTRACK_DEFAULT_VALUE_CLASSES = [
-  ["S", "V"],
-  ["C"],
-  ["R"],
-  ["C"],
-  ["P"],
-  ["F"],
-] as readonly CommandType[][];
-
 export abstract class DrawableStoryboardElement<T extends IStoryboardElement>
   extends Sprite
   implements IUpdatable
@@ -73,41 +64,12 @@ export abstract class DrawableStoryboardElementWithCommands
     );
     
     // Setup default values
-    for (const classTypes of BACKTRACK_DEFAULT_VALUE_CLASSES) {
-      for (const command of timelineCommands) {
-        if (classTypes.includes(command.type)) {
-          this.updateCommand(command, 0);
-          break;
-        }
-      }
-    }
+    const applied: Partial<Record<CommandType, boolean>> = {};
 
-    // Setup default position
-    let xPosSet = false;
-    let yPosSet = false;
     for (const command of timelineCommands) {
-      if (command.type === CommandType.Movement) {
-        if (!xPosSet) {
-          this.x = command.startValue.x;
-        }
-        if (!yPosSet) {
-          this.y = command.startValue.y;
-        }
-        break;
-      } else if (command.type === CommandType.MovementX) {
-        if (!xPosSet) {
-          this.x = command.startValue;
-          xPosSet = true;
-        }
-      } else if (command.type === CommandType.MovementY) {
-        if (!yPosSet) {
-          this.y = command.startValue;
-          yPosSet = true;
-        }
-      }
-      
-      if (xPosSet && yPosSet) {
-        break;
+      if (!applied[command.type]) {
+        this.updateCommand(command, 0);
+        applied[command.type] = true;
       }
     }
   }
@@ -229,24 +191,23 @@ export abstract class DrawableStoryboardElementWithCommands
       return [];
     }
 
-    const unrolledCommands: Command[][] = [];
-    const commandsDuration = loop.commandsDuration;
-    const totalIterations = loop.totalIterations;
+    const unrolledCommands: Command[] = [];
+    const { commandsDuration, totalIterations, loopStartTime } = loop;
 
     for (let i = 0; i < totalIterations; i++) {
-      const iterationStartTime = loop.loopStartTime + i * commandsDuration;
+      const iterationStartTime = loopStartTime + i * commandsDuration;
 
-      const cloned = baseCommands.map((command) => {
-        return new Command({
+      for (let j = 0; j < baseCommands.length; j++) {
+        const command = baseCommands[j];
+
+        unrolledCommands.push(new Command({
           ...command,
           startTime: command.startTime + iterationStartTime,
           endTime: command.endTime + iterationStartTime,
-        });
-      });
-
-      unrolledCommands.push(cloned);
+        }));
+      }
     }
 
-    return unrolledCommands.flat();
+    return unrolledCommands;
   }
 }
