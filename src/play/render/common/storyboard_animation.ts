@@ -15,16 +15,6 @@ export class DrawableStoryboardAnimation
   ) {
     super(object);
 
-    /*
-    TODO: This is incorrect, but works for 99% of maps
-    The only map I've seen it affect is https://osu-js.pages.dev/play/?1006822
-
-    I believe osu!stable calculates from the first *visible* frame.
-    This is hard to calculate because it's very dependent on the internal logic of osu!stable
-    and of the interactions between parameters, color, scale, alpha, and maybe even position?
-
-    osu!lazer currently (2020-8-5) uses this flawed/simplified logic:
-    */
     this.startTime = object.startTime;
 
     this.frames = getAllFramePaths(object).map(
