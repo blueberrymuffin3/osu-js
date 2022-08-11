@@ -68,9 +68,8 @@ export class StoryboardLayerTimeline extends Container {
     if (commandsObj.timelineGroup) {
       const hasCommands = commandsObj.timelineGroup.commands.length > 0;
       const hasLoops = commandsObj.loops.length > 0;
-      const hasTriggers = commandsObj.triggers.length > 0;
 
-      if (!hasCommands && !hasLoops && !hasTriggers) {
+      if (!hasCommands && !hasLoops) {
         console.warn("Object has no commands", object);
 
         return null;
