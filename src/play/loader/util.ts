@@ -7,11 +7,31 @@ import { Howl } from "howler";
 export interface LoadedBeatmap {
   data: StandardBeatmap;
   storyboard: Storyboard;
-  storyboardResources: Map<string, Texture>;
+  storyboardImages: Map<string, Texture>;
+  storyboardSamples: Map<string, Howl>;
   audio: Howl;
   background?: Texture;
   videoURLs: Map<string, string | null>;
   zip: JSZip;
+}
+
+export async function getBlobMappings(
+  zip: JSZip, 
+  paths: string[] | Set<string>
+): Promise<Map<string, Blob>> {
+  const blobMap = new Map<string, Blob>();
+
+  for (const filePath of paths) {
+    const file = getFileWinCompat(zip, filePath);
+
+    if (file) {
+      blobMap.set(filePath, await file.async("blob"));
+    } else {
+      console.warn(`File "${filePath}" not found in osz`);
+    }
+  }
+
+  return blobMap;
 }
 
 export function getFileWinCompat(
