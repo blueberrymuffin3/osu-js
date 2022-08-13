@@ -99,6 +99,32 @@ export class StandardGame extends Container {
     app.ticker.add(this.tick, this);
 
     this.audio.play();
+    this.audio.on("end", () => {
+      this.frameTimes ??= [];
+      console.log("Rendered", this.frameTimes.length, "frames");
+      this.frameTimes.sort((a, b) => a - b);
+      const Ps = [50, 90, 99, 99.9, 99.99];
+      for (const P of Ps) {
+        console.log(
+          `P${P}`,
+          this.frameTimes[
+            Math.floor((this.frameTimes.length * P) / 100)
+          ].toFixed(2)
+        );
+      }
+      console.log("min", this.frameTimes[0].toFixed(2));
+      console.log(
+        "max",
+        this.frameTimes[this.frameTimes.length - 1].toFixed(2)
+      );
+      console.log(
+        "mean",
+        (
+          this.frameTimes.reduce((a, b) => a + b) / this.frameTimes.length
+        ).toFixed(2)
+      );
+      this.frameTimes = null;
+    });
   }
 
   protected tick() {
@@ -127,32 +153,6 @@ export class StandardGame extends Container {
     }
 
     this.frameTimes?.push(this.app.ticker.elapsedMS);
-
-    if (this.frameTimes && this.timeElapsedMs >= this.audioDurationMs) {
-      console.log("Rendered", this.frameTimes.length, "frames");
-      this.frameTimes.sort((a, b) => a - b);
-      const Ps = [50, 90, 99, 99.9, 99.99];
-      for (const P of Ps) {
-        console.log(
-          `P${P}`,
-          this.frameTimes[
-            Math.floor((this.frameTimes.length * P) / 100)
-          ].toFixed(2)
-        );
-      }
-      console.log("min", this.frameTimes[0].toFixed(2));
-      console.log(
-        "max",
-        this.frameTimes[this.frameTimes.length - 1].toFixed(2)
-      );
-      console.log(
-        "mean",
-        (
-          this.frameTimes.reduce((a, b) => a + b) / this.frameTimes.length
-        ).toFixed(2)
-      );
-      this.frameTimes = null;
-    }
 
     this.hitObjectTimeline.update(this.timeElapsedMs);
     this.cursorAutoplay.update(this.timeElapsedMs);
