@@ -24,15 +24,15 @@ export class Timeline<Instance> implements IUpdatable {
   private elements: TimelineElement<Instance>[];
   private activeElements = new Set<TimelineElementState<Instance>>();
 
-  private createElement: TimelineCallback<Instance>;
-  private updateElement: TimelineCallback<Instance>;
-  private destroyElement: TimelineCallback<Instance>;
+  private createElement: TimelineCallback<Instance> | null;
+  private updateElement: TimelineCallback<Instance> | null;
+  private destroyElement: TimelineCallback<Instance> | null;
 
   public constructor(
     elements: TimelineElement<Instance>[],
-    createElement: TimelineCallback<Instance>,
-    updateElement: TimelineCallback<Instance>,
-    destroyElement: TimelineCallback<Instance>,
+    createElement: TimelineCallback<Instance> | null,
+    updateElement: TimelineCallback<Instance> | null,
+    destroyElement: TimelineCallback<Instance> | null,
     allowSkippingElements: boolean
   ) {
     this.elements = elements
@@ -59,16 +59,16 @@ export class Timeline<Instance> implements IUpdatable {
           instance: nextElement.build(),
           endTimeMs: nextElement.endTimeMs,
         };
-        this.createElement(nextElementState.instance, timeMs);
+        this.createElement?.(nextElementState.instance, timeMs);
         this.activeElements.add(nextElementState);
       }
     }
 
     for (const element of this.activeElements) {
       if (timeMs < element.endTimeMs) {
-        this.updateElement(element.instance, timeMs);
+        this.updateElement?.(element.instance, timeMs);
       } else {
-        this.destroyElement(element.instance, timeMs);
+        this.destroyElement?.(element.instance, timeMs);
         this.activeElements.delete(element);
       }
     }
