@@ -28,7 +28,6 @@ export class StandardGame extends Container {
   private storyboardOverlay: StoryboardLayerTimeline;
 
   private audio: Howl;
-  private audioDurationMs: number;
   private lastSeekTime = 0;
   private lastTimeUpdateMs = 0;
   private trueTimeElapsedMs = 0;
@@ -48,7 +47,6 @@ export class StandardGame extends Container {
 
     this.app = app;
     this.audio = beatmap.audio;
-    this.audioDurationMs = this.audio.duration() * 1000;
 
     VIRTUAL_SCREEN_MASK.setParent(this);
     this.mask = VIRTUAL_SCREEN_MASK;
