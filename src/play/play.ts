@@ -39,13 +39,9 @@ export const load = (cb: LoadCallback, info: BeatmapInfo) =>
     },
   ]);
 
-export function start(container: HTMLElement) {
-  app.resizeTo = container;
-  container.appendChild(app.view);
-  app.stage.addChild(new StandardGame(app, loadedBeatmap));
-
+export async function start(container: HTMLElement) {
   if (import.meta.env.DEV) {
-    // import("spectorjs").then((SPECTOR) => {
+    // await import("spectorjs").then((SPECTOR) => {
     //   const style = document.createElement("style");
     //   style.innerText = `
     //   .captureMenuComponent, .captureMenuLogComponent {
@@ -58,7 +54,7 @@ export function start(container: HTMLElement) {
     //   new SPECTOR.Spector().displayUI();
     // });
 
-    import("pixi-stats").then(({ addStats }) => {
+    await import("pixi-stats").then(({ addStats }) => {
       const style = document.createElement("style");
       style.innerText = `
       div#stats {
@@ -82,4 +78,8 @@ export function start(container: HTMLElement) {
       app.ticker.add(stats.update, stats, UPDATE_PRIORITY.UTILITY);
     });
   }
+
+  app.resizeTo = container;
+  container.appendChild(app.view);
+  app.stage.addChild(new StandardGame(app, loadedBeatmap));
 }
