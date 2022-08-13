@@ -3,9 +3,16 @@ import type { Beatmap } from "osu-api-v2";
 import Mustache from "mustache";
 import templateError from "./main_error.html?raw";
 import template from "./main_info.handlebars?raw";
+import DEFAULT_BANNER from "./default-banner.jpg";
+
+declare global {
+  interface Window {
+    onBannerError: (img: HTMLImageElement) => void;
+  }
+}
 
 (async () => {
-  const id = new Number(new URL(location.toString()).search.substring(1));
+  const id = Number(new URL(location.toString()).search.substring(1));
   const infoResponse = await fetch(`/api/beatmap/${id}`);
 
   if (!infoResponse.ok) {
@@ -16,7 +23,16 @@ import template from "./main_info.handlebars?raw";
 
   console.log(info);
 
-  document.title = `${info.beatmapset?.artist} - ${info.beatmapset?.title} - ${info.version} (\u2605 ${info.difficulty_rating.toFixed(2)})`
+  document.title = `${info.beatmapset?.artist} - ${info.beatmapset?.title} - ${
+    info.version
+  } (\u2605 ${info.difficulty_rating.toFixed(2)})`;
+
+  window.onBannerError = (img: HTMLImageElement) => {
+    // Prevent load loops
+    if (img.src != DEFAULT_BANNER) {
+      img.src = DEFAULT_BANNER;
+    }
+  };
 
   document.querySelector<HTMLElement>(".info")!.innerHTML = Mustache.render(
     template,
