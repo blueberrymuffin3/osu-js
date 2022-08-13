@@ -1,5 +1,6 @@
 import "./style.scss";
 import type { Beatmap } from "osu-api-v2";
+import { Howler } from "howler";
 import Mustache from "mustache";
 import templateError from "./main_error.html?raw";
 import template from "./main_info.handlebars?raw";
@@ -52,6 +53,11 @@ declare global {
     loadingBar.style.width = `${prop * 100}%`;
     loadingText.innerText = desc;
   };
+
+  // Increase pool of unlocked audio objects.
+  // Prevents "HTML5 Audio pool exhausted" messages.
+  // TODO: Should it be done in some other way?
+  Howler.html5PoolSize = 64;
 
   updateLoadingBar(0, "downloading app");
   try {
