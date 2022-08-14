@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { Storyboard } from "osu-classes";
 import { StandardBeatmap } from "osu-standard-stable";
 import { BaseTexture, ImageResource, Texture } from "pixi.js";
-import { Howl } from "howler";
+import { Howl, HowlOptions } from "howler";
 
 export interface LoadedBeatmap {
   data: StandardBeatmap;
@@ -16,7 +16,7 @@ export interface LoadedBeatmap {
 }
 
 export async function getBlobMappings(
-  zip: JSZip, 
+  zip: JSZip,
   paths: string[] | Set<string>
 ): Promise<Map<string, Blob>> {
   const blobMap = new Map<string, Blob>();
@@ -97,4 +97,19 @@ export async function textureFromFile(
   const imageResource = new ImageResource(URL.createObjectURL(blob));
   await imageResource.load();
   return new Texture(new BaseTexture(imageResource));
+}
+
+export async function loadSound(options: HowlOptions) {
+  if (options.preload === undefined || options.preload === false) {
+    throw new Error("Must preload sound to use loadSound()");
+  }
+
+  const howl = new Howl(options);
+
+  return new Promise<Howl>((resolve, reject) => {
+    howl.on("load", () => resolve(howl));
+    howl.on("loaderror", (_id, errorCode) =>
+      reject(`Error loading sound (howler code ${errorCode})`)
+    );
+  });
 }

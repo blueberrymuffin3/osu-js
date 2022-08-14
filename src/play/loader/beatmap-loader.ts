@@ -1,5 +1,4 @@
 import JSZip from "jszip";
-import { Howl } from "howler";
 import {
   StoryboardAnimation,
   StoryboardSample,
@@ -20,6 +19,7 @@ import {
   getBlobMappings,
   getFileWinCompat,
   LoadedBeatmap,
+  loadSound,
   textureFromFile,
 } from "./util";
 
@@ -239,7 +239,7 @@ export const loadBeatmapStep =
             throw new Error("Audio file not found in archive");
           }
 
-          loaded.audio = new Howl({
+          loaded.audio = await loadSound({
             src: (await blobUrlFromFile(audioFile)) as string,
             html5: true,
             preload: "metadata",
@@ -247,14 +247,6 @@ export const loadBeatmapStep =
               audioFile.name.lastIndexOf(".") + 1
             ),
           });
-
-          const loadedPromise = new Promise((resolve, reject) => {
-            loaded.audio!.on("load", resolve);
-            loaded.audio!.on("loaderror", (_id, error) => reject(error));
-          });
-          loaded.audio.load();
-
-          await loadedPromise;
         },
       },
       {
