@@ -1,6 +1,10 @@
 import JSZip from "jszip";
 import { Howl } from "howler";
-import { StoryboardAnimation, StoryboardSample, StoryboardSprite } from "osu-classes";
+import {
+  StoryboardAnimation,
+  StoryboardSample,
+  StoryboardSprite,
+} from "osu-classes";
 import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "./executor";
@@ -201,10 +205,25 @@ export const loadBeatmapStep =
           }
 
           const imageBlobs = await getBlobMappings(loaded.zip!, allImagePaths);
-          const sampleBlobs = await getBlobMappings(loaded.zip!, allSamplePaths);
-          
-          loaded.storyboardImages = await generateAtlases(imageBlobs, cb);
-          loaded.storyboardSamples = await loadSamples(sampleBlobs, cb);
+          const sampleBlobs = await getBlobMappings(
+            loaded.zip!,
+            allSamplePaths
+          );
+
+          await executeSteps(cb, [
+            {
+              weight: 5,
+              async execute(cb) {
+                loaded.storyboardImages = await generateAtlases(imageBlobs, cb);
+              },
+            },
+            {
+              weight: 1,
+              async execute(cb) {
+                loaded.storyboardSamples = await loadSamples(sampleBlobs, cb);
+              },
+            },
+          ]);
         },
       },
       {
