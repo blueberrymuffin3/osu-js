@@ -22,7 +22,7 @@ export async function loadSamples(
             src: URL.createObjectURL(blob),
             html5: true,
             preload: "metadata",
-            format: name.substring(name.lastIndexOf(".") + 1),
+            format: name.substring(name.lastIndexOf(".") + 1)
           });
 
           samples.set(name, howl);
