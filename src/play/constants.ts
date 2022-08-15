@@ -140,3 +140,6 @@ export const getAllFramePaths = (element: StoryboardAnimation) => {
   }
   return paths;
 };
+
+export const isUsingFirefox = navigator.userAgent.includes("Firefox");
+export const firefoxMaxTimeBetweenUpdates = 0.1; // Time should update about once every 40ms
