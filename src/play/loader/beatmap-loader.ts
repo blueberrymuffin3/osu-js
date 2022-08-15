@@ -10,7 +10,7 @@ import { executeSteps, LoadCallback } from "./executor";
 import fetchProgress from "fetch-progress";
 import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
-import { getAllFramePaths } from "../constants";
+import { getAllFramePaths, isUsingIOS } from "../constants";
 import { generateAtlases } from "./atlas-loader";
 import { loadSamples } from "./sample-loader";
 import { loadVideosStep } from "./video-loader";
@@ -241,8 +241,8 @@ export const loadBeatmapStep =
 
           loaded.audio = await loadSound({
             src: (await blobUrlFromFile(audioFile)) as string,
-            html5: true,
-            preload: "metadata",
+            html5: !isUsingIOS,
+            preload: !isUsingIOS ? "metadata" : true,
             format: audioFile.name.substring(
               audioFile.name.lastIndexOf(".") + 1
             ),
