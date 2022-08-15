@@ -10,7 +10,6 @@ export class PlayableStoryboardSample {
 
     if (!this.sound) return;
 
-    this.sound.once("end", () => this.sound!.unload());
     this.soundId = this.sound.play();
     this.sound.volume(object.volume / 100, this.soundId);
   }
