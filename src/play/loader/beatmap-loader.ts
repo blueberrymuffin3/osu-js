@@ -177,8 +177,9 @@ export const loadBeatmapStep =
           cb(0, "Loading Storyboard Images & Samples");
 
           const allLayers = [...loaded.storyboard.layers.values()];
-          const visibleLayers = allLayers.filter((l) => l.visibleWhenPassing);
-          const allObjects = visibleLayers.flatMap((l) => l.elements);
+          const allObjects = allLayers
+            .filter((l) => l.visibleWhenPassing && l.name !== "Video")
+            .flatMap((l) => l.elements);
 
           const allImagePaths = new Set<string>();
           const allSamplePaths = new Set<string>();
