@@ -48,7 +48,15 @@ declare global {
   const loadingBar = document.getElementById("loading-bar")!;
   const loadingText = document.getElementById("loading-text")!;
 
+  let _lastProp = 0;
   const updateLoadingBar = (prop: number, desc: string) => {
+    if (prop < _lastProp) {
+      console.error(
+        `Non-monotonic loading event: status decreased from ${_lastProp} (${loadingText.innerText}) to ${prop} (${desc})`
+      );
+    }
+    _lastProp = prop;
+
     loadingBar.style.width = `${prop * 100}%`;
     loadingText.innerText = desc;
   };

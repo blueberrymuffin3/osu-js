@@ -9,20 +9,18 @@ export class DrawableStoryboardAnimation
   private frames: Texture[];
   protected startTime: number;
 
-  public constructor(
-    object: StoryboardAnimation,
-    storyboardResources: Map<string, Texture>,
-  ) {
+  constructor(object: StoryboardAnimation, textures: Map<string, Texture>) {
     super(object);
 
     this.startTime = object.startTime;
 
-    this.frames = getAllFramePaths(object).map(
-      (path) => storyboardResources.get(path) ?? Texture.EMPTY
-    );
+    this.frames = getAllFramePaths(object)
+      .map((path) => textures.get(path) ?? Texture.EMPTY);
+
     if (this.frames.findIndex((x) => x == Texture.EMPTY) >= 0) {
       console.warn("Animation missing frames");
     }
+
     this.texture = this.frames[0];
   }
 

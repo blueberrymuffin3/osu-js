@@ -57,7 +57,7 @@ export abstract class DrawableStoryboardElementWithCommands
     // TODO: Triggers
     this.commandTimeline = new Timeline(
       timelineCommands.map(this.createElement),
-      () => {},
+      null,
       this.updateCommand,
       this.finalizeCommand,
       false

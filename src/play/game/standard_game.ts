@@ -7,6 +7,8 @@ import {
   OSU_PIXELS_SCREEN_SIZE,
   VIRTUAL_SCREEN,
   VIRTUAL_SCREEN_MASK,
+  isUsingFirefox,
+  firefoxMaxTimeBetweenUpdates,
 } from "../constants";
 
 import { HitObjectTimeline } from "./hitobject_timeline";
@@ -14,9 +16,6 @@ import { StoryboardLayerTimeline } from "./storyboard_timeline";
 import CursorAutoplay from "../render/standard/cursor_autoplay";
 import { LoadedBeatmap } from "../loader/util";
 import { StoryboardVideoLayer } from "../render/common/storyboard_video";
-
-const isUsingFirefox = navigator.userAgent.includes("Firefox");
-const firefoxMaxTimeBetweenUpdates = 0.1; // Time should update about once every 40ms
 
 export class StandardGame extends Container {
   private app: Application;

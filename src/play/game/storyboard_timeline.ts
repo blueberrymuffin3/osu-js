@@ -11,15 +11,15 @@ import {
   LayerType,
   StoryboardSprite,
   StoryboardAnimation,
-  IStoryboardElementWithDuration,
   IHasCommands,
+  StoryboardSample,
 } from "osu-classes";
 
 import { Container, Texture } from "pixi.js";
 
 import {
+  AudioObjectTimeline,
   DisplayObjectTimeline,
-  DOTimelineInstance,
   TimelineElement,
 } from "./timeline";
 
@@ -28,15 +28,20 @@ import { STORYBOARD_STANDARD_MASK } from "../constants";
 import { DrawableStoryboardAnimation } from "../render/common/storyboard_animation";
 import { DrawableStoryboardSprite } from "../render/common/storyboard_sprite";
 import { LoadedBeatmap } from "../loader/util";
+import { PlayableStoryboardSample } from "../render/common/storyboard_sample";
+import { Howl } from "howler";
 
 export class StoryboardLayerTimeline extends Container {
-  private timeline: DisplayObjectTimeline;
-  private storyboardResources: Map<string, Texture>;
+  private displayTimeline: DisplayObjectTimeline;
+  private audioTimeline: AudioObjectTimeline;
+  private storyboardImages: Map<string, Texture>;
+  private storyboardSamples: Map<string, Howl>;
 
   constructor(beatmap: LoadedBeatmap, layer: keyof typeof LayerType) {
     super();
 
-    this.storyboardResources = beatmap.storyboardResources;
+    this.storyboardImages = beatmap.storyboardImages;
+    this.storyboardSamples = beatmap.storyboardSamples;
 
     const currentLayer = beatmap.storyboard.getLayerByName(layer);
     const isWidescreen = beatmap.data.general.widescreenStoryboard;
@@ -47,13 +52,26 @@ export class StoryboardLayerTimeline extends Container {
       this.mask = STORYBOARD_STANDARD_MASK;
     }
 
-    const elements = currentLayer.elements
-      .map((el, index) => this.createElement(el, index))
-      .filter((e) => e != null) as TimelineElement<DOTimelineInstance>[];
+    const elements = currentLayer.elements;
+    const displayElements = [];
+    const audioElements = [];
 
-    this.timeline = new DisplayObjectTimeline(elements);
+    for (let i = 0; i < elements.length; ++i) {
+      const created = this.createElement(elements[i], i);
 
-    this.addChild(this.timeline);
+      if (!created) continue;
+
+      if (elements[i] instanceof StoryboardSample) {
+        audioElements.push(created);
+      } else {
+        displayElements.push(created);
+      }
+    }
+
+    this.displayTimeline = new DisplayObjectTimeline(displayElements);
+    this.audioTimeline = new AudioObjectTimeline(audioElements);
+
+    this.addChild(this.displayTimeline);
   }
 
   private childOrderDirty = false;
@@ -61,8 +79,7 @@ export class StoryboardLayerTimeline extends Container {
   private createElement = (
     object: IStoryboardElement,
     index: number
-  ): TimelineElement<DOTimelineInstance> | null => {
-    const durationObj = object as IStoryboardElementWithDuration;
+  ): TimelineElement<any> | null => {
     const commandsObj = object as IStoryboardElement & IHasCommands;
 
     if (commandsObj.timelineGroup) {
@@ -76,41 +93,16 @@ export class StoryboardLayerTimeline extends Container {
       }
     }
 
-    const startTimeMs = object.startTime;
-    const endTimeMs = durationObj.endTime ?? object.startTime;
-
     if (object instanceof StoryboardAnimation) {
-      return {
-        startTimeMs,
-        endTimeMs,
-        build: () => {
-          this.childOrderDirty = true;
-
-          const animation = new DrawableStoryboardAnimation(
-            object,
-            this.storyboardResources
-          );
-          animation.zIndex = index;
-          return animation;
-        },
-      };
+      return this.createAnimation(object, index);
     }
 
     if (object instanceof StoryboardSprite) {
-      return {
-        startTimeMs,
-        endTimeMs,
-        build: () => {
-          this.childOrderDirty = true;
+      return this.createSprite(object, index);
+    }
 
-          const sprite = new DrawableStoryboardSprite(
-            object,
-            this.storyboardResources
-          );
-          sprite.zIndex = index;
-          return sprite;
-        },
-      };
+    if (object instanceof StoryboardSample) {
+      return this.createSample(object);
     }
 
     console.warn("Unknown storyboard element", object);
@@ -118,11 +110,58 @@ export class StoryboardLayerTimeline extends Container {
     return null;
   };
 
+  private createAnimation(animation: StoryboardAnimation, index: number) {
+    return {
+      startTimeMs: animation.startTime,
+      endTimeMs: animation.endTime,
+      build: () => {
+        this.childOrderDirty = true;
+
+        const drawable = new DrawableStoryboardAnimation(
+          animation,
+          this.storyboardImages
+        );
+        drawable.zIndex = index;
+        return drawable;
+      },
+    };
+  }
+
+  private createSprite(sprite: StoryboardSprite, index: number) {
+    return {
+      startTimeMs: sprite.startTime,
+      endTimeMs: sprite.endTime,
+      build: () => {
+        this.childOrderDirty = true;
+
+        const drawable = new DrawableStoryboardSprite(
+          sprite,
+          this.storyboardImages
+        );
+        drawable.zIndex = index;
+        return drawable;
+      },
+    };
+  }
+
+  private createSample(sample: StoryboardSample) {
+    return {
+      startTimeMs: sample.startTime,
+      endTimeMs: sample.startTime,
+      build: () => {
+        return new PlayableStoryboardSample(sample, this.storyboardSamples);
+      },
+    };
+  }
+
   public update(timeMs: number) {
     this.childOrderDirty = false;
-    this.timeline.update(timeMs);
+    
+    this.displayTimeline.update(timeMs);
+    this.audioTimeline.update(timeMs);
+
     if (this.childOrderDirty) {
-      this.timeline.sortChildren();
+      this.displayTimeline.sortChildren();
     }
   }
 }
