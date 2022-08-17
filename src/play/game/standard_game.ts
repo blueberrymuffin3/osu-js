@@ -98,9 +98,11 @@ export class StandardGame extends Container {
     this.interactive = true;
     this.interactiveChildren = false;
 
+    // Some storyboards start before 0 ms.
+    this.timeElapsedMs = Math.min(0, beatmap.storyboard.earliestEventTime ?? 0);
+
     app.ticker.add(this.tick, this);
 
-    this.audio.play();
     this.audio.on("end", () => {
       this.frameTimes ??= [];
       console.log("Rendered", this.frameTimes.length, "frames");
@@ -132,10 +134,35 @@ export class StandardGame extends Container {
   protected tick() {
     adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
 
+    this.timeElapsedMs = this.getTimeElapsed();
+
+    this.frameTimes?.push(this.app.ticker.elapsedMS);
+
+    this.hitObjectTimeline.update(this.timeElapsedMs);
+    this.cursorAutoplay.update(this.timeElapsedMs);
+    this.storyboardVideo.update(this.timeElapsedMs);
+    this.storyboardBackground.update(this.timeElapsedMs);
+    this.storyboardPass.update(this.timeElapsedMs);
+    this.storyboardForeground.update(this.timeElapsedMs);
+    this.storyboardOverlay.update(this.timeElapsedMs);
+    this.songProgressGraph.update(this.timeElapsedMs);
+  }
+
+  private getTimeElapsed(): number {
+    // Audio is not started yet and we need to render storyboard elements.
+    if (this.timeElapsedMs < 16.67) {
+      if (this.timeElapsedMs >= 0 && !this.audio.playing()) {
+        this.audio.play();
+      }
+
+      return this.timeElapsedMs + this.app.ticker.elapsedMS;
+    }
+
     if (isUsingFirefox) {
       // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=587465
 
       const seekTime = this.audio.seek();
+
       if (seekTime != this.lastSeekTime) {
         this.trueTimeElapsedMs = seekTime * 1000;
         this.lastTimeUpdateMs = this.trueTimeElapsedMs;
@@ -149,21 +176,10 @@ export class StandardGame extends Container {
       }
 
       // Ensure time is monotonic
-      this.timeElapsedMs = Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
-    } else {
-      this.timeElapsedMs = this.audio.seek() * 1000;
+      return Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
     }
-
-    this.frameTimes?.push(this.app.ticker.elapsedMS);
-
-    this.hitObjectTimeline.update(this.timeElapsedMs);
-    this.cursorAutoplay.update(this.timeElapsedMs);
-    this.storyboardVideo.update(this.timeElapsedMs);
-    this.storyboardBackground.update(this.timeElapsedMs);
-    this.storyboardPass.update(this.timeElapsedMs);
-    this.storyboardForeground.update(this.timeElapsedMs);
-    this.storyboardOverlay.update(this.timeElapsedMs);
-    this.songProgressGraph.update(this.timeElapsedMs);
+    
+    return this.audio.seek() * 1000;
   }
 
   destroy(options?: IDestroyOptions | boolean) {
