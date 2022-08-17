@@ -54,7 +54,10 @@ export class Timeline<Instance> implements IUpdatable {
     ) {
       const nextElement = this.elements[this.nextElementIndex];
 
-      if (!this.allowSkippingElements || timeMs < nextElement.endTimeMs) {
+      const hasStarted = timeMs >= nextElement.startTimeMs;
+      const hasEnded = timeMs >= nextElement.endTimeMs;
+
+      if (hasStarted && !hasEnded || !this.allowSkippingElements) {
         const nextElementState: TimelineElementState<Instance> = {
           instance: nextElement.build(),
           endTimeMs: nextElement.endTimeMs,
@@ -120,7 +123,7 @@ export class AudioObjectTimeline implements IUpdatable {
       null,
       null,
       null,
-      false,
+      true,
     );
   }
 
