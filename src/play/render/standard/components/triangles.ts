@@ -1,7 +1,9 @@
+import { MathUtils } from "osu-classes";
 import { MeshGeometry } from "pixi.js";
 import { lerp } from "../../../anim";
 
-const TRIANGLE_COUNT = 10;
+const MIN_TRIANGLE_COUNT = 4;
+const MAX_TRIANGLE_COUNT = 8;
 
 const TRIANGLE_SIZE_MIN = 0.2;
 const TRIANGLE_SIZE_MAX = 0.4;
@@ -13,6 +15,7 @@ const TRIANGLE_SPEED_MAX = 0.0002;
 const SQRT3_2 = Math.sqrt(3) / 2;
 
 export class Triangles extends MeshGeometry {
+  private triangleCount: number;
   private trianglePositions: Float32Array;
   private triangleSizes: Float32Array;
   private triangleSpeeds: Float32Array;
@@ -20,23 +23,31 @@ export class Triangles extends MeshGeometry {
   private lastTimeMs = NaN;
 
   constructor() {
-    const vertices = new Float32Array(TRIANGLE_COUNT * 6);
-    const index = new Uint16Array(TRIANGLE_COUNT * 3);
+    const triangleCount = MathUtils.clamp(
+      Math.round(Math.random() * MAX_TRIANGLE_COUNT),
+      MIN_TRIANGLE_COUNT,
+      MAX_TRIANGLE_COUNT
+    );
+
+    const vertices = new Float32Array(triangleCount * 6);
+    const index = new Uint16Array(triangleCount * 3);
     for (let i = 0; i < index.length; i++) {
       index[i] = i;
     }
 
     super(vertices, undefined, index);
-    this.trianglePositions = new Float32Array(TRIANGLE_COUNT * 2);
-    this.triangleSizes = new Float32Array(TRIANGLE_COUNT);
-    this.triangleSpeeds = new Float32Array(TRIANGLE_COUNT);
+
+    this.triangleCount = triangleCount;
+    this.trianglePositions = new Float32Array(triangleCount * 2);
+    this.triangleSizes = new Float32Array(triangleCount);
+    this.triangleSpeeds = new Float32Array(triangleCount);
     this.vertices = vertices;
 
     this.resetTriangles();
   }
 
   public resetTriangles() {
-    for (let i = 0; i < TRIANGLE_COUNT; i++) {
+    for (let i = 0; i < this.triangleCount; i++) {
       const size = lerp(Math.random(), TRIANGLE_SIZE_MIN, TRIANGLE_SIZE_MAX);
       const x = lerp(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
       const y = lerp(Math.random(), -size, 1 + size);
@@ -52,7 +63,7 @@ export class Triangles extends MeshGeometry {
   }
 
   private recalculateVertices() {
-    for (let i = 0; i < TRIANGLE_COUNT; i++) {
+    for (let i = 0; i < this.triangleCount; i++) {
       const j = i * 2;
       const x = this.trianglePositions[j + 0];
       const y = this.trianglePositions[j + 1];
@@ -84,7 +95,7 @@ export class Triangles extends MeshGeometry {
       return;
     }
 
-    for (let i = 0; i < TRIANGLE_COUNT; i++) {
+    for (let i = 0; i < this.triangleCount; i++) {
       const j = i * 2;
       let x = this.trianglePositions[j + 0];
       let y = this.trianglePositions[j + 1];
