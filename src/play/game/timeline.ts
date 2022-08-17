@@ -54,10 +54,9 @@ export class Timeline<Instance> implements IUpdatable {
     ) {
       const nextElement = this.elements[this.nextElementIndex];
 
-      const hasStarted = timeMs >= nextElement.startTimeMs;
       const hasEnded = timeMs >= nextElement.endTimeMs;
 
-      if (hasStarted && !hasEnded || !this.allowSkippingElements) {
+      if (!(hasEnded && this.allowSkippingElements)) {
         const nextElementState: TimelineElementState<Instance> = {
           instance: nextElement.build(),
           endTimeMs: nextElement.endTimeMs,
