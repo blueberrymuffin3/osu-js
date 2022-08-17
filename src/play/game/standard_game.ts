@@ -105,32 +105,7 @@ export class StandardGame extends Container {
 
     app.ticker.add(this.tick, this);
 
-    this.audio.on("end", () => {
-      this.frameTimes ??= [];
-      console.log("Rendered", this.frameTimes.length, "frames");
-      this.frameTimes.sort((a, b) => a - b);
-      const Ps = [50, 90, 99, 99.9, 99.99];
-      for (const P of Ps) {
-        console.log(
-          `P${P}`,
-          this.frameTimes[
-            Math.floor((this.frameTimes.length * P) / 100)
-          ].toFixed(2)
-        );
-      }
-      console.log("min", this.frameTimes[0].toFixed(2));
-      console.log(
-        "max",
-        this.frameTimes[this.frameTimes.length - 1].toFixed(2)
-      );
-      console.log(
-        "mean",
-        (
-          this.frameTimes.reduce((a, b) => a + b) / this.frameTimes.length
-        ).toFixed(2)
-      );
-      this.frameTimes = null;
-    });
+    this.audio.on("end", () => this.stop());
   }
 
   protected tick() {
@@ -188,6 +163,35 @@ export class StandardGame extends Container {
     
     // Don't overwrite elapsed time if audio seek is 0.
     return (this.audio.seek() * 1000) || this.timeElapsedMs;
+  }
+
+  stop() {
+    this.frameTimes ??= [];
+    this.frameTimes.sort((a, b) => a - b);
+
+    const totalFrames = this.frameTimes.length;
+
+    console.log("Rendered", totalFrames, "frames");
+    
+    const Ps = [50, 90, 99, 99.9, 99.99];
+
+    for (const P of Ps) {
+      const frameTimeIndex = Math.floor((totalFrames * P) / 100);
+      const frameTime = this.frameTimes[frameTimeIndex].toFixed(2);
+
+      console.log(`P${P} ${frameTime}`);
+    }
+
+    const min = this.frameTimes[0] ?? 0;
+    const max = this.frameTimes[this.frameTimes.length - 1] ?? 0;
+    const mean = this.frameTimes.reduce((a, b) => a + b) / (totalFrames || 1);
+
+    console.log("min", min.toFixed(2));
+    console.log("max", max.toFixed(2));
+    console.log("mean", mean.toFixed(2));
+
+    this.frameTimes = null;
+    this.isAudioEnded = true;
   }
 
   destroy(options?: IDestroyOptions | boolean) {
