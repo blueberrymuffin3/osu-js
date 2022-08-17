@@ -78,6 +78,8 @@ export class Timeline<Instance> implements IUpdatable {
 export type DOTimelineInstance = DisplayObject & IUpdatable;
 
 export class DisplayObjectTimeline extends Container implements IUpdatable {
+  private timeline: Timeline<DOTimelineInstance>;
+
   public constructor(elements: TimelineElement<DOTimelineInstance>[]) {
     super();
     this.timeline = new Timeline(
@@ -103,7 +105,24 @@ export class DisplayObjectTimeline extends Container implements IUpdatable {
     this.removeChild(instance);
   };
 
-  private timeline: Timeline<DOTimelineInstance>;
+
+  public update(timeMs: number) {
+    this.timeline.update(timeMs);
+  }
+}
+
+export class AudioObjectTimeline implements IUpdatable {
+  private timeline: Timeline<IUpdatable>;
+
+  public constructor(elements: TimelineElement<IUpdatable>[]) {
+    this.timeline = new Timeline(
+      elements,
+      null,
+      null,
+      null,
+      false,
+    );
+  }
 
   public update(timeMs: number) {
     this.timeline.update(timeMs);

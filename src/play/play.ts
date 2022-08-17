@@ -1,5 +1,13 @@
 import "./style.scss";
-import { Application, ENV, Loader, settings, UPDATE_PRIORITY } from "pixi.js";
+import {
+  Application,
+  ENV,
+  ExtensionFormatLoose,
+  extensions,
+  ExtensionType,
+  settings,
+  UPDATE_PRIORITY,
+} from "pixi.js";
 import * as PIXI from "pixi.js";
 import { BinaryFontLoader } from "./resources/fonts";
 import { executeSteps, LoadCallback } from "./loader/executor";
@@ -9,7 +17,10 @@ import { StandardGame } from "./game/standard_game";
 import { LoadedBeatmap } from "./loader/util";
 import { loadBeatmapStep } from "./loader/beatmap-loader";
 
-Loader.registerPlugin(BinaryFontLoader);
+extensions.add(<ExtensionFormatLoose>{
+  type: ExtensionType.Loader,
+  ref: BinaryFontLoader,
+});
 (window as any).PIXI = PIXI; // For Pixi browser extension
 
 settings.PREFER_ENV = ENV.WEBGL2;

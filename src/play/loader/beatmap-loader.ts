@@ -1,32 +1,30 @@
 import JSZip from "jszip";
-import { Howl } from "howler";
-import { StoryboardAnimation, StoryboardSprite } from "osu-classes";
+import {
+  StoryboardAnimation,
+  StoryboardSample,
+  StoryboardSprite,
+} from "osu-classes";
 import { BeatmapDecoder, StoryboardDecoder } from "osu-parsers";
 import { Beatmap as BeatmapInfo } from "osu-api-v2";
 import { executeSteps, LoadCallback } from "./executor";
 import fetchProgress from "fetch-progress";
 import md5 from "blueimp-md5";
 import { StandardBeatmap, StandardRuleset } from "osu-standard-stable";
-import { getAllFramePaths } from "../constants";
+import { getAllFramePaths, isUsingIOS } from "../constants";
 import { generateAtlases } from "./atlas-loader";
+import { loadSamples } from "./sample-loader";
+import { loadVideosStep } from "./video-loader";
 import {
   blobUrlFromFile,
+  getBlobMappings,
   getFileWinCompat,
   LoadedBeatmap,
+  loadSound,
   textureFromFile,
 } from "./util";
-import { loadVideosStep } from "./video-loader";
 
 const BEATMAP_CACHE_TTL = 3600;
 const CACHE_HEADER_TIMESTAMP = "x-cache-timestamp";
-
-const ALL_LAYERS = [
-  "Background",
-  "Fail",
-  "Pass",
-  "Foreground",
-  "Overlay",
-] as const;
 
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
   const beatmapDecoded = new BeatmapDecoder().decodeFromString(
@@ -176,37 +174,57 @@ export const loadBeatmapStep =
             return;
           }
 
-          cb(0, "Loading Storyboard Images");
+          cb(0, "Loading Storyboard Images & Samples");
 
-          const allObjects = ALL_LAYERS.flatMap(
-            (layer) => loaded.storyboard!.getLayerByName(layer).elements
-          );
+          const allLayers = [...loaded.storyboard.layers.values()];
+          const allObjects = allLayers
+            .filter((l) => l.visibleWhenPassing && l.name !== "Video")
+            .flatMap((l) => l.elements);
 
-          const allImagePaths = new Set(
-            allObjects.flatMap((object) => {
-              if (object instanceof StoryboardAnimation) {
-                return getAllFramePaths(object);
-              }
+          const allImagePaths = new Set<string>();
+          const allSamplePaths = new Set<string>();
 
-              if (object instanceof StoryboardSprite) {
-                return object.filePath;
-              }
+          for (let i = 0; i < allObjects.length; ++i) {
+            const object = allObjects[i];
 
-              console.warn("Unknown object type", object);
-              return [];
-            })
-          );
-
-          const blobMap = new Map<string, Blob>();
-          for (const imagePath of allImagePaths) {
-            const file = getFileWinCompat(loaded.zip!, imagePath);
-            if (file) {
-              blobMap.set(imagePath, await file.async("blob"));
-            } else {
-              console.warn(`File "${imagePath}" not found in osz`);
+            if (object instanceof StoryboardAnimation) {
+              getAllFramePaths(object).forEach((p) => allImagePaths.add(p));
+              continue;
             }
+
+            if (object instanceof StoryboardSprite) {
+              allImagePaths.add(object.filePath);
+              continue;
+            }
+
+            if (object instanceof StoryboardSample) {
+              allSamplePaths.add(object.filePath);
+              continue;
+            }
+
+            console.warn("Unknown object type", object);
           }
-          loaded.storyboardResources = await generateAtlases(blobMap, cb);
+
+          const imageBlobs = await getBlobMappings(loaded.zip!, allImagePaths);
+          const sampleBlobs = await getBlobMappings(
+            loaded.zip!,
+            allSamplePaths
+          );
+
+          await executeSteps(cb, [
+            {
+              weight: 5,
+              async execute(cb) {
+                loaded.storyboardImages = await generateAtlases(imageBlobs, cb);
+              },
+            },
+            {
+              weight: 1,
+              async execute(cb) {
+                loaded.storyboardSamples = await loadSamples(sampleBlobs, cb);
+              },
+            },
+          ]);
         },
       },
       {
@@ -222,22 +240,14 @@ export const loadBeatmapStep =
             throw new Error("Audio file not found in archive");
           }
 
-          loaded.audio = new Howl({
+          loaded.audio = await loadSound({
             src: (await blobUrlFromFile(audioFile)) as string,
-            html5: true,
-            preload: "metadata",
+            html5: !isUsingIOS,
+            preload: !isUsingIOS ? "metadata" : true,
             format: audioFile.name.substring(
               audioFile.name.lastIndexOf(".") + 1
             ),
           });
-
-          const loadedPromise = new Promise((resolve, reject) => {
-            loaded.audio!.on("load", resolve);
-            loaded.audio!.on("loaderror", (_id, error) => reject(error));
-          });
-          loaded.audio.load();
-
-          await loadedPromise;
         },
       },
       {

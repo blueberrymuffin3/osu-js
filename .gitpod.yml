@@ -5,5 +5,20 @@ tasks:
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
-  - port: 3000
+  - description: Vite hot reload
+    port: 3000
     onOpen: ignore
+    visibility: public
+
+  - description: Wranger service registry
+    port: 6284
+    onOpen: ignore
+
+  - description: Inspector
+    port: 9229
+    onOpen: ignore
+
+  - description: Miniflare public
+    port: 8788
+    onOpen: notify
+    visibility: public
