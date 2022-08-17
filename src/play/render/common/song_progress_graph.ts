@@ -34,7 +34,6 @@ export class SongProgressGraph extends Container implements IUpdatable {
   private lastUpdateColumnsLit = NaN;
 
   public constructor({ data }: LoadedBeatmap) {
-    console.time("SongProgressGraph");
     super();
     this.x = OSU_PIXELS_SCREEN_WIDESCREEN.left;
     this.y = OSU_PIXELS_SCREEN_WIDESCREEN.bottom;
@@ -42,11 +41,6 @@ export class SongProgressGraph extends Container implements IUpdatable {
     this.calculateGraphData(data.hitObjects);
     this.generateSquares();
     this.update(-Infinity);
-    
-    console.log([this.firstHit, this.lastHit]);
-    console.log(this.values);
-
-    console.timeEnd("SongProgressGraph");
   }
 
   private getHitObjectEndTime(hitObject: StandardHitObject) {
