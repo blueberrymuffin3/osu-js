@@ -28,6 +28,8 @@ export class StandardGame extends Container {
   private storyboardOverlay: StoryboardLayerTimeline;
   private songProgressGraph: SongProgressGraph;
 
+  private isAudioStarted = false;
+  private isAudioEnded = false;
   private audio: Howl;
   private lastSeekTime = 0;
   private lastTimeUpdateMs = 0;
@@ -98,44 +100,51 @@ export class StandardGame extends Container {
     this.interactive = true;
     this.interactiveChildren = false;
 
+    // Some storyboards start before 0 ms.
+    this.timeElapsedMs = Math.min(0, beatmap.storyboard.earliestEventTime ?? 0);
+
     app.ticker.add(this.tick, this);
 
-    this.audio.play();
-    this.audio.on("end", () => {
-      this.frameTimes ??= [];
-      console.log("Rendered", this.frameTimes.length, "frames");
-      this.frameTimes.sort((a, b) => a - b);
-      const Ps = [50, 90, 99, 99.9, 99.99];
-      for (const P of Ps) {
-        console.log(
-          `P${P}`,
-          this.frameTimes[
-            Math.floor((this.frameTimes.length * P) / 100)
-          ].toFixed(2)
-        );
-      }
-      console.log("min", this.frameTimes[0].toFixed(2));
-      console.log(
-        "max",
-        this.frameTimes[this.frameTimes.length - 1].toFixed(2)
-      );
-      console.log(
-        "mean",
-        (
-          this.frameTimes.reduce((a, b) => a + b) / this.frameTimes.length
-        ).toFixed(2)
-      );
-      this.frameTimes = null;
-    });
+    this.audio.on("end", () => this.stop());
   }
 
   protected tick() {
     adaptiveScaleDisplayObject(this.app.screen, VIRTUAL_SCREEN, this);
 
+    this.timeElapsedMs = this.getTimeElapsed();
+
+    this.frameTimes?.push(this.app.ticker.elapsedMS);
+
+    this.hitObjectTimeline.update(this.timeElapsedMs);
+    this.cursorAutoplay.update(this.timeElapsedMs);
+    this.storyboardVideo.update(this.timeElapsedMs);
+    this.storyboardBackground.update(this.timeElapsedMs);
+    this.storyboardPass.update(this.timeElapsedMs);
+    this.storyboardForeground.update(this.timeElapsedMs);
+    this.storyboardOverlay.update(this.timeElapsedMs);
+    this.songProgressGraph.update(this.timeElapsedMs);
+  }
+
+  private getTimeElapsed(): number {
+    /**
+     * Audio is not started yet or already ended. 
+     * 0 ms is the time at which audio should always start playing.
+     * When audio ends it pauses itself and resets seek time to 0.
+     * Use {@link isAudioStarted} to make sure we don't need to play the audio again.
+     */
+    if (this.timeElapsedMs < 0 || this.isAudioEnded) {
+      return this.timeElapsedMs + this.app.ticker.elapsedMS;
+    } else if (!this.isAudioStarted) {
+      this.audio.play();
+      this.isAudioStarted = true;
+      this.isAudioEnded = false;
+    }
+
     if (isUsingFirefox) {
       // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=587465
 
       const seekTime = this.audio.seek();
+
       if (seekTime != this.lastSeekTime) {
         this.trueTimeElapsedMs = seekTime * 1000;
         this.lastTimeUpdateMs = this.trueTimeElapsedMs;
@@ -149,21 +158,40 @@ export class StandardGame extends Container {
       }
 
       // Ensure time is monotonic
-      this.timeElapsedMs = Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
-    } else {
-      this.timeElapsedMs = this.audio.seek() * 1000;
+      return Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
+    }
+    
+    // Don't overwrite elapsed time if audio seek is 0.
+    return (this.audio.seek() * 1000) || this.timeElapsedMs;
+  }
+
+  stop() {
+    this.frameTimes ??= [];
+    this.frameTimes.sort((a, b) => a - b);
+
+    const totalFrames = this.frameTimes.length;
+
+    console.log("Rendered", totalFrames, "frames");
+    
+    const Ps = [50, 90, 99, 99.9, 99.99];
+
+    for (const P of Ps) {
+      const frameTimeIndex = Math.floor((totalFrames * P) / 100);
+      const frameTime = this.frameTimes[frameTimeIndex].toFixed(2);
+
+      console.log(`P${P} ${frameTime}`);
     }
 
-    this.frameTimes?.push(this.app.ticker.elapsedMS);
+    const min = this.frameTimes[0] ?? 0;
+    const max = this.frameTimes[this.frameTimes.length - 1] ?? 0;
+    const mean = this.frameTimes.reduce((a, b) => a + b) / (totalFrames || 1);
 
-    this.hitObjectTimeline.update(this.timeElapsedMs);
-    this.cursorAutoplay.update(this.timeElapsedMs);
-    this.storyboardVideo.update(this.timeElapsedMs);
-    this.storyboardBackground.update(this.timeElapsedMs);
-    this.storyboardPass.update(this.timeElapsedMs);
-    this.storyboardForeground.update(this.timeElapsedMs);
-    this.storyboardOverlay.update(this.timeElapsedMs);
-    this.songProgressGraph.update(this.timeElapsedMs);
+    console.log("min", min.toFixed(2));
+    console.log("max", max.toFixed(2));
+    console.log("mean", mean.toFixed(2));
+
+    this.frameTimes = null;
+    this.isAudioEnded = true;
   }
 
   destroy(options?: IDestroyOptions | boolean) {

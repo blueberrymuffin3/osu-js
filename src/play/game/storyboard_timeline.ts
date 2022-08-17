@@ -145,9 +145,12 @@ export class StoryboardLayerTimeline extends Container {
   }
 
   private createSample(sample: StoryboardSample) {
+    const howl = this.storyboardSamples.get(sample.filePath);
+    const duration = (howl?.duration() ?? 0) * 1000;
+
     return {
       startTimeMs: sample.startTime,
-      endTimeMs: sample.startTime,
+      endTimeMs: sample.startTime + duration,
       build: () => {
         return new PlayableStoryboardSample(sample, this.storyboardSamples);
       },

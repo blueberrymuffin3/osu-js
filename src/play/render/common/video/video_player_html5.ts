@@ -23,7 +23,15 @@ export class VideoPlayerHTML5 extends Sprite implements IUpdatable {
       },
       true
     );
-    this.video.addEventListener("ended", () => this.destroy(true));
+    this.video.addEventListener("ended", () => {
+      /**
+       * We need to empty this texture when this video ends.
+       * Otherwise Pixi will throw an error as we are trying 
+       * to update the texture using the video that is already destroyed.
+       */
+      this.texture = Texture.EMPTY;
+      this.destroy(true);
+    });
 
     this.video.src = videoUrl;
 
