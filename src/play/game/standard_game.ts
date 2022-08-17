@@ -28,12 +28,8 @@ export class StandardGame extends Container {
   private storyboardOverlay: StoryboardLayerTimeline;
   private songProgressGraph: SongProgressGraph;
 
-  /**
-   * When audio ends it pauses itself and resets seek time to 0.
-   * There is no way to determine whether 
-   * audio has not yet begun or has already ended. 
-   */
-  private isStarted = false;
+  private isAudioStarted = false;
+  private isAudioEnded = false;
   private audio: Howl;
   private lastSeekTime = 0;
   private lastTimeUpdateMs = 0;
@@ -155,12 +151,18 @@ export class StandardGame extends Container {
   }
 
   private getTimeElapsed(): number {
-    // Audio is not started yet and we need to render storyboard elements.
-    if (this.timeElapsedMs < 0) {
+    /**
+     * Audio is not started yet or already ended. 
+     * 0 ms is the time at which audio should always start playing.
+     * When audio ends it pauses itself and resets seek time to 0.
+     * Use {@link isAudioStarted} to make sure we don't need to play the audio again.
+     */
+    if (this.timeElapsedMs < 0 || this.isAudioEnded) {
       return this.timeElapsedMs + this.app.ticker.elapsedMS;
-    } else if (!this.isStarted) {
+    } else if (!this.isAudioStarted) {
       this.audio.play();
-      this.isStarted = true;
+      this.isAudioStarted = true;
+      this.isAudioEnded = false;
     }
 
     if (isUsingFirefox) {
