@@ -65,15 +65,10 @@ export class StoryboardLayerTimeline extends Container {
     const durationObj = object as IStoryboardElementWithDuration;
     const commandsObj = object as IStoryboardElement & IHasCommands;
 
-    if (commandsObj.timelineGroup) {
-      const hasCommands = commandsObj.timelineGroup.commands.length > 0;
-      const hasLoops = commandsObj.loops.length > 0;
+    if (!commandsObj.hasCommands) {
+      console.warn("Object has no commands", object);
 
-      if (!hasCommands && !hasLoops) {
-        console.warn("Object has no commands", object);
-
-        return null;
-      }
+      return null;
     }
 
     const startTimeMs = object.startTime;
