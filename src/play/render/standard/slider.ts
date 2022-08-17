@@ -1,7 +1,7 @@
 import { SliderPath } from "osu-classes";
 import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
-import { clamp01, EasingFunctions, lerp } from "../../anim";
+import { MathUtils, Easing } from "osu-classes";
 import {
   DisplayObjectTimeline,
   DOTimelineInstance,
@@ -152,13 +152,14 @@ export class SliderPiece extends Container implements IUpdatable {
     const exitTime = timeRelativeMs - this.hitObject.duration;
 
     this.alpha =
-      lerp(enterTime / this.fadeIn, 0, 1) *
-      lerp(exitTime / SLIDER_FADE_OUT, 1, 0);
+      MathUtils.lerpClamped01(enterTime / this.fadeIn, 0, 1) *
+      MathUtils.lerpClamped01(exitTime / SLIDER_FADE_OUT, 1, 0);
 
-    this.sliderPathSprite.alpha = lerp(exitTime / SLIDER_BODY_FADE_OUT, 1, 0);
-    this.sliderPathSprite.endProp = clamp01(enterTime / this.fadeIn);
+    this.sliderPathSprite.alpha = MathUtils
+      .lerpClamped01(exitTime / SLIDER_BODY_FADE_OUT, 1, 0);
+    this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
 
-    const sliderProgress = clamp01(timeRelativeMs / this.hitObject.duration);
+    const sliderProgress = MathUtils.clamp01(timeRelativeMs / this.hitObject.duration);
     const sliderProportion = this.hitObject.path.progressAt(
       sliderProgress,
       this.hitObject.spans
@@ -173,12 +174,12 @@ export class SliderPiece extends Container implements IUpdatable {
       );
 
       this.sliderBallSprite.alpha =
-        1 - EasingFunctions.OutQuint(exitTime / SLIDER_BALL_FADE_OUT);
-      const sliderBallScaleFactor = EasingFunctions.OutQuint(
+        1 - Easing.outQuint(exitTime / SLIDER_BALL_FADE_OUT);
+      const sliderBallScaleFactor = Easing.outQuint(
         exitTime / SLIDER_BALL_DURATION
       );
       this.sliderBallSprite.scale.set(
-        lerp(
+        MathUtils.lerpClamped01(
           sliderBallScaleFactor,
           SLIDER_BALL_SCALE_INITIAL,
           SLIDER_BALL_SCALE_EXIT
@@ -186,13 +187,13 @@ export class SliderPiece extends Container implements IUpdatable {
       );
 
       this.followCircleSprite.alpha =
-        EasingFunctions.OutQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-        (1 - EasingFunctions.OutQuint(exitTime / FOLLOW_CIRCLE_FADE_OUT));
+        Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
+        (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_FADE_OUT));
       const followCircleScaleFactor =
-        EasingFunctions.OutQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-        (1 - EasingFunctions.OutQuint(exitTime / FOLLOW_CIRCLE_DURATION));
+        Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
+        (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_DURATION));
       this.followCircleSprite.scale.set(
-        lerp(
+        MathUtils.lerpClamped01(
           followCircleScaleFactor,
           FOLLOW_CIRCLE_SCALE_INITIAL,
           FOLLOW_CIRCLE_SCALE_FULL

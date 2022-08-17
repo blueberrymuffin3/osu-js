@@ -1,5 +1,5 @@
 import { Container, Sprite } from "pixi.js";
-import { EasingFunction, EasingFunctions, lerpUnclamped } from "../../anim";
+import { MathUtils, Easing } from "osu-classes";
 import { IUpdatable } from "../../game/timeline";
 import {
   TEXTURE_CURSOR_INNER,
@@ -21,16 +21,14 @@ export class Cursor extends Container implements IUpdatable {
   public set expanded(value) {
     if (value != this._expanded) {
       this._expanded = value;
-      this.scaleFn = value
-        ? EasingFunctions.OutElasticHalf
-        : EasingFunctions.OutQuad;
+      this.scaleFn = value ? Easing.outElasticHalf : Easing.outQuad;
       this.scaleStart = this.scaleCurrent;
       this.scaleEnd = value ? SCALE_EXPANDED : SCALE_DEFAULT;
       this.scaleStartTimeMs = NaN;
     }
   }
 
-  private scaleFn: EasingFunction | null = null;
+  private scaleFn: Easing.EasingFn | null = null;
   private scaleStart: number = SCALE_DEFAULT;
   private scaleEnd: number = SCALE_DEFAULT;
   private scaleCurrent: number = SCALE_DEFAULT;
@@ -58,7 +56,7 @@ export class Cursor extends Container implements IUpdatable {
         this.scaleFn = null;
         this.scaleCurrent = this.scaleEnd;
       } else {
-        this.scaleCurrent = lerpUnclamped(
+        this.scaleCurrent = MathUtils.lerp(
           this.scaleFn(scaleProgress),
           this.scaleStart,
           this.scaleEnd
