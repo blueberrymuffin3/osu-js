@@ -186,7 +186,8 @@ export class StandardGame extends Container {
       return Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
     }
     
-    return this.audio.seek() * 1000;
+    // Don't overwrite elapsed time if audio seek is 0.
+    return (this.audio.seek() * 1000) || this.timeElapsedMs;
   }
 
   destroy(options?: IDestroyOptions | boolean) {
