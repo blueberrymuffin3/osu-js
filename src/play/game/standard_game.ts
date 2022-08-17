@@ -16,6 +16,7 @@ import { StoryboardLayerTimeline } from "./storyboard_timeline";
 import CursorAutoplay from "../render/standard/cursor_autoplay";
 import { LoadedBeatmap } from "../loader/util";
 import { StoryboardVideoLayer } from "../render/common/storyboard_video";
+import { SongProgressGraph } from "../render/common/song_progress_graph";
 
 export class StandardGame extends Container {
   private app: Application;
@@ -25,6 +26,7 @@ export class StandardGame extends Container {
   private storyboardPass: StoryboardLayerTimeline;
   private storyboardForeground: StoryboardLayerTimeline;
   private storyboardOverlay: StoryboardLayerTimeline;
+  private songProgressGraph: SongProgressGraph;
 
   private audio: Howl;
   private lastSeekTime = 0;
@@ -79,12 +81,15 @@ export class StandardGame extends Container {
     this.hitObjectTimeline.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
     cursorContainer.position.copyFrom(OSU_PIXELS_PLAY_AREA_OFFSET);
 
+    this.songProgressGraph = new SongProgressGraph(beatmap);
+
     this.gameContainer.addChild(
       this.storyboardBackground,
       this.storyboardPass,
       this.storyboardForeground,
       this.hitObjectTimeline,
       this.storyboardOverlay,
+      this.songProgressGraph,
       cursorContainer
     );
 
@@ -158,6 +163,7 @@ export class StandardGame extends Container {
     this.storyboardPass.update(this.timeElapsedMs);
     this.storyboardForeground.update(this.timeElapsedMs);
     this.storyboardOverlay.update(this.timeElapsedMs);
+    this.songProgressGraph.update(this.timeElapsedMs);
   }
 
   destroy(options?: IDestroyOptions | boolean) {
