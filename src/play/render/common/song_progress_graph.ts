@@ -15,14 +15,15 @@ const COLUMNS = Math.ceil(
 
 const COLOR_EMPTY = 0xffffff;
 const COLOR_DIM = 0xffffff;
-const COLOR_LIT = 0xd5ecf3;
+const COLOR_LIT = 0xddffff;
+const COLOR_BAR_BG = 0x000000;
 
 const ALPHA_EMPTY = Math.pow(20 / 255, 2.2);
 const ALPHA_DIM = Math.pow(140 / 255, 2.2);
 const ALPHA_LIT = 1;
+const ALPHA_BAR_BG = 0.5;
 
 const BAR_HEIGHT = 5;
-const BAR_BG_ALPHA = 0.5;
 
 /**
  * See https://github.com/ppy/osu/blob/master/osu.Game/Screens/Play/HUD/SongProgressGraph.cs
@@ -118,8 +119,8 @@ export class SongProgressGraph extends Container implements IUpdatable {
     const background = Sprite.from(Texture.WHITE);
     const fill = Sprite.from(Texture.WHITE);
 
-    background.tint = 0x000000;
-    background.alpha = BAR_BG_ALPHA;
+    background.tint = COLOR_BAR_BG;
+    background.alpha = ALPHA_BAR_BG;
     fill.tint = COLOR_LIT;
 
     background.anchor.set(0, 1);
