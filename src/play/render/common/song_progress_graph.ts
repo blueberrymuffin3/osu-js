@@ -6,7 +6,6 @@ import { IUpdatable } from "../../game/timeline";
 import { LoadedBeatmap } from "../../loader/util";
 
 const GRANULARITY = 200;
-// TODO: This should be 6 according to https://github.com/ppy/osu/blob/f30d68cd4e1078ef009618e9b258aed2c8f3d9a8/osu.Game/Screens/Play/SquareGraph.cs#L188-L190, but I measured it to actually be about 3.75
 const SQUARE_SPACING_MEASURED = 3.75;
 const SQUARE_SIZE = SQUARE_SPACING_MEASURED * (4 / 6);
 const ROWS = 6;
@@ -20,13 +19,17 @@ const COLOR_LIT = 0xd5ecf3;
 
 const ALPHA_EMPTY = Math.pow(20 / 255, 2.2);
 const ALPHA_DIM = Math.pow(140 / 255, 2.2);
-const ALPHA_LIT = Math.pow(1, 2.2);
+const ALPHA_LIT = 1;
+
+const BAR_HEIGHT = 5;
+const BAR_BG_ALPHA = 0.5;
 
 /**
  * See https://github.com/ppy/osu/blob/master/osu.Game/Screens/Play/HUD/SongProgressGraph.cs
  * TODO: Is it possible to use a ParticleContainer?
  */
 export class SongProgressGraph extends Container implements IUpdatable {
+  private barFill!: Sprite;
   private squares: Sprite[] = new Array(ROWS * COLUMNS);
   private values!: Int32Array;
   private firstHit!: number;
@@ -40,6 +43,7 @@ export class SongProgressGraph extends Container implements IUpdatable {
 
     this.calculateGraphData(data.hitObjects);
     this.generateSquares();
+    this.generateBar();
     this.update(-Infinity);
   }
 
@@ -101,7 +105,7 @@ export class SongProgressGraph extends Container implements IUpdatable {
         sprite.width = SQUARE_SIZE;
         sprite.height = SQUARE_SIZE;
         sprite.x = x * SQUARE_SPACING_MEASURED;
-        sprite.y = -y * SQUARE_SPACING_MEASURED;
+        sprite.y = -y * SQUARE_SPACING_MEASURED - BAR_HEIGHT;
         sprite.alpha = ALPHA_EMPTY;
         sprite.tint = COLOR_EMPTY;
         this.squares[x * ROWS + y] = sprite;
@@ -110,11 +114,34 @@ export class SongProgressGraph extends Container implements IUpdatable {
     }
   }
 
+  private generateBar() {
+    const background = Sprite.from(Texture.WHITE);
+    const fill = Sprite.from(Texture.WHITE);
+
+    background.tint = 0x000000;
+    background.alpha = BAR_BG_ALPHA;
+    fill.tint = COLOR_LIT;
+
+    background.anchor.set(0, 1);
+    fill.anchor.set(0, 1);
+
+    background.height = BAR_HEIGHT;
+    fill.height = BAR_HEIGHT;
+    background.width = OSU_PIXELS_SCREEN_WIDESCREEN.width;
+    fill.width = 123;
+
+    this.addChild(background, fill);
+    this.barFill = fill;
+  }
+
   public update(timeMs: number) {
-    const columnsLit = Math.ceil(
-      clamp01((timeMs - this.firstHit) / (this.lastHit - this.firstHit)) *
-        COLUMNS
+    const prop = clamp01(
+      (timeMs - this.firstHit) / (this.lastHit - this.firstHit)
     );
+
+    this.barFill.width = OSU_PIXELS_SCREEN_WIDESCREEN.width * prop;
+
+    const columnsLit = Math.ceil(prop * COLUMNS);
     if (columnsLit == this.lastUpdateColumnsLit) {
       return;
     }
