@@ -136,10 +136,13 @@ export class SongProgressGraph extends Container implements IUpdatable {
   }
 
   public update(timeMs: number) {
-    const clamp = MathUtils
-      .clamp01((timeMs - this.firstHit) / (this.lastHit - this.firstHit));
-    const columnsLit = Math.ceil(clamp * COLUMNS);
-    
+    const prop = MathUtils.clamp01(
+      (timeMs - this.firstHit) / (this.lastHit - this.firstHit)
+    );
+
+    this.barFill.width = OSU_PIXELS_SCREEN_WIDESCREEN.width * prop;
+
+    const columnsLit = Math.ceil(prop * COLUMNS);
     if (columnsLit == this.lastUpdateColumnsLit) {
       return;
     }
