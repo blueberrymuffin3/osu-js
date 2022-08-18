@@ -1,5 +1,5 @@
 import { getScaledRect, POLICY } from "./adaptive-scale";
-import { BeatmapDifficultySection, Origins, StoryboardAnimation } from "osu-classes";
+import { Origins, StoryboardAnimation } from "osu-classes";
 import { DisplayObject, Graphics, IPointData, Rectangle } from "pixi.js";
 
 export type TimeMsProvider = () => number;
