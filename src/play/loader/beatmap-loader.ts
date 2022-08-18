@@ -142,7 +142,7 @@ export const loadBeatmapStep =
             console.warn(
               "No .osu files matching MD5 Hash found, fetching from API instead"
             );
-            const response = await fetch(`/api/download/beatmap/${info.id}`);
+            const response = await fetch(`/api/beatmap/${info.id}/latest.osu`);
             if (!response.ok) {
               throw new Error(
                 `Error downloading beatmap: Got status ${response.status}`
