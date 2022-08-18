@@ -1,12 +1,5 @@
 import MultiBinPacker, { Bin, Rect } from "multi-bin-packer";
-import {
-  ALPHA_MODES,
-  BaseTexture,
-  MIPMAP_MODES,
-  Rectangle,
-  SCALE_MODES,
-  Texture,
-} from "pixi.js";
+import { BaseTexture, Rectangle, Texture } from "pixi.js";
 import { executeSteps, LoadCallback } from "./executor";
 
 const MAX_ATLAS_SIZE = Math.min(2048, getMaxWebGlTextureSize());
@@ -210,17 +203,7 @@ function renderBin(map: Map<String, Texture>, bin: Bin<AtlasItemMeta>) {
     ); // Bottom
   }
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const baseTexture = BaseTexture.fromBuffer(
-    new Uint8Array(imageData.data.buffer),
-    canvas.width,
-    canvas.height,
-    {
-      scaleMode: SCALE_MODES.LINEAR,
-      mipmap: MIPMAP_MODES.OFF,
-      alphaMode: ALPHA_MODES.PREMULTIPLY_ON_UPLOAD,
-    }
-  );
+  const baseTexture = BaseTexture.from(canvas);
 
   for (const result of bin.rects) {
     const texture = new Texture(

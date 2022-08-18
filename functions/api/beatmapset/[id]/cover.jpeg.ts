@@ -1,4 +1,4 @@
-import { cachedApiResponseHelper } from "../../lib";
+import { cachedApiResponseHelper } from "../../../lib";
 
 export const onRequestGet: PagesFunction = async ({ params, waitUntil }) => {
   return cachedApiResponseHelper(
