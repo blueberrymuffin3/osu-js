@@ -104,13 +104,6 @@ export const STORYBOARD_ORIGIN_MAP = new Map<Origins, IPointData>([
   [Origins.BottomRight,  { x: 1  , y: 1   }],
 ]);
 
-export const diameterFromCs = (CS: number) => 54.4 - 4.48 * CS;
-
-export const preemtTimeFromAr = (AR: number) =>
-  BeatmapDifficultySection.range(AR, 1800, 1200, 450);
-export const fadeInTimeFromAr = (AR: number) =>
-  BeatmapDifficultySection.range(AR, 1200, 800, 300);
-
 export function adaptiveScaleDisplayObject(
   containerSize: Size,
   targetSize: Size,
