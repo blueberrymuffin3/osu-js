@@ -29,7 +29,7 @@ export default class CursorAutoplay extends Cursor {
 
   getCursorState(timeMs: number): CursorState {
     while (
-      this.nextHitObjectIndex < this.hitObjects.length - 1 &&
+      this.nextHitObjectIndex < this.hitObjects.length &&
       this.hitObjects[this.nextHitObjectIndex].startTime <= timeMs
     ) {
       this.nextHitObjectIndex++;
@@ -73,7 +73,7 @@ export default class CursorAutoplay extends Cursor {
           expanded: true,
         };
       }
-    } else {
+    } else if (nextHitObject) {
       let clickDuration;
 
       if (currentHitObject instanceof Slider) {
@@ -96,7 +96,7 @@ export default class CursorAutoplay extends Cursor {
 
       const travelStart = travelEnd - travelDuration;
 
-      // between hit objects
+      // Between hit objects
       const progress = (timeMs - travelStart) / travelDuration;
 
       return {
@@ -106,6 +106,12 @@ export default class CursorAutoplay extends Cursor {
           nextHitObject.stackedStartPosition
         ),
         expanded: timeMs < clickEnd,
+      };
+    } else {
+      // Song ended
+      return {
+        pos: currentHitObject.stackedEndPosition,
+        expanded: false,
       };
     }
   }
