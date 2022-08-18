@@ -57,7 +57,7 @@ export const loadBeatmapStep =
         async execute(cb) {
           cb(0, "Downloading Beatmap");
 
-          const url = `/api/download/beatmapset/${info.beatmapset_id}`;
+          const url = `https://catboy.best/d/${info.beatmapset_id}`;
           let cache: Cache | null = null;
           try {
             cache = await caches.open("cache");
