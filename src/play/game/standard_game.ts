@@ -43,7 +43,7 @@ export class StandardGame extends Container {
 
   private startTimeMs: number;
   private endTimeMs: number;
-  private frameTimes: number[] | null = [];
+  private frameTimes: number[] = [];
 
   constructor(app: Application, beatmap: LoadedBeatmap) {
     super();
@@ -133,11 +133,11 @@ export class StandardGame extends Container {
       this.isAudioEnded = false;
     }
 
-    if (this.frameTimes !== null && this.timeElapsedMs >= this.endTimeMs) {
+    if (this.frameTimes.length > 0 && this.timeElapsedMs >= this.endTimeMs) {
       this.summarize();
     }
 
-    this.frameTimes?.push(this.app.ticker.elapsedMS);
+    this.frameTimes.push(this.app.ticker.elapsedMS);
 
     this.hitObjectTimeline.update(this.timeElapsedMs);
     this.cursorAutoplay.update(this.timeElapsedMs);
@@ -181,7 +181,6 @@ export class StandardGame extends Container {
   }
 
   summarize() {
-    this.frameTimes ??= [];
     this.frameTimes.sort((a, b) => a - b);
 
     const totalFrames = this.frameTimes.length;
@@ -205,7 +204,8 @@ export class StandardGame extends Container {
     console.log("max", max.toFixed(2));
     console.log("mean", mean.toFixed(2));
 
-    this.frameTimes = null;
+    // Empty array for next benchmark.
+    this.frameTimes = [];
   }
 
   destroy(options?: IDestroyOptions | boolean) {
