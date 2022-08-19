@@ -120,6 +120,18 @@ export class StandardGame extends Container {
 
     this.timeElapsedMs = this.getTimeElapsed();
 
+    /**
+     * 0 ms is the time at which audio should always start playing.
+     * When audio ends it pauses itself and resets seek time to 0.
+     * Use {@link isAudioStarted} to make sure
+     * we don't need to play the audio again.
+     */
+    if (this.timeElapsedMs >= 0 && !this.isAudioStarted) {
+      this.audio.play();
+      this.isAudioStarted = true;
+      this.isAudioEnded = false;
+    }
+
     this.frameTimes?.push(this.app.ticker.elapsedMS);
 
     this.hitObjectTimeline.update(this.timeElapsedMs);
@@ -133,18 +145,9 @@ export class StandardGame extends Container {
   }
 
   private getTimeElapsed(): number {
-    /**
-     * Audio is not started yet or already ended. 
-     * 0 ms is the time at which audio should always start playing.
-     * When audio ends it pauses itself and resets seek time to 0.
-     * Use {@link isAudioStarted} to make sure we don't need to play the audio again.
-     */
+    // Audio is not started yet or already ended.
     if (this.timeElapsedMs < 0 || this.isAudioEnded) {
       return this.timeElapsedMs + this.app.ticker.elapsedMS;
-    } else if (!this.isAudioStarted) {
-      this.audio.play();
-      this.isAudioStarted = true;
-      this.isAudioEnded = false;
     }
 
     if (isUsingFirefox) {
