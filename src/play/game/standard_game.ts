@@ -108,7 +108,7 @@ export class StandardGame extends Container {
 
     this.timeElapsedMs = this.startTimeMs;
 
-    this.audio.once("end", () => this.isAudioEnded = true);
+    this.audio.on("end", () => this.isAudioEnded = true);
 
     app.ticker.add(this.tick, this);
   }
