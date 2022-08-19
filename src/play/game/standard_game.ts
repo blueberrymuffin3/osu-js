@@ -41,12 +41,12 @@ export class StandardGame extends Container {
   private hitObjectTimeline: HitObjectTimeline;
   private cursorAutoplay: CursorAutoplay;
 
-  private frameTimes: number[] | null = [];
+  private startTimeMs: number;
+  private endTimeMs: number;
+  private frameTimes: number[] = [];
 
   constructor(app: Application, beatmap: LoadedBeatmap) {
     super();
-
-    this.app = app;
 
     this.app = app;
     this.audio = beatmap.audio;
@@ -100,12 +100,17 @@ export class StandardGame extends Container {
     this.interactive = true;
     this.interactiveChildren = false;
 
+    const { earliestEventTime, latestEventTime } = beatmap.storyboard;
+
     // Some storyboards start before 0 ms.
-    this.timeElapsedMs = Math.min(0, beatmap.storyboard.earliestEventTime ?? 0);
+    this.startTimeMs = Math.min(0, earliestEventTime ?? 0);
+    this.endTimeMs = Math.max(this.audio.duration() * 1000, latestEventTime ?? 0);
+
+    this.timeElapsedMs = this.startTimeMs;
+
+    this.audio.on("end", () => this.isAudioEnded = true);
 
     app.ticker.add(this.tick, this);
-
-    this.audio.on("end", () => this.stop());
   }
 
   protected tick() {
@@ -113,7 +118,23 @@ export class StandardGame extends Container {
 
     this.timeElapsedMs = this.getTimeElapsed();
 
-    this.frameTimes?.push(this.app.ticker.elapsedMS);
+    /**
+     * 0 ms is the time at which audio should always start playing.
+     * When audio ends it pauses itself and resets seek time to 0.
+     * Use {@link isAudioStarted} to make sure
+     * we don't need to play the audio again.
+     */
+    if (this.timeElapsedMs >= 0 && !this.isAudioStarted) {
+      this.audio.play();
+      this.isAudioStarted = true;
+      this.isAudioEnded = false;
+    }
+
+    if (this.timeElapsedMs < this.endTimeMs) {
+      this.frameTimes.push(this.app.ticker.elapsedMS);
+    } else if (this.frameTimes.length > 0) {
+      this.summarize();
+    }
 
     this.hitObjectTimeline.update(this.timeElapsedMs);
     this.cursorAutoplay.update(this.timeElapsedMs);
@@ -126,18 +147,9 @@ export class StandardGame extends Container {
   }
 
   private getTimeElapsed(): number {
-    /**
-     * Audio is not started yet or already ended. 
-     * 0 ms is the time at which audio should always start playing.
-     * When audio ends it pauses itself and resets seek time to 0.
-     * Use {@link isAudioStarted} to make sure we don't need to play the audio again.
-     */
+    // Audio is not started yet or already ended.
     if (this.timeElapsedMs < 0 || this.isAudioEnded) {
       return this.timeElapsedMs + this.app.ticker.elapsedMS;
-    } else if (!this.isAudioStarted) {
-      this.audio.play();
-      this.isAudioStarted = true;
-      this.isAudioEnded = false;
     }
 
     if (isUsingFirefox) {
@@ -160,19 +172,18 @@ export class StandardGame extends Container {
       // Ensure time is monotonic
       return Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
     }
-    
+
     // Don't overwrite elapsed time if audio seek is 0.
     return (this.audio.seek() * 1000) || this.timeElapsedMs;
   }
 
-  stop() {
-    this.frameTimes ??= [];
+  summarize() {
     this.frameTimes.sort((a, b) => a - b);
 
     const totalFrames = this.frameTimes.length;
 
     console.log("Rendered", totalFrames, "frames");
-    
+
     const Ps = [50, 90, 99, 99.9, 99.99];
 
     for (const P of Ps) {
@@ -190,8 +201,8 @@ export class StandardGame extends Container {
     console.log("max", max.toFixed(2));
     console.log("mean", mean.toFixed(2));
 
-    this.frameTimes = null;
-    this.isAudioEnded = true;
+    // Empty array for next benchmark.
+    this.frameTimes = [];
   }
 
   destroy(options?: IDestroyOptions | boolean) {
