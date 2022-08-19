@@ -13,10 +13,11 @@ declare global {
 
 (async () => {
   const id = Number(new URL(location.toString()).search.substring(1));
-  const infoResponse = await fetch(`/api/beatmap/${id}`);
+  const infoResponse = await fetch(`/api/beatmap/${id}/info`);
 
   if (!infoResponse.ok) {
     document.querySelector<HTMLElement>(".info")!.innerHTML = templateError;
+    return;
   }
 
   const info = (await infoResponse.json()) as Beatmap;

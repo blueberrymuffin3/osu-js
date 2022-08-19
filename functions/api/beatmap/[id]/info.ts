@@ -1,4 +1,4 @@
-import { cachedApiResponseHelper, ENV, getAPITokenHeader } from "../../lib";
+import { cachedApiResponseHelper, ENV, getAPITokenHeader } from "../../../lib";
 
 export const onRequestGet: PagesFunction<ENV> = async ({
   waitUntil,
@@ -11,6 +11,6 @@ export const onRequestGet: PagesFunction<ENV> = async ({
   return cachedApiResponseHelper(url.toString(), {
     waitUntil,
     ttl: 60,
-    fetchHeaders: await getAPITokenHeader(env)
+    fetchHeaders: await getAPITokenHeader(env),
   });
 };

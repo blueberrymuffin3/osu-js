@@ -5,12 +5,12 @@ import {
   StandardHitObject,
 } from "osu-standard-stable";
 import { Cursor } from "./cursor";
-import { EasingFunctions, lerp2D } from "../../anim";
+import { MathUtils, Easing } from "osu-classes";
 import { IPointData } from "pixi.js";
 
 const MAX_CLICK_PROPORTION = 0.5;
 const MAX_CLICK_DURATION = 50;
-const easingFunction = EasingFunctions.OutQuad;
+const easingFunction = Easing.outQuad;
 
 interface CursorState {
   pos: IPointData;
@@ -29,7 +29,7 @@ export default class CursorAutoplay extends Cursor {
 
   getCursorState(timeMs: number): CursorState {
     while (
-      this.nextHitObjectIndex < this.hitObjects.length - 1 &&
+      this.nextHitObjectIndex < this.hitObjects.length &&
       this.hitObjects[this.nextHitObjectIndex].startTime <= timeMs
     ) {
       this.nextHitObjectIndex++;
@@ -73,7 +73,7 @@ export default class CursorAutoplay extends Cursor {
           expanded: true,
         };
       }
-    } else {
+    } else if (nextHitObject) {
       let clickDuration;
 
       if (currentHitObject instanceof Slider) {
@@ -96,16 +96,22 @@ export default class CursorAutoplay extends Cursor {
 
       const travelStart = travelEnd - travelDuration;
 
-      // between hit objects
+      // Between hit objects
       const progress = (timeMs - travelStart) / travelDuration;
 
       return {
-        pos: lerp2D(
+        pos: MathUtils.lerpVector2(
           easingFunction(progress),
           currentHitObject.stackedEndPosition,
           nextHitObject.stackedStartPosition
         ),
         expanded: timeMs < clickEnd,
+      };
+    } else {
+      // Song ended
+      return {
+        pos: currentHitObject.stackedEndPosition,
+        expanded: false,
       };
     }
   }

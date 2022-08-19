@@ -80,17 +80,16 @@ export class StoryboardLayerTimeline extends Container {
     object: IStoryboardElement,
     index: number
   ): TimelineElement<any> | null => {
+    if (object instanceof StoryboardSample) {
+      return this.createSample(object);
+    }
+
     const commandsObj = object as IStoryboardElement & IHasCommands;
 
-    if (commandsObj.timelineGroup) {
-      const hasCommands = commandsObj.timelineGroup.commands.length > 0;
-      const hasLoops = commandsObj.loops.length > 0;
+    if (!commandsObj.hasCommands) {
+      console.warn("Object has no commands", object);
 
-      if (!hasCommands && !hasLoops) {
-        console.warn("Object has no commands", object);
-
-        return null;
-      }
+      return null;
     }
 
     if (object instanceof StoryboardAnimation) {
@@ -99,10 +98,6 @@ export class StoryboardLayerTimeline extends Container {
 
     if (object instanceof StoryboardSprite) {
       return this.createSprite(object, index);
-    }
-
-    if (object instanceof StoryboardSample) {
-      return this.createSample(object);
     }
 
     console.warn("Unknown storyboard element", object);
@@ -145,9 +140,12 @@ export class StoryboardLayerTimeline extends Container {
   }
 
   private createSample(sample: StoryboardSample) {
+    const howl = this.storyboardSamples.get(sample.filePath);
+    const duration = (howl?.duration() ?? 0) * 1000;
+
     return {
       startTimeMs: sample.startTime,
-      endTimeMs: sample.startTime,
+      endTimeMs: sample.startTime + duration,
       build: () => {
         return new PlayableStoryboardSample(sample, this.storyboardSamples);
       },

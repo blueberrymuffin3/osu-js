@@ -1,6 +1,5 @@
-import { MathUtils } from "osu-classes";
 import { MeshGeometry } from "pixi.js";
-import { lerp } from "../../../anim";
+import { MathUtils } from "osu-classes";
 
 const MIN_TRIANGLE_COUNT = 4;
 const MAX_TRIANGLE_COUNT = 8;
@@ -48,10 +47,14 @@ export class Triangles extends MeshGeometry {
 
   public resetTriangles() {
     for (let i = 0; i < this.triangleCount; i++) {
-      const size = lerp(Math.random(), TRIANGLE_SIZE_MIN, TRIANGLE_SIZE_MAX);
-      const x = lerp(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
-      const y = lerp(Math.random(), -size, 1 + size);
-      const speed = lerp(Math.random(), TRIANGLE_SPEED_MIN, TRIANGLE_SPEED_MAX);
+      const size = MathUtils
+        .lerpClamped01(Math.random(), TRIANGLE_SIZE_MIN, TRIANGLE_SIZE_MAX);
+      const x = MathUtils
+        .lerpClamped01(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
+      const y = MathUtils
+        .lerpClamped01(Math.random(), -size, 1 + size);
+      const speed = MathUtils
+        .lerpClamped01(Math.random(), TRIANGLE_SPEED_MIN, TRIANGLE_SPEED_MAX);
 
       this.trianglePositions[i * 2] = x;
       this.trianglePositions[i * 2 + 1] = y;
@@ -102,13 +105,17 @@ export class Triangles extends MeshGeometry {
       let size = this.triangleSizes[i];
       y -= deltaMs * this.triangleSpeeds[i];
       if (forward ? y < -size : y > 1 + size) {
-        this.triangleSpeeds[i] = lerp(
+        this.triangleSpeeds[i] = MathUtils.lerpClamped01(
           Math.random(),
           TRIANGLE_SPEED_MIN,
           TRIANGLE_SPEED_MAX
         );
         y = forward ? 1 + size : -size;
-        x = lerp(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
+        x = MathUtils.lerpClamped01(
+          Math.random(), 
+          TRIANGLE_X_MIN, 
+          TRIANGLE_X_MAX
+        );
       }
       this.trianglePositions[j + 0] = x;
       this.trianglePositions[j + 1] = y;

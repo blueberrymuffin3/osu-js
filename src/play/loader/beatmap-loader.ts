@@ -57,7 +57,7 @@ export const loadBeatmapStep =
         async execute(cb) {
           cb(0, "Downloading Beatmap");
 
-          const url = `/api/download/beatmapset/${info.beatmapset_id}`;
+          const url = `https://catboy.best/d/${info.beatmapset_id}`;
           let cache: Cache | null = null;
           try {
             cache = await caches.open("cache");
@@ -142,7 +142,7 @@ export const loadBeatmapStep =
             console.warn(
               "No .osu files matching MD5 Hash found, fetching from API instead"
             );
-            const response = await fetch(`/api/download/beatmap/${info.id}`);
+            const response = await fetch(`/api/beatmap/${info.id}/latest.osu`);
             if (!response.ok) {
               throw new Error(
                 `Error downloading beatmap: Got status ${response.status}`
@@ -164,7 +164,7 @@ export const loadBeatmapStep =
             osbString
           );
 
-          loaded.data.events.storyboard = loaded.storyboard;
+          loaded.data.events.storyboard = loaded.storyboard!;
         },
       },
       {
