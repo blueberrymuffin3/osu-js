@@ -49,8 +49,6 @@ export class StandardGame extends Container {
     super();
 
     this.app = app;
-
-    this.app = app;
     this.audio = beatmap.audio;
 
     VIRTUAL_SCREEN_MASK.setParent(this);
