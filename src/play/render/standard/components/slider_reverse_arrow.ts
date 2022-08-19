@@ -1,6 +1,6 @@
+import { MathUtils, Easing } from "osu-classes";
 import { SliderRepeat } from "osu-standard-stable";
 import { BLEND_MODES, Sprite, Texture } from "pixi.js";
-import { EasingFunctions, lerp } from "../../../anim";
 import { IUpdatable } from "../../../game/timeline";
 import { TEXTURE_SLIDER_REVERSE_ARROW } from "../../../resources/textures";
 
@@ -33,20 +33,29 @@ export class SliderReverseArrowSprite extends Sprite implements IUpdatable {
   update(timeMs: number): void {
     const enter = timeMs - this.timeEnter;
     const hit = timeMs - this.timeHit;
-    this.alpha =
-      lerp(enter / this.animDuration, 0, 1) *
-      lerp(EasingFunctions.OutQuad(hit / this.animDuration), 1, 0);
+
+    const alphaFadeIn = MathUtils
+      .lerpClamped01(enter / this.animDuration, 0, 1);
+      
+    const alphaFadeOut = MathUtils
+      .lerpClamped01(Easing.outQuad(hit / this.animDuration), 1, 0);
+
+    this.alpha = alphaFadeIn * alphaFadeOut;
 
     // TODO: "Pulse" slider reverse arrows with the beat
     // See https://github.com/ppy/osu/blob/d590219779fa2f4baec692f09dd7b6b7e3b0996f/osu.Game.Rulesets.Osu/Skinning/Default/ReverseArrowPiece.cs#L47-L51
-    this.scale.set(
-      lerp(
-        EasingFunctions.OutElasticHalf(enter / (this.animDuration * 2)),
-        SCALE_IN,
-        1
-      ) *
-        lerp(EasingFunctions.OutQuad(hit / this.animDuration), 1, SCALE_OUT) *
-        this.baseScale
+    const scaleInFactor = MathUtils.lerpClamped01(
+      Easing.outElasticHalf(enter / (this.animDuration * 2)), 
+      SCALE_IN, 
+      1
     );
+
+    const scaleOutFactor = MathUtils.lerpClamped01(
+      Easing.outQuad(hit / this.animDuration), 
+      1, 
+      SCALE_OUT
+    );
+    
+    this.scale.set(scaleInFactor * scaleOutFactor * this.baseScale);
   }
 }

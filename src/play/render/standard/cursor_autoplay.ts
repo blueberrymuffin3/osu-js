@@ -5,12 +5,12 @@ import {
   StandardHitObject,
 } from "osu-standard-stable";
 import { Cursor } from "./cursor";
-import { EasingFunctions, lerp2D } from "../../anim";
+import { MathUtils, Easing } from "osu-classes";
 import { IPointData } from "pixi.js";
 
 const MAX_CLICK_PROPORTION = 0.5;
 const MAX_CLICK_DURATION = 50;
-const easingFunction = EasingFunctions.OutQuad;
+const easingFunction = Easing.outQuad;
 
 interface CursorState {
   pos: IPointData;
@@ -100,7 +100,7 @@ export default class CursorAutoplay extends Cursor {
       const progress = (timeMs - travelStart) / travelDuration;
 
       return {
-        pos: lerp2D(
+        pos: MathUtils.lerpVector2(
           easingFunction(progress),
           currentHitObject.stackedEndPosition,
           nextHitObject.stackedStartPosition

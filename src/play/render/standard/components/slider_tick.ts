@@ -1,5 +1,5 @@
 import { Container, Sprite } from "pixi.js";
-import { EasingFunctions, lerp } from "../../../anim";
+import { MathUtils, Easing } from "osu-classes";
 import { IUpdatable } from "../../../game/timeline";
 import {
   TEXTURE_SLIDER_TICK_INNER,
@@ -48,13 +48,28 @@ export class SliderTickSprite extends Container implements IUpdatable {
   update(timeMs: number): void {
     const enter = timeMs - this.enterTime;
     const hit = timeMs - this.hitTime;
-    this.alpha =
-      lerp(enter / FADE_TIME, 0, 1) *
-      lerp(EasingFunctions.OutQuint(hit / FADE_TIME), 1, 0);
-    this.scale.set(
-      lerp(EasingFunctions.OutElasticHalf(enter / SCALE_IN_TIME), SCALE_IN, 1) *
-        lerp(EasingFunctions.OutQuad(hit / SCALE_OUT_TIME), 1, SCALE_OUT) *
-        this.baseScale
+
+    const alphaFadeIn = MathUtils.lerpClamped01(enter / FADE_TIME, 0, 1);
+    const alphaFadeOut = MathUtils.lerpClamped01(
+      Easing.outQuint(hit / FADE_TIME),
+      1,
+      0
     );
+
+    this.alpha = alphaFadeIn * alphaFadeOut;
+
+    const scaleInFactor = MathUtils.lerpClamped01(
+      Easing.outElasticHalf(enter / SCALE_IN_TIME),
+      SCALE_IN,
+      1
+    );
+
+    const scaleOutFactor = MathUtils.lerpClamped01(
+      Easing.outQuad(hit / SCALE_OUT_TIME),
+      1,
+      SCALE_OUT
+    );
+
+    this.scale.set(scaleInFactor * scaleOutFactor * this.baseScale);
   }
 }

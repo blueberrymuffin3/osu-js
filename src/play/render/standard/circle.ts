@@ -7,7 +7,7 @@ import {
   IBitmapTextStyle,
   BLEND_MODES,
 } from "pixi.js";
-import { clamp01, lerp } from "../../anim";
+import { MathUtils } from "osu-classes";
 import { IUpdatable } from "../../game/timeline";
 import { FONT_VENERA_FACE } from "../../resources/fonts";
 import {
@@ -104,14 +104,15 @@ export class CirclePiece extends Container implements IUpdatable {
 
       // Expand during explosion
       this.scale.set(
-        lerp(timeRelativeMs / SCALE_TIME, 1.0, 1.5) * this.initialScale
+        MathUtils.lerpClamped01(timeRelativeMs / SCALE_TIME, 1.0, 1.5) 
+          * this.initialScale
       );
 
       // Flash
       const progressPhase1 = timeRelativeMs / FLASH_IN_TIME;
       if (progressPhase1 < 1) {
         // Phase 1
-        this.flash.alpha = clamp01(progressPhase1);
+        this.flash.alpha = MathUtils.clamp01(progressPhase1);
       } else {
         // Phase 2
         this.approachCircle.visible = false;
@@ -122,17 +123,27 @@ export class CirclePiece extends Container implements IUpdatable {
         const progressPhase2 = timeRelativeMs - FLASH_IN_TIME;
 
         // TODO: Probably slightly incorrect because flash is faded twice
-        this.flash.alpha = clamp01(1 - progressPhase2 / FLASH_OUT_TIME);
-        this.alpha = clamp01(1 - progressPhase2 / FADE_OUT_TIME);
+        this.flash.alpha = MathUtils
+          .clamp01(1 - progressPhase2 / FLASH_OUT_TIME);
+        this.alpha = MathUtils.clamp01(1 - progressPhase2 / FADE_OUT_TIME);
       }
     } else {
       // Entering
 
       const timeRelativeEnterMs = timeRelativeMs + this.hitObject.timePreempt;
 
-      this.alpha = lerp(timeRelativeEnterMs / this.hitObject.timeFadeIn, 0, 1);
+      this.alpha = MathUtils.lerpClamped01(
+        timeRelativeEnterMs / this.hitObject.timeFadeIn, 
+        0, 
+        1
+      );
+
       this.approachCircle.scale.set(
-        lerp(timeRelativeEnterMs / this.hitObject.timePreempt, 4, 1)
+        MathUtils.lerpClamped01(
+          timeRelativeEnterMs / this.hitObject.timePreempt, 
+          4, 
+          1
+        )
       );
     }
   }

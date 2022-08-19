@@ -164,7 +164,7 @@ export const loadBeatmapStep =
             osbString
           );
 
-          loaded.data.events.storyboard = loaded.storyboard;
+          loaded.data.events.storyboard = loaded.storyboard!;
         },
       },
       {

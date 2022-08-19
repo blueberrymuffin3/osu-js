@@ -1,6 +1,6 @@
 import { Slider, Spinner, StandardHitObject } from "osu-standard-stable";
 import { Container, Sprite, Texture } from "pixi.js";
-import { clamp01 } from "../../anim";
+import { MathUtils } from "osu-classes";
 import { OSU_PIXELS_SCREEN_WIDESCREEN } from "../../constants";
 import { IUpdatable } from "../../game/timeline";
 import { LoadedBeatmap } from "../../loader/util";
@@ -136,7 +136,7 @@ export class SongProgressGraph extends Container implements IUpdatable {
   }
 
   public update(timeMs: number) {
-    const prop = clamp01(
+    const prop = MathUtils.clamp01(
       (timeMs - this.firstHit) / (this.lastHit - this.firstHit)
     );
 

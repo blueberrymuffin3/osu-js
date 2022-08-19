@@ -1064,26 +1064,26 @@ osu-api-v2@^0.0.17:
   dependencies:
     node-fetch "^2.6.7"
 
-osu-classes@^0.10.1, osu-classes@^0.10.4:
-  version "0.10.4"
-  resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-0.10.4.tgz#8f1d808e985577369c037d1bf8d4de9fbcb3cf7e"
-  integrity sha512-i3T/+BRXt78MMwEqXmRb+w+/1cKYQzznGgGyVfmu+6PWhZMuBi+3/1a08YM1TDC2DWyCSYsY+W1nzRCW8LfnlA==
+osu-classes@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/osu-classes/-/osu-classes-1.0.1.tgz#0b208b8a6257681f07043186896bfd6bf7159039"
+  integrity sha512-ZgANLXFF7Wxfq8h6D6F/3RDl3WbpK/8lzUWiTY26Shp6h50pR2QsdfNUtPrYHMdbq8jhjrZf1NnjQzmX4jLPvA==
 
-osu-parsers@^2.5.2:
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/osu-parsers/-/osu-parsers-2.5.2.tgz#a7925b9783b9b840c17f09cae112237ebd4f560e"
-  integrity sha512-OkTuexJFVMI6txi89yoNTkFW5oOmDbrixcoxCpIvY1ZvI01IluEe2BhBXYezExuZz2obywyfSvdvJs/z3NlxzQ==
+osu-parsers@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/osu-parsers/-/osu-parsers-3.0.1.tgz#430724ed4fa1b43abbdcda805757d508bf05cad8"
+  integrity sha512-iqf4TpGQLF/h2K6q+trHATHAsIqZvvYIiDKRNGsX9lIKV81zNi6uobAj7Wr+nPRRvUFu4KQI+Q1ZCl4oWklrWQ==
   dependencies:
     buffer "^6.0.3"
     lzma-js-simple "^1.1.0"
-    osu-classes "^0.10.4"
+    osu-classes "^1.0.1"
 
-osu-standard-stable@^2.3.3:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/osu-standard-stable/-/osu-standard-stable-2.3.3.tgz#36f811f0119009de5edad321143c3bc6051ae9a3"
-  integrity sha512-TCSjYG/4uGz9dAH0ZSgpcaX/BL/2uj073QW7wsoM2Kr5WEyKWbg0h2snsCtgEgpdgLUcRrT6EO+X+JHZrarWcQ==
+osu-standard-stable@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/osu-standard-stable/-/osu-standard-stable-3.0.1.tgz#4121abb935eb1cd2e817cd7ae2d5ceec8b2fedad"
+  integrity sha512-N75/WQqByJk3HGUhZx/IERPaxIjMExSRRu6x9dcd57PYQjGN3kDdWSEJYignOU8j3u7vDAmfyWN8WulhUNKu2g==
   dependencies:
-    osu-classes "^0.10.1"
+    osu-classes "^1.0.1"
 
 pako@~1.0.2:
   version "1.0.11"
