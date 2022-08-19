@@ -1,4 +1,4 @@
-import { SliderPath } from "osu-classes";
+import { SliderPath, Vector2 } from "osu-classes";
 import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { MathUtils, Easing } from "osu-classes";
@@ -30,11 +30,33 @@ const FOLLOW_CIRCLE_SCALE_FULL = 1.0;
 const FOLLOW_CIRCLE_DURATION = 300;
 const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_DURATION / 2;
 
+const FLOAT_EPSILON = 1e-3;
+
 function sliderAngle(sliderPath: SliderPath, atStart: boolean) {
   const path = sliderPath.path;
-  const position1 = path[atStart ? 0 : path.length - 1];
-  const position2 = path[atStart ? 1 : path.length - 2];
-  const delta = position2.subtract(position1);
+  if (!atStart) {
+    path.reverse();
+  }
+  let delta: Vector2 | null = null;
+  const position1 = path[0];
+
+  for (let index = 1; index < path.length; index++) {
+    const position2 = path[index];
+    delta = position2.subtract(position1);
+    
+    if (
+      Math.abs(delta.x) >= FLOAT_EPSILON ||
+      Math.abs(delta.y) >= FLOAT_EPSILON
+    ) {
+      break;
+    }
+  }
+
+  if (!delta) {
+    console.warn("Path only has 1 point");
+    return 0;
+  }
+
   return Math.atan2(delta.y, delta.x) * (180 / Math.PI);
 }
 
@@ -155,11 +177,16 @@ export class SliderPiece extends Container implements IUpdatable {
       MathUtils.lerpClamped01(enterTime / this.fadeIn, 0, 1) *
       MathUtils.lerpClamped01(exitTime / SLIDER_FADE_OUT, 1, 0);
 
-    this.sliderPathSprite.alpha = MathUtils
-      .lerpClamped01(exitTime / SLIDER_BODY_FADE_OUT, 1, 0);
+    this.sliderPathSprite.alpha = MathUtils.lerpClamped01(
+      exitTime / SLIDER_BODY_FADE_OUT,
+      1,
+      0
+    );
     this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
 
-    const sliderProgress = MathUtils.clamp01(timeRelativeMs / this.hitObject.duration);
+    const sliderProgress = MathUtils.clamp01(
+      timeRelativeMs / this.hitObject.duration
+    );
     const sliderProportion = this.hitObject.path.progressAt(
       sliderProgress,
       this.hitObject.spans
