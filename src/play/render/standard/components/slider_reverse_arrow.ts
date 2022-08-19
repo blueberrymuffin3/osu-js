@@ -34,28 +34,28 @@ export class SliderReverseArrowSprite extends Sprite implements IUpdatable {
     const enter = timeMs - this.timeEnter;
     const hit = timeMs - this.timeHit;
 
-    const clamp1 = MathUtils
+    const alphaFadeIn = MathUtils
       .lerpClamped01(enter / this.animDuration, 0, 1);
       
-    const clamp2 = MathUtils
+    const alphaFadeOut = MathUtils
       .lerpClamped01(Easing.outQuad(hit / this.animDuration), 1, 0);
 
-    this.alpha = clamp1 * clamp2;
+    this.alpha = alphaFadeIn * alphaFadeOut;
 
     // TODO: "Pulse" slider reverse arrows with the beat
     // See https://github.com/ppy/osu/blob/d590219779fa2f4baec692f09dd7b6b7e3b0996f/osu.Game.Rulesets.Osu/Skinning/Default/ReverseArrowPiece.cs#L47-L51
-    const lerp1 = MathUtils.lerpClamped01(
+    const scaleInFactor = MathUtils.lerpClamped01(
       Easing.outElasticHalf(enter / (this.animDuration * 2)), 
       SCALE_IN, 
       1
     );
 
-    const lerp2 = MathUtils.lerpClamped01(
+    const scaleOutFactor = MathUtils.lerpClamped01(
       Easing.outQuad(hit / this.animDuration), 
       1, 
       SCALE_OUT
     );
     
-    this.scale.set(lerp1 * lerp2 * this.baseScale);
+    this.scale.set(scaleInFactor * scaleOutFactor * this.baseScale);
   }
 }
