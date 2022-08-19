@@ -110,9 +110,9 @@ export class StandardGame extends Container {
 
     this.timeElapsedMs = this.startTimeMs;
 
-    app.ticker.add(this.tick, this);
+    this.audio.once("end", () => this.isAudioEnded = true);
 
-    this.audio.on("end", () => this.stop());
+    app.ticker.add(this.tick, this);
   }
 
   protected tick() {
@@ -131,6 +131,10 @@ export class StandardGame extends Container {
       this.audio.play();
       this.isAudioStarted = true;
       this.isAudioEnded = false;
+    }
+
+    if (this.frameTimes !== null && this.timeElapsedMs >= this.endTimeMs) {
+      this.summarize();
     }
 
     this.frameTimes?.push(this.app.ticker.elapsedMS);
@@ -171,19 +175,19 @@ export class StandardGame extends Container {
       // Ensure time is monotonic
       return Math.max(this.timeElapsedMs, this.trueTimeElapsedMs);
     }
-    
+
     // Don't overwrite elapsed time if audio seek is 0.
     return (this.audio.seek() * 1000) || this.timeElapsedMs;
   }
 
-  stop() {
+  summarize() {
     this.frameTimes ??= [];
     this.frameTimes.sort((a, b) => a - b);
 
     const totalFrames = this.frameTimes.length;
 
     console.log("Rendered", totalFrames, "frames");
-    
+
     const Ps = [50, 90, 99, 99.9, 99.99];
 
     for (const P of Ps) {
@@ -202,7 +206,6 @@ export class StandardGame extends Container {
     console.log("mean", mean.toFixed(2));
 
     this.frameTimes = null;
-    this.isAudioEnded = true;
   }
 
   destroy(options?: IDestroyOptions | boolean) {
