@@ -127,7 +127,6 @@ export class StandardGame extends Container {
      * we don't need to play the audio again.
      */
     if (this.timeElapsedMs >= 0 && !this.isAudioStarted) {
-      this.audio.seek(this.timeElapsedMs / 1000);
       this.audio.play();
       this.isAudioStarted = true;
       this.isAudioEnded = false;
