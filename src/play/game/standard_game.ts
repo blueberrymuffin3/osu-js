@@ -133,11 +133,11 @@ export class StandardGame extends Container {
       this.isAudioEnded = false;
     }
 
-    if (this.frameTimes.length > 0 && this.timeElapsedMs >= this.endTimeMs) {
+    if (this.timeElapsedMs < this.endTimeMs) {
+      this.frameTimes.push(this.app.ticker.elapsedMS);
+    } else if (this.frameTimes.length > 0) {
       this.summarize();
     }
-
-    this.frameTimes.push(this.app.ticker.elapsedMS);
 
     this.hitObjectTimeline.update(this.timeElapsedMs);
     this.cursorAutoplay.update(this.timeElapsedMs);
