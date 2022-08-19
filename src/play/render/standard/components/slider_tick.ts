@@ -49,27 +49,27 @@ export class SliderTickSprite extends Container implements IUpdatable {
     const enter = timeMs - this.enterTime;
     const hit = timeMs - this.hitTime;
 
-    const lerp1 = MathUtils.lerpClamped01(enter / FADE_TIME, 0, 1);
-    const lerp2 = MathUtils.lerpClamped01(
-      Easing.outQuint(hit / FADE_TIME), 
-      1, 
+    const alphaFadeIn = MathUtils.lerpClamped01(enter / FADE_TIME, 0, 1);
+    const alphaFadeOut = MathUtils.lerpClamped01(
+      Easing.outQuint(hit / FADE_TIME),
+      1,
       0
     );
 
-    this.alpha = lerp1 * lerp2;
-      
-    const lerp3 = MathUtils.lerpClamped01(
-      Easing.outElasticHalf(enter / SCALE_IN_TIME), 
-      SCALE_IN, 
+    this.alpha = alphaFadeIn * alphaFadeOut;
+
+    const scaleInFactor = MathUtils.lerpClamped01(
+      Easing.outElasticHalf(enter / SCALE_IN_TIME),
+      SCALE_IN,
       1
     );
 
-    const lerp4 = MathUtils.lerpClamped01(
-      Easing.outQuad(hit / SCALE_OUT_TIME), 
-      1, 
+    const scaleOutFactor = MathUtils.lerpClamped01(
+      Easing.outQuad(hit / SCALE_OUT_TIME),
+      1,
       SCALE_OUT
     );
 
-    this.scale.set(lerp3 * lerp4 * this.baseScale);
+    this.scale.set(scaleInFactor * scaleOutFactor * this.baseScale);
   }
 }
