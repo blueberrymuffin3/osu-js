@@ -41,6 +41,8 @@ export class StandardGame extends Container {
   private hitObjectTimeline: HitObjectTimeline;
   private cursorAutoplay: CursorAutoplay;
 
+  private startTimeMs: number;
+  private endTimeMs: number;
   private frameTimes: number[] | null = [];
 
   constructor(app: Application, beatmap: LoadedBeatmap) {
@@ -100,8 +102,13 @@ export class StandardGame extends Container {
     this.interactive = true;
     this.interactiveChildren = false;
 
+    const { earliestEventTime, latestEventTime } = beatmap.storyboard;
+
     // Some storyboards start before 0 ms.
-    this.timeElapsedMs = Math.min(0, beatmap.storyboard.earliestEventTime ?? 0);
+    this.startTimeMs = Math.min(0, earliestEventTime ?? 0);
+    this.endTimeMs = Math.max(this.audio.duration() * 1000, latestEventTime ?? 0);
+
+    this.timeElapsedMs = this.startTimeMs;
 
     app.ticker.add(this.tick, this);
 
