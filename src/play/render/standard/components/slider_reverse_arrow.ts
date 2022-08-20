@@ -81,7 +81,7 @@ export class SliderReverseArrowSprite extends Sprite implements IUpdatable {
 
     const pulseFactor = MathUtils.lerpClamped01(
       Easing.outQuad(timeSinceLastBeat / this.timingPoint.beatLength),
-      PULSE_SCALE,
+      timeSinceHit < 0 ? PULSE_SCALE : 1,
       1
     );
 
