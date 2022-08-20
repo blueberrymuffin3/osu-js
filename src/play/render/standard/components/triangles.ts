@@ -4,8 +4,8 @@ import { MathUtils } from "osu-classes";
 const MIN_TRIANGLE_COUNT = 5;
 const MAX_TRIANGLE_COUNT = 8;
 
-const TRIANGLE_SIZE_MIN = 0.15;
-const TRIANGLE_SIZE_MAX = 0.4;
+const TRIANGLE_SIZE_MIN = 0.1;
+const TRIANGLE_SIZE_MAX = 0.6;
 const TRIANGLE_X_MIN = 0.2;
 const TRIANGLE_X_MAX = 1 - TRIANGLE_X_MIN;
 const TRIANGLE_SPEED_MIN = 0.0001;
