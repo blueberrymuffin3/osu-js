@@ -18,6 +18,7 @@ import { SliderTickSprite } from "./components/slider_tick";
 
 const SLIDER_FADE_OUT = 450;
 
+const SLIDER_BODY_SNAKING = true;
 const SLIDER_BODY_FADE_OUT = 40;
 
 const SLIDER_BALL_SCALE_INITIAL = 1;
@@ -177,21 +178,23 @@ export class SliderPiece extends Container implements IUpdatable {
     spanProgress: number,
     enterTime: number
   ): void {
-    // this.sliderPathSprite.endProgress = MathUtils.clamp01(
-    //   enterTime / this.fadeIn
-    // );
-    
-    const finalSpan = totalProgress > 1 - 1 / this.slider.spans;
+    // https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/SnakingSliderBody.cs#L79
 
-    if (!finalSpan) return;
+    let startProgress = 0;
+    let endProgress = 1;
 
-    if (this.slider.spans % 2 == 0) {
-      this.sliderPathSprite.startProgress = 0;
-      this.sliderPathSprite.endProgress = spanProgress;
-    } else {
-      this.sliderPathSprite.startProgress = spanProgress;
-      this.sliderPathSprite.endProgress = 1;
+    if (totalProgress > 1 - 1 / this.slider.spans) { 
+      if (this.slider.spans % 2 == 0) {
+        endProgress = SLIDER_BODY_SNAKING ? spanProgress : 1;
+      } else {
+        startProgress = SLIDER_BODY_SNAKING ? spanProgress : 0;
+      }
+    } else if (SLIDER_BODY_SNAKING) {
+      endProgress = MathUtils.clamp01(3 * enterTime / this.preempt);
     }
+
+    this.sliderPathSprite.startProgress = startProgress;
+    this.sliderPathSprite.endProgress = endProgress;
   }
 
   private updateFollower(
