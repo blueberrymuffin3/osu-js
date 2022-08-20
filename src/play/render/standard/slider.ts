@@ -26,10 +26,13 @@ const SLIDER_BALL_SCALE_EXIT = 1.2;
 const SLIDER_BALL_ANIM_DURATION = 450;
 const SLIDER_BALL_FADE_OUT = SLIDER_BALL_ANIM_DURATION / 4;
 
-const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / 2.4;
+const FOLLOW_AREA = 2.4;
+const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / FOLLOW_AREA;
 const FOLLOW_CIRCLE_SCALE_FULL = 1.0;
-const FOLLOW_CIRCLE_ANIM_DURATION = 300;
-const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_ANIM_DURATION / 2;
+const FOLLOW_CIRCLE_PRESS_ANIM_DURATION = 300;
+const FOLLOW_CIRCLE_END_ANIM_DURATION = 300;
+const FOLLOW_CIRCLE_FADE_IN = FOLLOW_CIRCLE_PRESS_ANIM_DURATION / 2;
+const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_FADE_IN;
 
 const FLOAT_EPSILON = 1e-3;
 
@@ -64,7 +67,7 @@ function sliderAngle(sliderPath: SliderPath, atStart: boolean) {
 export class SliderPiece extends Container implements IUpdatable {
   public static EXIT_ANIMATION_DURATION = Math.max(
     SLIDER_BALL_FADE_OUT,
-    FOLLOW_CIRCLE_ANIM_DURATION
+    FOLLOW_CIRCLE_END_ANIM_DURATION
   );
 
   private preempt: number;
@@ -228,12 +231,12 @@ export class SliderPiece extends Container implements IUpdatable {
     );
 
     // TODO: Maybe it should be renamed to something better?
-    const circleProgress = timeRelativeMs / FOLLOW_CIRCLE_ANIM_DURATION;
-    const circleAnimProgress = exitTime / FOLLOW_CIRCLE_ANIM_DURATION;
+    const circlePressProgress = timeRelativeMs / FOLLOW_CIRCLE_PRESS_ANIM_DURATION;
+    const circleEndProgress = exitTime / FOLLOW_CIRCLE_END_ANIM_DURATION;
     const circleFadeOutProgress = exitTime / FOLLOW_CIRCLE_FADE_OUT;
 
-    const circleScaleIn = Easing.outQuint(circleProgress);
-    const circleScaleOut = Easing.outQuint(circleAnimProgress);
+    const circleScaleIn = Easing.outQuint(circlePressProgress);
+    const circleScaleOut = Easing.outQuint(circleEndProgress);
     const circleFadeOut = Easing.outQuint(circleFadeOutProgress);
 
     this.followCircleSprite.alpha = circleScaleIn * (1 - circleFadeOut);
