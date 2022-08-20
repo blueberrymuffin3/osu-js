@@ -23,13 +23,13 @@ const SLIDER_BODY_FADE_OUT = 40;
 
 const SLIDER_BALL_SCALE_INITIAL = 1;
 const SLIDER_BALL_SCALE_EXIT = 1.2;
-const SLIDER_BALL_FADE_DURATION = 450;
-const SLIDER_BALL_FADE_OUT = SLIDER_BALL_FADE_DURATION / 4;
+const SLIDER_BALL_ANIM_DURATION = 450;
+const SLIDER_BALL_FADE_OUT = SLIDER_BALL_ANIM_DURATION / 4;
 
 const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / 2.4;
 const FOLLOW_CIRCLE_SCALE_FULL = 1.0;
-const FOLLOW_CIRCLE_FADE_DURATION = 300;
-const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_FADE_DURATION / 2;
+const FOLLOW_CIRCLE_ANIM_DURATION = 300;
+const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_ANIM_DURATION / 2;
 
 const FLOAT_EPSILON = 1e-3;
 
@@ -64,7 +64,7 @@ function sliderAngle(sliderPath: SliderPath, atStart: boolean) {
 export class SliderPiece extends Container implements IUpdatable {
   public static EXIT_ANIMATION_DURATION = Math.max(
     SLIDER_BALL_FADE_OUT,
-    FOLLOW_CIRCLE_FADE_DURATION
+    FOLLOW_CIRCLE_ANIM_DURATION
   );
 
   private preempt: number;
@@ -213,9 +213,9 @@ export class SliderPiece extends Container implements IUpdatable {
     this.follower.position.copyFrom(currentPosition);
 
     const ballFadeOutProgress = exitTime / SLIDER_BALL_FADE_OUT;
-    const ballFadeProgress = exitTime / SLIDER_BALL_FADE_DURATION;
+    const ballAnimProgress = exitTime / SLIDER_BALL_ANIM_DURATION;
 
-    const sliderBallScaleFactor = Easing.outQuad(ballFadeProgress);
+    const sliderBallScaleFactor = Easing.outQuad(ballAnimProgress);
   
     this.sliderBallSprite.alpha = 1 - Easing.outQuad(ballFadeOutProgress);
 
@@ -227,12 +227,13 @@ export class SliderPiece extends Container implements IUpdatable {
       )
     );
 
-    const circleProgress = timeRelativeMs / FOLLOW_CIRCLE_FADE_DURATION;
-    const circleFadeProgress = exitTime / FOLLOW_CIRCLE_FADE_DURATION;
+    // TODO: Maybe it should be renamed to something better?
+    const circleProgress = timeRelativeMs / FOLLOW_CIRCLE_ANIM_DURATION;
+    const circleAnimProgress = exitTime / FOLLOW_CIRCLE_ANIM_DURATION;
     const circleFadeOutProgress = exitTime / FOLLOW_CIRCLE_FADE_OUT;
 
     const circleScaleIn = Easing.outQuint(circleProgress);
-    const circleScaleOut = Easing.outQuint(circleFadeProgress);
+    const circleScaleOut = Easing.outQuint(circleAnimProgress);
     const circleFadeOut = Easing.outQuint(circleFadeOutProgress);
 
     this.followCircleSprite.alpha = circleScaleIn * (1 - circleFadeOut);
