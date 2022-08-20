@@ -1,4 +1,4 @@
-import { ControlPointInfo, SliderPath, Vector2 } from "osu-classes";
+import { ControlPointInfo, HitObject, SliderPath, Vector2 } from "osu-classes";
 import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { MathUtils, Easing } from "osu-classes";
@@ -69,7 +69,9 @@ export class SliderPiece extends Container implements IUpdatable {
   private preempt: number;
   private fadeIn: number;
 
-  private hitObject: Slider;
+  private slider: Slider;
+  private controlPoints: ControlPointInfo;
+  private accentColor: number;
 
   private sliderPathSprite: SliderPathSprite;
   private nestedDisplayObjectsTimeline: DisplayObjectTimeline;
@@ -78,7 +80,7 @@ export class SliderPiece extends Container implements IUpdatable {
   private followCircleSprite: Sprite;
 
   public constructor(
-    hitObject: Slider,
+    slider: Slider,
     controlPoints: ControlPointInfo,
     accentColor: number,
     trackColor: number,
@@ -86,12 +88,14 @@ export class SliderPiece extends Container implements IUpdatable {
   ) {
     super();
 
-    this.hitObject = hitObject;
-    this.preempt = hitObject.timePreempt;
-    this.fadeIn = hitObject.timeFadeIn;
+    this.slider = slider;
+    this.preempt = slider.timePreempt;
+    this.fadeIn = slider.timeFadeIn;
+    this.controlPoints = controlPoints;
+    this.accentColor = accentColor;
 
     this.sliderPathSprite = new SliderPathSprite(
-      hitObject,
+      slider,
       trackColor,
       borderColor
     );
@@ -102,53 +106,14 @@ export class SliderPiece extends Container implements IUpdatable {
 
     const nestedDisplayObjects: TimelineElement<DOTimelineInstance>[] = [];
 
-    for (const nestedHitObject of hitObject.nestedHitObjects) {
-      if (nestedHitObject instanceof SliderTick) {
-        const startTime =
-          nestedHitObject.startTime - nestedHitObject.timePreempt;
-        const endTime = nestedHitObject.startTime;
+    for (const nestedHitObject of slider.nestedHitObjects) {
+      const created = this.createNestedObject(nestedHitObject);
 
-        nestedDisplayObjects.push({
-          startTimeMs: startTime,
-          endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
-          build: () => {
-            const sprite = new SliderTickSprite(
-              accentColor,
-              startTime,
-              endTime,
-              nestedHitObject.scale / 2
-            );
-            sprite.position.copyFrom(
-              nestedHitObject.startPosition.subtract(hitObject.startPosition)
-            );
-            return sprite;
-          },
-        });
-      } else if (nestedHitObject instanceof SliderRepeat) {
-        const angle = sliderAngle(
-          hitObject.path,
-          nestedHitObject.repeatIndex % 2 !== 0
-        );
-        nestedDisplayObjects.push({
-          startTimeMs: nestedHitObject.startTime - nestedHitObject.timePreempt,
-          endTimeMs:
-            nestedHitObject.startTime +
-            SliderReverseArrowSprite.EXIT_ANIMATION_DURATION,
-          build: () => {
-            const sprite = new SliderReverseArrowSprite(
-              nestedHitObject, 
-              controlPoints
-            );
+      if (!created) continue;
 
-            sprite.position.copyFrom(
-              nestedHitObject.startPosition.subtract(hitObject.startPosition)
-            );
-            sprite.angle = angle;
-            return sprite;
-          },
-        });
-      }
+      nestedDisplayObjects.push(created);
     }
+
     this.nestedDisplayObjectsTimeline = new DisplayObjectTimeline(
       nestedDisplayObjects
     );
@@ -160,7 +125,7 @@ export class SliderPiece extends Container implements IUpdatable {
 
     this.follower = new Container();
     this.follower.visible = false;
-    this.follower.scale.set(this.hitObject.scale / 2);
+    this.follower.scale.set(this.slider.scale / 2);
     this.follower.addChild(this.sliderBallSprite, this.followCircleSprite);
 
     this.addChild(
@@ -173,10 +138,10 @@ export class SliderPiece extends Container implements IUpdatable {
   update(timeMs: number) {
     this.nestedDisplayObjectsTimeline.update(timeMs);
 
-    const timeRelativeMs = timeMs - this.hitObject.startTime;
+    const timeRelativeMs = timeMs - this.slider.startTime;
 
     const enterTime = timeRelativeMs + this.preempt;
-    const exitTime = timeRelativeMs - this.hitObject.duration;
+    const exitTime = timeRelativeMs - this.slider.duration;
 
     this.alpha =
       MathUtils.lerpClamped01(enterTime / this.fadeIn, 0, 1) *
@@ -190,19 +155,19 @@ export class SliderPiece extends Container implements IUpdatable {
     this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
 
     const sliderProgress = MathUtils.clamp01(
-      timeRelativeMs / this.hitObject.duration
+      timeRelativeMs / this.slider.duration
     );
-    const sliderProportion = this.hitObject.path.progressAt(
+    const sliderProportion = this.slider.path.progressAt(
       sliderProgress,
-      this.hitObject.spans
+      this.slider.spans
     );
-    const finalSpan = sliderProgress > 1 - 1 / this.hitObject.spans;
+    const finalSpan = sliderProgress > 1 - 1 / this.slider.spans;
 
     const sliderActive = timeRelativeMs >= 0;
     this.follower.visible = sliderActive;
     if (sliderActive) {
       this.follower.position.copyFrom(
-        this.hitObject.path.positionAt(sliderProportion)
+        this.slider.path.positionAt(sliderProportion)
       );
 
       this.sliderBallSprite.alpha =
@@ -234,7 +199,7 @@ export class SliderPiece extends Container implements IUpdatable {
     }
 
     if (finalSpan) {
-      if (this.hitObject.spans % 2 == 0) {
+      if (this.slider.spans % 2 == 0) {
         this.sliderPathSprite.startProp = 0;
         this.sliderPathSprite.endProp = sliderProportion;
       } else {
@@ -242,5 +207,74 @@ export class SliderPiece extends Container implements IUpdatable {
         this.sliderPathSprite.endProp = 1;
       }
     }
+  }
+
+  private createNestedObject(
+    nestedHitObject: HitObject
+  ): TimelineElement<DOTimelineInstance> | null {
+    if (nestedHitObject instanceof SliderTick) {
+      return this.createSliderTick(nestedHitObject);
+    }
+
+    if (nestedHitObject instanceof SliderRepeat) {
+      return this.createSliderRepeat(nestedHitObject);
+    }
+
+    return null;
+  }
+
+  private createSliderTick(
+    tick: SliderTick
+  ): TimelineElement<SliderTickSprite> {
+    const startTime = tick.startTime - tick.timePreempt;
+    const endTime = tick.startTime;
+
+    return {
+      startTimeMs: startTime,
+      endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
+      build: () => {
+        const sprite = new SliderTickSprite(
+          this.accentColor,
+          startTime,
+          endTime,
+          tick.scale / 2
+        );
+
+        sprite.position.copyFrom(
+          tick.startPosition.subtract(this.slider.startPosition)
+        );
+
+        return sprite;
+      },
+    };
+  }
+
+  private createSliderRepeat(
+    repeat: SliderRepeat
+  ): TimelineElement<SliderReverseArrowSprite> {
+    return {
+      startTimeMs: repeat.startTime - repeat.timePreempt,
+      endTimeMs: repeat.startTime + 
+        SliderReverseArrowSprite.EXIT_ANIMATION_DURATION,
+      build: () => {
+        const sprite = new SliderReverseArrowSprite(
+          repeat, 
+          this.controlPoints
+        );
+
+        const angle = sliderAngle(
+          this.slider.path, 
+          repeat.repeatIndex % 2 !== 0
+        );
+
+        sprite.position.copyFrom(
+          repeat.startPosition.subtract(this.slider.startPosition)
+        );
+
+        sprite.angle = angle;
+
+        return sprite;
+      },
+    };
   }
 }
