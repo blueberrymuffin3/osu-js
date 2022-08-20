@@ -9,6 +9,7 @@ const SCALE_IN = 0.5;
 const SCALE_OUT = 1.5;
 const SCALE_FACTOR = 0.6;
 const PULSE_SCALE = 1.3;
+const PULSE_THRESHOLD = 16;
 
 const MAX_ANIM_DURATION = 300;
 const MINIMUM_BEAT_LENGTH = 200;
@@ -79,9 +80,13 @@ export class SliderReverseArrowSprite extends Sprite implements IUpdatable {
       SCALE_OUT
     );
 
+    // Add a threshold value to prevent pulsations right before the slider repeat is hit.
+    const pulseStartTime = timeSinceHit + PULSE_THRESHOLD;
+    const pulseInitialScale = pulseStartTime < 0 ? PULSE_SCALE : 1;
+
     const pulseFactor = MathUtils.lerpClamped01(
       Easing.outQuad(timeSinceLastBeat / this.timingPoint.beatLength),
-      timeSinceHit < 0 ? PULSE_SCALE : 1,
+      pulseInitialScale,
       1
     );
 
