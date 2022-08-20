@@ -40,7 +40,10 @@ export class CirclePiece extends Container implements IUpdatable {
 
   private hitObject: Circle;
 
+  private approachContainer: Container;
   private approachCircle: Sprite;
+  
+  private circleContainer: Container;
   private glow: Sprite;
   private circle: CircleTriangles;
   private numberGlow: Sprite;
@@ -57,44 +60,48 @@ export class CirclePiece extends Container implements IUpdatable {
     this.initialScale = hitObject.scale / 2; // TODO: Why times 2?
     this.scale.set(this.initialScale);
 
+    this.approachContainer = new Container();
     this.approachCircle = Sprite.from(
       TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE
     );
     this.approachCircle.anchor.set(0.5);
     this.approachCircle.tint = color;
-    this.addChild(this.approachCircle);
+    this.approachContainer.addChild(this.approachCircle);
+    this.addChild(this.approachContainer);
+
+    this.circleContainer = new Container();
+    this.circle = new CircleTriangles(color);
+    this.circleContainer.addChild(this.circle);
 
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
     this.glow.blendMode = BLEND_MODES.ADD;
     this.glow.anchor.set(0.5);
     this.glow.alpha = 0.5;
     this.glow.tint = color;
-    this.addChild(this.glow);
-
-    this.circle = new CircleTriangles(color);
-    this.addChild(this.circle);
+    this.circleContainer.addChild(this.glow);
 
     this.numberGlow = Sprite.from(TEXTURE_NUMBER_GLOW);
     this.numberGlow.scale.set(0.5);
     this.numberGlow.alpha = 0.5;
     this.numberGlow.anchor.set(0.5);
-    this.addChild(this.numberGlow);
+    this.circleContainer.addChild(this.numberGlow);
 
     const label = (hitObject.currentComboIndex + 1).toString();
     this.number = new BitmapText(label, NUMBER_STYLE);
     this.number.anchor.set(0.5);
     this.number.y = 8;
-    this.addChild(this.number);
+    this.circleContainer.addChild(this.number);
 
     this.ring = Sprite.from(TEXTURE_OSU_RING);
     this.ring.anchor.set(0.5);
-    this.addChild(this.ring);
+    this.circleContainer.addChild(this.ring);
 
     this.flash = Sprite.from(TEXTURE_FLASH);
     this.flash.blendMode = BLEND_MODES.ADD;
     this.flash.anchor.set(0.5);
     this.flash.alpha = 0;
-    this.addChild(this.flash);
+    this.circleContainer.addChild(this.flash);
+    this.addChild(this.circleContainer);
   }
 
   // TODO: Should be able to handle non-monotonic updates
@@ -137,13 +144,24 @@ export class CirclePiece extends Container implements IUpdatable {
 
       const timeRelativeEnterMs = timeRelativeMs + this.hitObject.timePreempt;
 
-      this.alpha = MathUtils.lerpClamped01(
+      this.circleContainer.alpha = MathUtils.lerpClamped01(
         timeRelativeEnterMs / this.hitObject.timeFadeIn, 
         0, 
         1
       );
 
-      this.approachCircle.scale.set(
+      const approachFadeIn = Math.min(
+        this.hitObject.timeFadeIn * 2, 
+        this.hitObject.timePreempt
+      );
+
+      this.approachContainer.alpha = MathUtils.lerpClamped01(
+        timeRelativeEnterMs / approachFadeIn,
+        0,
+        1
+      );
+
+      this.approachContainer.scale.set(
         MathUtils.lerpClamped01(
           timeRelativeEnterMs / this.hitObject.timePreempt, 
           APPROACH_CIRCLE_SCALE_INITIAL, 
