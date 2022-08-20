@@ -143,70 +143,98 @@ export class SliderPiece extends Container implements IUpdatable {
     const enterTime = timeRelativeMs + this.preempt;
     const exitTime = timeRelativeMs - this.slider.duration;
 
-    this.alpha =
-      MathUtils.lerpClamped01(enterTime / this.fadeIn, 0, 1) *
-      MathUtils.lerpClamped01(exitTime / SLIDER_FADE_OUT, 1, 0);
-
-    this.sliderPathSprite.alpha = MathUtils.lerpClamped01(
-      exitTime / SLIDER_BODY_FADE_OUT,
-      1,
-      0
+    this.sliderPathSprite.endProgress = MathUtils.clamp01(
+      enterTime / this.fadeIn
     );
-    this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
 
-    const sliderProgress = MathUtils.clamp01(
+    const totalProgress = MathUtils.clamp01(
       timeRelativeMs / this.slider.duration
     );
-    const sliderProportion = this.slider.path.progressAt(
-      sliderProgress,
+
+    const spanProgress = this.slider.path.progressAt(
+      totalProgress,
       this.slider.spans
     );
-    const finalSpan = sliderProgress > 1 - 1 / this.slider.spans;
+    
+    this.updateAlpha(enterTime, exitTime);
+    this.updateProgress(totalProgress, spanProgress);
+    this.updateFollower(timeRelativeMs, spanProgress, exitTime);
+  }
 
-    const sliderActive = timeRelativeMs >= 0;
-    this.follower.visible = sliderActive;
-    if (sliderActive) {
-      this.follower.position.copyFrom(
-        this.slider.path.positionAt(sliderProportion)
-      );
+  private updateAlpha(enterTime: number, exitTime: number): void {
+    const fadeInProgress = enterTime / this.fadeIn;
+    const alphaFadeIn = MathUtils.lerpClamped01(fadeInProgress, 0, 1);
 
-      this.sliderBallSprite.alpha =
-        1 - Easing.outQuint(exitTime / SLIDER_BALL_FADE_OUT);
-      const sliderBallScaleFactor = Easing.outQuint(
-        exitTime / SLIDER_BALL_DURATION
-      );
-      this.sliderBallSprite.scale.set(
-        MathUtils.lerpClamped01(
-          sliderBallScaleFactor,
-          SLIDER_BALL_SCALE_INITIAL,
-          SLIDER_BALL_SCALE_EXIT
-        )
-      );
+    const fadeOutProgress = exitTime / SLIDER_FADE_OUT;
+    const alphaFadeOut = MathUtils.lerpClamped01(fadeOutProgress, 1, 0);
 
-      this.followCircleSprite.alpha =
-        Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-        (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_FADE_OUT));
-      const followCircleScaleFactor =
-        Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-        (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_DURATION));
-      this.followCircleSprite.scale.set(
-        MathUtils.lerpClamped01(
-          followCircleScaleFactor,
-          FOLLOW_CIRCLE_SCALE_INITIAL,
-          FOLLOW_CIRCLE_SCALE_FULL
-        )
-      );
+    this.alpha = alphaFadeIn * alphaFadeOut;
+    
+    const pathFadeOutProgress = exitTime / SLIDER_BODY_FADE_OUT;
+
+    this.sliderPathSprite.alpha = MathUtils
+      .lerpClamped01(pathFadeOutProgress, 1, 0);
+  }
+
+  private updateProgress(totalProgress: number, spanProgress: number): void {
+    const finalSpan = totalProgress > 1 - 1 / this.slider.spans;
+
+    if (!finalSpan) return;
+
+    if (this.slider.spans % 2 == 0) {
+      this.sliderPathSprite.startProgress = 0;
+      this.sliderPathSprite.endProgress = spanProgress;
+    } else {
+      this.sliderPathSprite.startProgress = spanProgress;
+      this.sliderPathSprite.endProgress = 1;
     }
+  }
 
-    if (finalSpan) {
-      if (this.slider.spans % 2 == 0) {
-        this.sliderPathSprite.startProp = 0;
-        this.sliderPathSprite.endProp = sliderProportion;
-      } else {
-        this.sliderPathSprite.startProp = sliderProportion;
-        this.sliderPathSprite.endProp = 1;
-      }
-    }
+  private updateFollower(
+    timeRelativeMs: number, 
+    spanProgress: number, 
+    exitTime: number
+  ): void {
+    const isSliderActive = timeRelativeMs >= 0;
+
+    this.follower.visible = isSliderActive;
+
+    if (!isSliderActive) return;
+    
+    this.follower.position.copyFrom(
+      this.slider.path.positionAt(spanProgress)
+    );
+
+    this.sliderBallSprite.alpha =
+      1 - Easing.outQuint(exitTime / SLIDER_BALL_FADE_OUT);
+  
+    const sliderBallScaleFactor = Easing.outQuint(
+      exitTime / SLIDER_BALL_DURATION
+    );
+
+    this.sliderBallSprite.scale.set(
+      MathUtils.lerpClamped01(
+        sliderBallScaleFactor,
+        SLIDER_BALL_SCALE_INITIAL,
+        SLIDER_BALL_SCALE_EXIT
+      )
+    );
+
+    this.followCircleSprite.alpha =
+      Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
+      (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_FADE_OUT));
+
+    const followCircleScaleFactor =
+      Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
+      (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_DURATION));
+
+    this.followCircleSprite.scale.set(
+      MathUtils.lerpClamped01(
+        followCircleScaleFactor,
+        FOLLOW_CIRCLE_SCALE_INITIAL,
+        FOLLOW_CIRCLE_SCALE_FULL
+      )
+    );
   }
 
   private createNestedObject(

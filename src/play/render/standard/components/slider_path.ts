@@ -43,8 +43,8 @@ const uniformGroup = new UniformGroup({
 
 interface RenderState {
   resolution: number;
-  startProp: number;
-  endProp: number;
+  startProgress: number;
+  endProgress: number;
 }
 
 const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniformGroup);
@@ -62,8 +62,8 @@ export class SliderPathSprite extends Container {
   private padding!: number;
   private matricesValid = false;
 
-  public startProp = 0;
-  public endProp = 1;
+  public startProgress = 0;
+  public endProgress = 1;
 
   constructor(slider: Slider, trackColor: number, borderColor: number) {
     super();
@@ -91,14 +91,15 @@ export class SliderPathSprite extends Container {
     const renderState: RenderState = {
       // prettier-ignore
       resolution: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
-      startProp: this.startProp,
-      endProp: this.endProp,
+      startProgress: this.startProgress,
+      endProgress: this.endProgress,
     };
+    
     if (
       !this.lastRenderState ||
       this.lastRenderState.resolution != renderState.resolution ||
-      this.lastRenderState.startProp != renderState.startProp ||
-      this.lastRenderState.endProp != renderState.endProp
+      this.lastRenderState.startProgress != renderState.startProgress ||
+      this.lastRenderState.endProgress != renderState.endProgress
     ) {
       this.updateSpriteRender(renderer, renderState);
       // prettier-ignore
@@ -134,7 +135,7 @@ export class SliderPathSprite extends Container {
       overallBounds.height
     );
     uniformGroup.uniforms.AA = AA_FACTOR / state.resolution;
-    uniformGroup.uniforms.range = [state.startProp, state.endProp];
+    uniformGroup.uniforms.range = [state.startProgress, state.endProgress];
     uniformGroup.uniforms.radius = this.radius;
     uniformGroup.uniforms.trackColor = this.trackColor;
     uniformGroup.uniforms.borderColor = this.borderColor;
