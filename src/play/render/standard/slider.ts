@@ -23,12 +23,12 @@ const SLIDER_BODY_FADE_OUT = 40;
 
 const SLIDER_BALL_SCALE_INITIAL = 1;
 const SLIDER_BALL_SCALE_EXIT = 1.2;
+const SLIDER_BALL_FOLLOW_AREA = 2.4;
 const SLIDER_BALL_ANIM_DURATION = 450;
 const SLIDER_BALL_FADE_OUT = SLIDER_BALL_ANIM_DURATION / 4;
 
-const FOLLOW_AREA = 2.4;
-const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / FOLLOW_AREA;
-const FOLLOW_CIRCLE_SCALE_FULL = 1.0;
+const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / SLIDER_BALL_FOLLOW_AREA;
+const FOLLOW_CIRCLE_SCALE_EXIT = 1;
 const FOLLOW_CIRCLE_PRESS_ANIM_DURATION = 300;
 const FOLLOW_CIRCLE_END_ANIM_DURATION = 300;
 const FOLLOW_CIRCLE_FADE_IN = FOLLOW_CIRCLE_PRESS_ANIM_DURATION / 2;
@@ -230,7 +230,8 @@ export class SliderPiece extends Container implements IUpdatable {
       )
     );
 
-    // TODO: Maybe it should be renamed to something better?
+    // TODO: Maybe these all variables should be renamed to something better?
+    // https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/DefaultFollowCircle.cs#L33
     const circlePressProgress = timeRelativeMs / FOLLOW_CIRCLE_PRESS_ANIM_DURATION;
     const circleEndProgress = exitTime / FOLLOW_CIRCLE_END_ANIM_DURATION;
     const circleFadeOutProgress = exitTime / FOLLOW_CIRCLE_FADE_OUT;
@@ -241,13 +242,17 @@ export class SliderPiece extends Container implements IUpdatable {
 
     this.followCircleSprite.alpha = circleScaleIn * (1 - circleFadeOut);
 
-    const followCircleScaleFactor = circleScaleIn * (1 - circleScaleOut);
+    let followCircleScaleFactor = 1;
+    
+    if (this.followCircleSprite.alpha > FLOAT_EPSILON) {
+      followCircleScaleFactor = circleScaleIn * (1 - circleScaleOut);
+    }
   
     this.followCircleSprite.scale.set(
       MathUtils.lerpClamped01(
         followCircleScaleFactor,
         FOLLOW_CIRCLE_SCALE_INITIAL,
-        FOLLOW_CIRCLE_SCALE_FULL
+        FOLLOW_CIRCLE_SCALE_EXIT
       )
     );
   }
