@@ -22,6 +22,7 @@
   "dependencies": {
     "@blueberrymuffin3/ffmpeg-core": "^0.12.3",
     "@ffmpeg/ffmpeg": "^0.10.1",
+    "@pixi/filter-drop-shadow": "^4.2.0",
     "autoprefixer": "^10.4.7",
     "blueimp-md5": "^2.19.0",
     "buffer": "^6.0.3",
