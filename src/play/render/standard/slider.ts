@@ -143,10 +143,6 @@ export class SliderPiece extends Container implements IUpdatable {
     const enterTime = timeRelativeMs + this.preempt;
     const exitTime = timeRelativeMs - this.slider.duration;
 
-    this.sliderPathSprite.endProgress = MathUtils.clamp01(
-      enterTime / this.fadeIn
-    );
-
     const totalProgress = MathUtils.clamp01(
       timeRelativeMs / this.slider.duration
     );
@@ -157,7 +153,7 @@ export class SliderPiece extends Container implements IUpdatable {
     );
     
     this.updateAlpha(enterTime, exitTime);
-    this.updateProgress(totalProgress, spanProgress);
+    this.updateProgress(totalProgress, spanProgress, enterTime);
     this.updateFollower(timeRelativeMs, spanProgress, exitTime);
   }
 
@@ -176,7 +172,15 @@ export class SliderPiece extends Container implements IUpdatable {
       .lerpClamped01(pathFadeOutProgress, 1, 0);
   }
 
-  private updateProgress(totalProgress: number, spanProgress: number): void {
+  private updateProgress(
+    totalProgress: number,
+    spanProgress: number,
+    enterTime: number
+  ): void {
+    // this.sliderPathSprite.endProgress = MathUtils.clamp01(
+    //   enterTime / this.fadeIn
+    // );
+    
     const finalSpan = totalProgress > 1 - 1 / this.slider.spans;
 
     if (!finalSpan) return;
@@ -201,16 +205,16 @@ export class SliderPiece extends Container implements IUpdatable {
 
     if (!isSliderActive) return;
     
-    this.follower.position.copyFrom(
-      this.slider.path.positionAt(spanProgress)
-    );
+    const currentPosition = this.slider.path.positionAt(spanProgress);
 
-    this.sliderBallSprite.alpha =
-      1 - Easing.outQuint(exitTime / SLIDER_BALL_FADE_OUT);
+    this.follower.position.copyFrom(currentPosition);
+
+    const ballAlphaProgress = exitTime / SLIDER_BALL_FADE_OUT;
+    const ballScaleProgress = exitTime / SLIDER_BALL_DURATION;
+
+    const sliderBallScaleFactor = Easing.outQuint(ballScaleProgress);
   
-    const sliderBallScaleFactor = Easing.outQuint(
-      exitTime / SLIDER_BALL_DURATION
-    );
+    this.sliderBallSprite.alpha = 1 - Easing.outQuint(ballAlphaProgress);
 
     this.sliderBallSprite.scale.set(
       MathUtils.lerpClamped01(
@@ -220,14 +224,19 @@ export class SliderPiece extends Container implements IUpdatable {
       )
     );
 
-    this.followCircleSprite.alpha =
-      Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-      (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_FADE_OUT));
+    const circleScaleProgress = timeRelativeMs / FOLLOW_CIRCLE_DURATION;
+    const circleFadeOutProgress = exitTime / FOLLOW_CIRCLE_FADE_OUT;
 
-    const followCircleScaleFactor =
-      Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-      (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_DURATION));
+    const circleScaleIn = Easing.outQuint(circleScaleProgress);
+    const circleFadeOut = Easing.outQuint(circleFadeOutProgress);
 
+    this.followCircleSprite.alpha = circleScaleIn * (1 - circleFadeOut);
+
+    const circleScaleOutProgress = exitTime / FOLLOW_CIRCLE_DURATION;
+    const circleScaleOut = Easing.outQuint(circleScaleOutProgress);
+    
+    const followCircleScaleFactor = circleScaleIn * (1 - circleScaleOut);
+  
     this.followCircleSprite.scale.set(
       MathUtils.lerpClamped01(
         followCircleScaleFactor,
