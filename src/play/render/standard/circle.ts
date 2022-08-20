@@ -25,6 +25,11 @@ const NUMBER_STYLE: Partial<IBitmapTextStyle> = {
   align: "center",
 };
 
+// https://github.com/ppy/osu/blob/513ba69f6f8d61b83cc2552ae561633e3815c5c5/osu.Game.Rulesets.Osu/Skinning/Legacy/LegacyApproachCircle.cs#L46
+const APPROACH_CIRCLE_SCALE_FACTOR = Math.fround(128 / 118);
+const APPROACH_CIRCLE_SCALE_INITIAL = 4 * APPROACH_CIRCLE_SCALE_FACTOR;
+const APPROACH_CIRCLE_SCALE_EXIT = APPROACH_CIRCLE_SCALE_FACTOR;
+
 const FLASH_IN_TIME = 40;
 const FLASH_OUT_TIME = 100;
 const SCALE_TIME = 800;
@@ -141,8 +146,8 @@ export class CirclePiece extends Container implements IUpdatable {
       this.approachCircle.scale.set(
         MathUtils.lerpClamped01(
           timeRelativeEnterMs / this.hitObject.timePreempt, 
-          4, 
-          1
+          APPROACH_CIRCLE_SCALE_INITIAL, 
+          APPROACH_CIRCLE_SCALE_EXIT
         )
       );
     }
