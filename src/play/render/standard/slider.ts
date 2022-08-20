@@ -1,4 +1,4 @@
-import { SliderPath, Vector2 } from "osu-classes";
+import { ControlPointInfo, SliderPath, Vector2 } from "osu-classes";
 import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { MathUtils, Easing } from "osu-classes";
@@ -79,6 +79,7 @@ export class SliderPiece extends Container implements IUpdatable {
 
   public constructor(
     hitObject: Slider,
+    controlPoints: ControlPointInfo,
     accentColor: number,
     trackColor: number,
     borderColor: number
@@ -134,7 +135,11 @@ export class SliderPiece extends Container implements IUpdatable {
             nestedHitObject.startTime +
             SliderReverseArrowSprite.EXIT_ANIMATION_DURATION,
           build: () => {
-            const sprite = new SliderReverseArrowSprite(nestedHitObject);
+            const sprite = new SliderReverseArrowSprite(
+              nestedHitObject, 
+              controlPoints
+            );
+
             sprite.position.copyFrom(
               nestedHitObject.startPosition.subtract(hitObject.startPosition)
             );
