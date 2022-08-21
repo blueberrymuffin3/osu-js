@@ -28,7 +28,7 @@ const NUMBER_STYLE: Partial<IBitmapTextStyle> = {
 
 const NUMBER_SHADOW_FILTER = new DropShadowFilter({
   alpha: 0.3,
-  distance: 4.5,
+  distance: 4,
   pixelSize: 1,
   blur: 0,
   rotation: 90,
