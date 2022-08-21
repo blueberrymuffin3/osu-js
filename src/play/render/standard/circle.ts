@@ -90,9 +90,10 @@ export class CirclePiece extends Container implements IUpdatable {
     this.circleContainer.addChild(this.glow);
 
     this.numberGlow = Sprite.from(TEXTURE_NUMBER_GLOW);
-    this.numberGlow.scale.set(0.5);
+    this.numberGlow.scale.set(0.85);
     this.numberGlow.alpha = 0.5;
     this.numberGlow.anchor.set(0.5);
+    this.numberGlow.blendMode = BLEND_MODES.ADD;
     this.circleContainer.addChild(this.numberGlow);
 
     const label = (hitObject.currentComboIndex + 1).toString();
