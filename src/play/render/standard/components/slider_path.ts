@@ -25,7 +25,6 @@ import { VIRTUAL_SCREEN_MASK } from "../../../constants";
 // https://www.shadertoy.com/view/tlSGzG Arc SDF
 
 const BORDER_PROP = 0.125;
-const PADDING = 5;
 const AA_FACTOR = 0.5;
 const GL_STATE = new State();
 GL_STATE.blend = false;
@@ -59,7 +58,6 @@ export class SliderPathSprite extends Container {
   private borderColor: number[];
 
   private radius!: number;
-  private padding!: number;
   private matricesValid = false;
 
   public startProgress = 0;
@@ -69,7 +67,6 @@ export class SliderPathSprite extends Container {
     super();
     this.points = slider.path.path;
     this.radius = slider.radius;
-    this.padding = this.radius + PADDING;
     this.trackColor = [...utils.hex2rgb(trackColor), 1];
     this.borderColor = [...utils.hex2rgb(borderColor), 1];
 
@@ -178,7 +175,7 @@ export class SliderPathSprite extends Container {
   boundingBox(points: Vector2[]) {
     const bounds = new Bounds();
     points.forEach((point) => bounds.addPoint(point));
-    bounds.pad(this.padding);
+    bounds.pad(this.radius);
     return bounds;
   }
 
@@ -186,7 +183,7 @@ export class SliderPathSprite extends Container {
     point1: Vector2,
     point2: Vector2
   ): [Vector2, Vector2, Vector2, Vector2] {
-    const right = point2.subtract(point1).normalize().scale(this.padding);
+    const right = point2.subtract(point1).normalize().scale(this.radius);
     const up = new Vector2(-right.y, right.x);
     return [
       point1.subtract(right).subtract(up),
