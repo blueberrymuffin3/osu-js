@@ -170,10 +170,11 @@ export class SliderPiece extends Container implements IUpdatable {
 
     this.alpha = alphaFadeIn * alphaFadeOut;
     
-    const pathFadeOutProgress = exitTime / SLIDER_BODY_FADE_OUT;
+    const pathFadeOutProgress = MathUtils.clamp01(
+      exitTime / SLIDER_BODY_FADE_OUT
+    );
 
-    this.sliderPathSprite.alpha = MathUtils
-      .lerpClamped01(pathFadeOutProgress, 1, 0);
+    this.sliderPathSprite.alpha = MathUtils.lerp(pathFadeOutProgress, 1, 0);
   }
 
   private updateProgress(

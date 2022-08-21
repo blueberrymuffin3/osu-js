@@ -8,7 +8,7 @@ import {
   BLEND_MODES,
 } from "pixi.js";
 import { DropShadowFilter } from "@pixi/filter-drop-shadow";
-import { MathUtils } from "osu-classes";
+import { Easing, MathUtils } from "osu-classes";
 import { IUpdatable } from "../../game/timeline";
 import { FONT_VENERA_FACE } from "../../resources/fonts";
 import {
@@ -41,14 +41,17 @@ const APPROACH_CIRCLE_SCALE_EXIT = APPROACH_CIRCLE_SCALE_FACTOR;
 
 const FLASH_IN_TIME = 40;
 const FLASH_OUT_TIME = 100;
-const SCALE_TIME = 800;
-const FADE_OUT_TIME = 400;
+const SCALE_TIME = 400;
+
+// TODO: Why the fade out time twice as long as the scale time?
+const FADE_OUT_TIME = 800;
 
 export class CirclePiece extends Container implements IUpdatable {
   public static EXIT_ANIMATION_DURATION = FADE_OUT_TIME
 
   private hitObject: Circle;
 
+  private approachFadeInTime: number;
   private approachContainer: Container;
   private approachCircle: Sprite;
   
@@ -60,14 +63,17 @@ export class CirclePiece extends Container implements IUpdatable {
   private ring: Sprite;
   private flash: Sprite;
 
-  private initialScale: number;
-
   public constructor(hitObject: Circle, color: number) {
     super();
     this.hitObject = hitObject;
 
-    this.initialScale = hitObject.scale / 2; // TODO: Why times 2?
-    this.scale.set(this.initialScale);
+    // TODO: Why times 2?
+    this.scale.set(hitObject.scale / 2);
+
+    this.approachFadeInTime = Math.min(
+      this.hitObject.timeFadeIn * 2, 
+      this.hitObject.timePreempt
+    );
 
     this.approachContainer = new Container();
     this.approachCircle = Sprite.from(
@@ -116,69 +122,71 @@ export class CirclePiece extends Container implements IUpdatable {
   }
 
   // TODO: Should be able to handle non-monotonic updates
-  update(timeMs: number) {
+  update(timeMs: number): void {
     this.circle.update(timeMs);
 
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
-    if (timeRelativeMs >= 0) {
-      // Exploding
-      // TODO: Add Particles
+    // Entering
+    if (timeRelativeMs <= 0) {
+      return this.animateEntering(timeRelativeMs); 
+    }
 
-      // Expand during explosion
-      this.scale.set(
-        MathUtils.lerpClamped01(timeRelativeMs / SCALE_TIME, 1.0, 1.5) 
-          * this.initialScale
-      );
+    // Flash
+    const flashInProgress = timeRelativeMs / FLASH_IN_TIME;
 
-      // Flash
-      const progressPhase1 = timeRelativeMs / FLASH_IN_TIME;
-      if (progressPhase1 < 1) {
-        // Phase 1
-        this.flash.alpha = MathUtils.clamp01(progressPhase1);
-      } else {
-        // Phase 2
-        this.approachCircle.visible = false;
-        this.circle.visible = false;
-        this.numberGlow.visible = false;
-        this.number.visible = false;
-        this.ring.visible = false;
-        const progressPhase2 = timeRelativeMs - FLASH_IN_TIME;
+    if (flashInProgress < 1) {
+      this.approachContainer.visible = false;
 
-        // TODO: Probably slightly incorrect because flash is faded twice
-        this.flash.alpha = MathUtils
-          .clamp01(1 - progressPhase2 / FLASH_OUT_TIME);
-        this.alpha = MathUtils.clamp01(1 - progressPhase2 / FADE_OUT_TIME);
-      }
-    } else {
-      // Entering
+      return this.animateFlashPhase1(flashInProgress);
+    }
 
-      const timeRelativeEnterMs = timeRelativeMs + this.hitObject.timePreempt;
+    return this.animateFlashPhase2(timeRelativeMs);
+  }
 
-      this.circleContainer.alpha = MathUtils.lerpClamped01(
-        timeRelativeEnterMs / this.hitObject.timeFadeIn, 
-        0, 
-        1
-      );
+  private animateEntering(timeRelativeMs: number): void {
+    const timeRelativeEnterMs = timeRelativeMs + this.hitObject.timePreempt;
+    const fadeInProgress = timeRelativeEnterMs / this.hitObject.timeFadeIn
 
-      const approachFadeIn = Math.min(
-        this.hitObject.timeFadeIn * 2, 
-        this.hitObject.timePreempt
-      );
+    this.circleContainer.alpha = MathUtils.lerpClamped01(fadeInProgress, 0, 1);
 
-      this.approachContainer.alpha = MathUtils.lerpClamped01(
-        timeRelativeEnterMs / approachFadeIn,
-        0,
-        1
-      );
+    const approachFadeProgress = timeRelativeEnterMs / this.approachFadeInTime;
 
-      this.approachContainer.scale.set(
-        MathUtils.lerpClamped01(
-          timeRelativeEnterMs / this.hitObject.timePreempt, 
-          APPROACH_CIRCLE_SCALE_INITIAL, 
-          APPROACH_CIRCLE_SCALE_EXIT
-        )
-      );
+    this.approachContainer.alpha = MathUtils.lerp(approachFadeProgress, 0, 1);
+
+    this.approachContainer.scale.set(
+      MathUtils.lerpClamped01(
+        timeRelativeEnterMs / this.hitObject.timePreempt, 
+        APPROACH_CIRCLE_SCALE_INITIAL, 
+        APPROACH_CIRCLE_SCALE_EXIT
+      )
+    );
+  }
+
+  private animateFlashPhase1(flashInProgress: number): void {
+    this.flash.alpha = MathUtils.lerpClamped01(flashInProgress, 0, 0.8);
+  }
+
+  private animateFlashPhase2(timeRelativeMs: number): void {
+    // Exploding
+    // TODO: Add Particles
+
+    const flashOutProgress = timeRelativeMs / FLASH_OUT_TIME;
+    const fadeOutProgress = timeRelativeMs / (FADE_OUT_TIME / 2);
+    const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
+    const scaleOutFactor = MathUtils.lerpClamped01(scaleProgress, 1, 1.5);
+
+    this.flash.alpha = MathUtils.lerpClamped01(flashOutProgress, 1, 0);
+    this.circleContainer.alpha = MathUtils.lerpClamped01(fadeOutProgress, 1, 0);
+    this.circleContainer.scale.set(scaleOutFactor);
+
+    // After the flash, we can hide some elements that were behind it.
+    if (this.ring.visible) this.ring.visible = false;
+    if (this.circle.visible) this.circle.visible = false;
+    if (this.number.visible) this.number.visible = false;
+
+    if (this.circleContainer.alpha < 0.01 && this.circleContainer.visible) {
+      this.circleContainer.visible = false;
     }
   }
 
