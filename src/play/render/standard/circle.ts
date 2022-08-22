@@ -14,9 +14,10 @@ import {
   TEXTURE_NUMBER_GLOW,
   TEXTURE_OSU_RING,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
+  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
 } from "../../resources/textures";
-import { CircleTriangles } from "./components/circle_triangles";
+import { ExplodePiece } from "./components/explode_piece";
 import { BitmapTextShadowed } from "../common/bitmap_text_shadowed";
 
 const NUMBER_STYLE: Partial<IBitmapTextStyle> = {
@@ -46,8 +47,9 @@ export class CirclePiece extends Container implements IUpdatable {
   private approachFadeInTime: number;
   
   private circleContainer: Container;
+  private circle: Sprite;
   private glow: Sprite;
-  private circle: CircleTriangles;
+  private explode: ExplodePiece;
   private numberGlow: Sprite;
   private number: BitmapTextShadowed;
   private ring: Sprite;
@@ -75,8 +77,14 @@ export class CirclePiece extends Container implements IUpdatable {
     this.addChild(this.approachContainer);
 
     this.circleContainer = new Container();
-    this.circle = new CircleTriangles(color);
+    this.circle = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC);
+    this.circle.tint = color;
     this.circleContainer.addChild(this.circle);
+
+    this.explode = new ExplodePiece(color);
+    this.explode.anchor.set(0.5);
+    this.explode.alpha = 0;
+    this.circleContainer.addChild(this.explode);
 
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
     this.glow.blendMode = BLEND_MODES.ADD;

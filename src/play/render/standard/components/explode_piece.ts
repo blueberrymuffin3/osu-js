@@ -6,7 +6,6 @@ import {
   BLEND_MODES,
   Graphics,
 } from "pixi.js";
-import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../../resources/textures";
 import { IUpdatable } from "../../../game/timeline";
 import { Triangles } from "./triangles";
 import { MathUtils } from "osu-classes";
@@ -21,15 +20,13 @@ const MASK = _MASK.geometry;
 const MIN_TRIANGLE_ALPHA = 0.18;
 const MAX_TRIANGLE_ALPHA = 0.23;
 
-export class CircleTriangles extends Sprite implements IUpdatable {
+export class ExplodePiece extends Sprite implements IUpdatable {
   private trianglesGeometry: Triangles;
   private trianglesMask: Graphics;
   private trianglesMesh: Mesh;
 
   constructor(color: number) {
-    super(Texture.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC));
-    this.tint = color;
-
+    super();
     this.anchor.set(0.5);
 
     this.trianglesGeometry = new Triangles();
