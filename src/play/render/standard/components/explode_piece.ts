@@ -8,8 +8,6 @@ import {
 import { IUpdatable } from "../../../game/timeline";
 import { Triangles } from "./triangles";
 
-const TRIANGLE_ALPHA = 0.2;
-
 export class ExplodePiece extends Mesh implements IUpdatable {
   private trianglesGeometry: Triangles;
 
@@ -22,7 +20,7 @@ export class ExplodePiece extends Mesh implements IUpdatable {
     this.x = -this.width * 0.5;
     this.y = -this.height * 0.5;
     this.scale.y = this.height;
-    this.alpha = TRIANGLE_ALPHA;
+    this.alpha = 0.2;
     this.tint = color;
     this.blendMode = BLEND_MODES.ADD;
     this.mask = new Graphics()
