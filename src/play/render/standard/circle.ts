@@ -82,8 +82,6 @@ export class CirclePiece extends Container implements IUpdatable {
     this.circleContainer.addChild(this.circle);
 
     this.explode = new ExplodePiece(color);
-    this.explode.anchor.set(0.5);
-    this.explode.alpha = 0;
     this.circleContainer.addChild(this.explode);
 
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
