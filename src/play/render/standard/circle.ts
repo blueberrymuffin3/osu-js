@@ -3,7 +3,6 @@ import {
   Container,
   Sprite,
   IDestroyOptions,
-  BitmapText,
   IBitmapTextStyle,
   BLEND_MODES,
 } from "pixi.js";
@@ -18,11 +17,11 @@ import {
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
 } from "../../resources/textures";
 import { CircleTriangles } from "./components/circle_triangles";
+import { BitmapTextShadowed } from "../common/bitmap_text_shadowed";
 
 const NUMBER_STYLE: Partial<IBitmapTextStyle> = {
   fontName: FONT_VENERA_FACE,
   fontSize: 80,
-  align: "center",
 };
 
 const FLASH_IN_TIME = 40;
@@ -31,7 +30,7 @@ const SCALE_TIME = 800;
 const FADE_OUT_TIME = 400;
 
 export class CirclePiece extends Container implements IUpdatable {
-  public static EXIT_ANIMATION_DURATION = FADE_OUT_TIME
+  public static EXIT_ANIMATION_DURATION = FADE_OUT_TIME;
 
   private hitObject: Circle;
 
@@ -39,7 +38,7 @@ export class CirclePiece extends Container implements IUpdatable {
   private glow: Sprite;
   private circle: CircleTriangles;
   private numberGlow: Sprite;
-  private number: BitmapText;
+  private number: BitmapTextShadowed;
   private ring: Sprite;
   private flash: Sprite;
 
@@ -76,8 +75,8 @@ export class CirclePiece extends Container implements IUpdatable {
     this.addChild(this.numberGlow);
 
     const label = (hitObject.currentComboIndex + 1).toString();
-    this.number = new BitmapText(label, NUMBER_STYLE);
-    this.number.anchor.set(0.5);
+    this.number = new BitmapTextShadowed(label, NUMBER_STYLE);
+    this.number.setAnchor(0.5);
     this.number.y = 8;
     this.addChild(this.number);
 
@@ -104,8 +103,8 @@ export class CirclePiece extends Container implements IUpdatable {
 
       // Expand during explosion
       this.scale.set(
-        MathUtils.lerpClamped01(timeRelativeMs / SCALE_TIME, 1.0, 1.5) 
-          * this.initialScale
+        MathUtils.lerpClamped01(timeRelativeMs / SCALE_TIME, 1.0, 1.5) *
+          this.initialScale
       );
 
       // Flash
@@ -123,8 +122,9 @@ export class CirclePiece extends Container implements IUpdatable {
         const progressPhase2 = timeRelativeMs - FLASH_IN_TIME;
 
         // TODO: Probably slightly incorrect because flash is faded twice
-        this.flash.alpha = MathUtils
-          .clamp01(1 - progressPhase2 / FLASH_OUT_TIME);
+        this.flash.alpha = MathUtils.clamp01(
+          1 - progressPhase2 / FLASH_OUT_TIME
+        );
         this.alpha = MathUtils.clamp01(1 - progressPhase2 / FADE_OUT_TIME);
       }
     } else {
@@ -133,15 +133,15 @@ export class CirclePiece extends Container implements IUpdatable {
       const timeRelativeEnterMs = timeRelativeMs + this.hitObject.timePreempt;
 
       this.alpha = MathUtils.lerpClamped01(
-        timeRelativeEnterMs / this.hitObject.timeFadeIn, 
-        0, 
+        timeRelativeEnterMs / this.hitObject.timeFadeIn,
+        0,
         1
       );
 
       this.approachCircle.scale.set(
         MathUtils.lerpClamped01(
-          timeRelativeEnterMs / this.hitObject.timePreempt, 
-          4, 
+          timeRelativeEnterMs / this.hitObject.timePreempt,
+          4,
           1
         )
       );
