@@ -8,17 +8,14 @@ import {
 } from "pixi.js";
 import { IUpdatable } from "../../../game/timeline";
 import { Triangles } from "./triangles";
-import { MathUtils } from "osu-classes";
 
-const _MASK = new Graphics();
-_MASK.beginFill(0xffffff);
-_MASK.drawCircle(0, 0, 128);
-_MASK.endFill();
+const MASK = new Graphics()
+  .beginFill(0xffffff)
+  .drawCircle(0, 0, 128)
+  .endFill()
+  .geometry;
 
-const MASK = _MASK.geometry;
-
-const MIN_TRIANGLE_ALPHA = 0.18;
-const MAX_TRIANGLE_ALPHA = 0.23;
+const TRIANGLE_ALPHA = 0.2;
 
 export class ExplodePiece extends Sprite implements IUpdatable {
   private trianglesGeometry: Triangles;
@@ -39,11 +36,7 @@ export class ExplodePiece extends Sprite implements IUpdatable {
     this.trianglesMesh.y = -this.height * 0.5;
     this.trianglesMesh.scale.x = this.width;
     this.trianglesMesh.scale.y = this.height;
-    this.trianglesMesh.alpha = MathUtils.clamp(
-      Math.random(), 
-      MIN_TRIANGLE_ALPHA, 
-      MAX_TRIANGLE_ALPHA
-    );
+    this.trianglesMesh.alpha = TRIANGLE_ALPHA;
     this.trianglesMesh.tint = color;
     this.trianglesMesh.blendMode = BLEND_MODES.ADD;
     this.trianglesMesh.mask = this.trianglesMask;
