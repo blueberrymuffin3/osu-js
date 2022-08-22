@@ -140,6 +140,8 @@ export class CirclePiece extends Container implements IUpdatable {
       return this.animateEntering(timeRelativeMs); 
     }
 
+    this.approachContainer.visible = false;
+
     // Flashing & exploding
     const flashInProgress = timeRelativeMs / FLASH_IN_TIME;
 
