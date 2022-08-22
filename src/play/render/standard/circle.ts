@@ -5,6 +5,7 @@ import {
   IDestroyOptions,
   IBitmapTextStyle,
   BLEND_MODES,
+  Graphics,
 } from "pixi.js";
 import { Easing, MathUtils } from "osu-classes";
 import { IUpdatable } from "../../game/timeline";
@@ -37,6 +38,12 @@ const SCALE_TIME = 400;
 // TODO: Why the fade out time twice as long as the scale time?
 const FADE_OUT_TIME = 800;
 
+const CIRCLE_MASK = new Graphics()
+  .beginFill(0xffffff)
+  .drawCircle(0, 0, 128)
+  .endFill()
+  .geometry;
+
 export class CirclePiece extends Container implements IUpdatable {
   public static EXIT_ANIMATION_DURATION = FADE_OUT_TIME;
 
@@ -49,7 +56,7 @@ export class CirclePiece extends Container implements IUpdatable {
   private circleContainer: Container;
   private circle: Sprite;
   private glow: Sprite;
-  private explode: ExplodePiece;
+  private triangles: ExplodePiece;
   private numberGlow: Sprite;
   private number: BitmapTextShadowed;
   private ring: Sprite;
@@ -77,12 +84,14 @@ export class CirclePiece extends Container implements IUpdatable {
     this.addChild(this.approachContainer);
 
     this.circleContainer = new Container();
+
+    const circleMask = new Graphics(CIRCLE_MASK);
     this.circle = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC);
     this.circle.tint = color;
-    this.circleContainer.addChild(this.circle);
-
-    this.explode = new ExplodePiece(color);
-    this.circleContainer.addChild(this.explode);
+    this.circle.anchor.set(0.5);
+    this.triangles = new ExplodePiece(color, this.circle, circleMask);
+    this.circle.addChild(circleMask);
+    this.circleContainer.addChild(this.circle, this.triangles);
 
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
     this.glow.blendMode = BLEND_MODES.ADD;
@@ -118,7 +127,7 @@ export class CirclePiece extends Container implements IUpdatable {
 
   // TODO: Should be able to handle non-monotonic updates
   update(timeMs: number): void {
-    this.explode.update(timeMs);
+    this.triangles.update(timeMs);
 
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
@@ -127,12 +136,10 @@ export class CirclePiece extends Container implements IUpdatable {
       return this.animateEntering(timeRelativeMs); 
     }
 
-    // Flash
+    // Flashing & exploding
     const flashInProgress = timeRelativeMs / FLASH_IN_TIME;
 
     if (flashInProgress < 1) {
-      this.approachContainer.visible = false;
-
       return this.animateFlashPhase1(flashInProgress);
     }
 
@@ -160,12 +167,26 @@ export class CirclePiece extends Container implements IUpdatable {
 
   private animateFlashPhase1(flashInProgress: number): void {
     this.flash.alpha = MathUtils.lerpClamped01(flashInProgress, 0, 0.8);
+    this.triangles.alpha = MathUtils.lerpClamped01(flashInProgress, 0, 0.3);
+    
+    if (this.circle.children.length > 0) {
+      // Remove triangle mask once hit object was hit
+      this.circle.removeChildren();
+      this.triangles.mask = null;
+
+      // Triangles that appeared after explosion are 1.2 times larger.
+      this.triangles.scale.set(
+        this.triangles.scale.x * EXPLODED_TRIANGLES_SCALE_INITIAL,
+        this.triangles.scale.y * EXPLODED_TRIANGLES_SCALE_INITIAL
+      );
+
+      // Align scaled triangles to center.
+      this.triangles.x *= EXPLODED_TRIANGLES_SCALE_INITIAL;
+      this.triangles.y *= EXPLODED_TRIANGLES_SCALE_INITIAL;
+    }
   }
 
   private animateFlashPhase2(timeRelativeMs: number): void {
-    // Exploding
-    // TODO: Add Particles
-
     const flashOutProgress = timeRelativeMs / FLASH_OUT_TIME;
     const fadeOutProgress = timeRelativeMs / (FADE_OUT_TIME / 2);
     const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
@@ -176,12 +197,12 @@ export class CirclePiece extends Container implements IUpdatable {
     this.circleContainer.scale.set(scaleOutFactor);
 
     // After the flash, we can hide some elements that were behind it.
-    if (this.ring.visible) this.ring.visible = false;
-    if (this.circle.visible) this.circle.visible = false;
-    if (this.number.visible) this.number.visible = false;
-    if (this.numberGlow.visible) this.numberGlow.visible = false;
+    this.ring.visible = false;
+    this.circle.visible = false;
+    this.number.visible = false;
+    this.numberGlow.visible = false;
 
-    if (this.circleContainer.alpha < 0.01 && this.circleContainer.visible) {
+    if (this.circleContainer.alpha < 0.01) {
       this.circleContainer.visible = false;
     }
   }
