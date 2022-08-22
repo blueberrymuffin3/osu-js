@@ -30,7 +30,7 @@ export class Triangles extends MeshGeometry {
   private lastTimeMs = NaN;
 
   constructor() {
-    const triangleCount = Math.round(
+    const triangleCount = Math.floor(
       MathUtils.map(
         Math.random(),
         0,
