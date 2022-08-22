@@ -8,7 +8,7 @@ const MAX_TRIANGLE_COUNT = 7;
 const TRIANGLE_SIZE_MIN = 0.10;
 const TRIANGLE_SIZE_MAX = 0.35;
 const TRIANGLE_SPEED_MIN = 0.0001;
-const TRIANGLE_SPEED_MAX = 0.0003;
+const TRIANGLE_SPEED_MAX = 0.0002;
 
 /**
  * Triangle width & height limits in range from 0 to 1.
