@@ -51,13 +51,15 @@ const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniformGroup);
 export class SliderPathSprite extends Container {
   private points: Vector2[];
   private geometry: Geometry;
+  private overallBounds: Bounds;
+
   private lastRenderState: RenderState | null = null;
   private texture: RenderTexture | null = null;
   private sprite: Sprite = new Sprite();
   private trackColor: number[];
   private borderColor: number[];
 
-  private radius!: number;
+  private radius: number;
   private matricesValid = false;
 
   public startProgress = 0;
@@ -70,6 +72,7 @@ export class SliderPathSprite extends Container {
     this.trackColor = [...utils.hex2rgb(trackColor), 1];
     this.borderColor = [...utils.hex2rgb(borderColor), 1];
 
+    this.overallBounds = this.boundingBox(this.points);
     this.geometry = this.generateGeometry(this.points);
 
     this.addChild(this.sprite);
@@ -85,18 +88,19 @@ export class SliderPathSprite extends Container {
       return;
     }
 
+    const scaleXY = this.worldTransform.a + this.worldTransform.d;
+
     const renderState: RenderState = {
-      // prettier-ignore
-      resolution: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
+      resolution: scaleXY / 2 * renderer.resolution,
       startProgress: this.startProgress,
       endProgress: this.endProgress,
     };
     
     if (
       !this.lastRenderState ||
-      this.lastRenderState.resolution != renderState.resolution ||
-      this.lastRenderState.startProgress != renderState.startProgress ||
-      this.lastRenderState.endProgress != renderState.endProgress
+      this.lastRenderState.resolution !== renderState.resolution ||
+      this.lastRenderState.startProgress !== renderState.startProgress ||
+      this.lastRenderState.endProgress !== renderState.endProgress
     ) {
       this.updateSpriteRender(renderer, renderState);
       // prettier-ignore
@@ -119,10 +123,8 @@ export class SliderPathSprite extends Container {
       virtualScreenRect.bottom
     );
 
-    const overallBoundsUnclipped = this.boundingBox(this.points);
-
     const overallBoundsClipped = new Bounds();
-    overallBoundsClipped.addBoundsMask(overallBoundsUnclipped, mask)
+    overallBoundsClipped.addBoundsMask(this.overallBounds, mask)
 
     const overallBounds = overallBoundsClipped.getRectangle();
     const textureBounds = new Rectangle(
@@ -131,6 +133,7 @@ export class SliderPathSprite extends Container {
       overallBounds.width,
       overallBounds.height
     );
+
     uniformGroup.uniforms.AA = AA_FACTOR / state.resolution;
     uniformGroup.uniforms.range = [state.startProgress, state.endProgress];
     uniformGroup.uniforms.radius = this.radius;
