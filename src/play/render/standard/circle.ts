@@ -34,7 +34,7 @@ const APPROACH_CIRCLE_SCALE_EXIT = APPROACH_CIRCLE_SCALE_FACTOR;
 const GLOW_ALPHA_DEFAULT = 0.5;
 const FLASH_IN_ALPHA_EXIT = 0.8;
 const EXPLODED_TRIANGLE_ALPHA_INITIAL = 0.2;
-const EXPLODED_TRIANGLE_SCALE_INITIAL = 1.2;
+const EXPLODED_TRIANGLE_SCALE_INITIAL = 1.1;
 const SCALE_EXIT = 1.5;
 const NUMBER_OFFSET_Y = 8;
 
@@ -191,7 +191,7 @@ export class CirclePiece extends Container implements IUpdatable {
       this.circle.removeChildren();
       this.triangles.mask = null;
 
-      // Triangles that appeared after explosion are 1.2 times larger.
+      // Triangles that appeared after explosion are 1.1 times larger.
       this.triangles.scale.set(
         this.triangles.scale.x * EXPLODED_TRIANGLE_SCALE_INITIAL,
         this.triangles.scale.y * EXPLODED_TRIANGLE_SCALE_INITIAL
