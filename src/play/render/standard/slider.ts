@@ -106,7 +106,6 @@ export class SliderPiece extends Container implements IUpdatable {
 
     this.sliderBallSprite = Sprite.from(TEXTURE_SLIDER_BALL);
     this.sliderBallSprite.blendMode = BLEND_MODES.ADD;
-    this.sliderBallSprite.tint = accentColor;
     this.sliderBallSprite.anchor.set(0.5);
 
     const nestedDisplayObjects: TimelineElement<DOTimelineInstance>[] = [];
