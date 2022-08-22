@@ -14,10 +14,10 @@ const TRIANGLE_SPEED_MAX = 0.0003;
  * Triangle width & height limits in range from 0 to 1.
  * They are used to prevent triangles from being rendered outside of the object.
  */
-const TRIANGLE_MIN_X = -0.2;
-const TRIANGLE_MAX_X = 1.2;
-const TRIANGLE_MIN_Y = -0.2;
-const TRIANGLE_MAX_Y = 1.2;
+const TRIANGLE_MIN_X = -0.1;
+const TRIANGLE_MAX_X = 1.1;
+const TRIANGLE_MIN_Y = -0.1;
+const TRIANGLE_MAX_Y = 1.1;
 
 const SQRT3_2 = Math.sqrt(3) / 2;
 
