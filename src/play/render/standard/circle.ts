@@ -31,12 +31,16 @@ const APPROACH_CIRCLE_SCALE_FACTOR = Math.fround(128 / 118);
 const APPROACH_CIRCLE_SCALE_INITIAL = 4 * APPROACH_CIRCLE_SCALE_FACTOR;
 const APPROACH_CIRCLE_SCALE_EXIT = APPROACH_CIRCLE_SCALE_FACTOR;
 
+const GLOW_DEFAULT_ALPHA = 0.2;
+const EXPLODED_TRIANGLES_SCALE_INITIAL = 1.2;
+const SCALE_EXIT = 1.5;
+const NUMBER_OFFSET_Y = 8;
+
 const FLASH_IN_TIME = 40;
 const FLASH_OUT_TIME = 100;
 const SCALE_TIME = 400;
-
-// TODO: Why the fade out time twice as long as the scale time?
 const FADE_OUT_TIME = 800;
+const GLOW_FADE_OUT_TIME = 400;
 
 const CIRCLE_MASK = new Graphics()
   .beginFill(0xffffff)
@@ -96,13 +100,13 @@ export class CirclePiece extends Container implements IUpdatable {
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
     this.glow.blendMode = BLEND_MODES.ADD;
     this.glow.anchor.set(0.5);
-    this.glow.alpha = 0.5;
+    this.glow.alpha = GLOW_DEFAULT_ALPHA;
     this.glow.tint = color;
     this.circleContainer.addChild(this.glow);
 
     this.numberGlow = Sprite.from(TEXTURE_NUMBER_GLOW);
     this.numberGlow.scale.set(0.85);
-    this.numberGlow.alpha = 0.5;
+    this.numberGlow.alpha = GLOW_DEFAULT_ALPHA;
     this.numberGlow.anchor.set(0.5);
     this.numberGlow.blendMode = BLEND_MODES.ADD;
     this.circleContainer.addChild(this.numberGlow);
@@ -110,7 +114,7 @@ export class CirclePiece extends Container implements IUpdatable {
     const label = (hitObject.currentComboIndex + 1).toString();
     this.number = new BitmapTextShadowed(label, NUMBER_STYLE);
     this.number.setAnchor(0.5);
-    this.number.y = 8;
+    this.number.y = NUMBER_OFFSET_Y;
     this.circleContainer.addChild(this.number);
 
     this.ring = Sprite.from(TEXTURE_OSU_RING);
@@ -188,12 +192,14 @@ export class CirclePiece extends Container implements IUpdatable {
 
   private animateFlashPhase2(timeRelativeMs: number): void {
     const flashOutProgress = timeRelativeMs / FLASH_OUT_TIME;
-    const fadeOutProgress = timeRelativeMs / (FADE_OUT_TIME / 2);
-    const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
-    const scaleOutFactor = MathUtils.lerpClamped01(scaleProgress, 1, 1.5);
+    const fadeOutProgress = timeRelativeMs / FADE_OUT_TIME;
 
     this.flash.alpha = MathUtils.lerpClamped01(flashOutProgress, 1, 0);
     this.circleContainer.alpha = MathUtils.lerpClamped01(fadeOutProgress, 1, 0);
+
+    const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
+    const scaleOutFactor = MathUtils.lerpClamped01(scaleProgress, 1, SCALE_EXIT);
+
     this.circleContainer.scale.set(scaleOutFactor);
 
     // After the flash, we can hide some elements that were behind it.
