@@ -7,7 +7,6 @@ import {
   IBitmapTextStyle,
   BLEND_MODES,
 } from "pixi.js";
-import { DropShadowFilter } from "@pixi/filter-drop-shadow";
 import { Easing, MathUtils } from "osu-classes";
 import { IUpdatable } from "../../game/timeline";
 import { FONT_VENERA_FACE } from "../../resources/fonts";
@@ -25,14 +24,6 @@ const NUMBER_STYLE: Partial<IBitmapTextStyle> = {
   fontSize: 80,
   align: "center",
 };
-
-const NUMBER_SHADOW_FILTER = new DropShadowFilter({
-  alpha: 0.3,
-  distance: 4,
-  pixelSize: 1,
-  blur: 0,
-  rotation: 90,
-});
 
 // https://github.com/ppy/osu/blob/513ba69f6f8d61b83cc2552ae561633e3815c5c5/osu.Game.Rulesets.Osu/Skinning/Legacy/LegacyApproachCircle.cs#L46
 const APPROACH_CIRCLE_SCALE_FACTOR = Math.fround(128 / 118);
@@ -104,7 +95,6 @@ export class CirclePiece extends Container implements IUpdatable {
 
     const label = (hitObject.currentComboIndex + 1).toString();
     this.number = new BitmapText(label, NUMBER_STYLE);
-    this.number.filters = [ NUMBER_SHADOW_FILTER ];
     this.number.anchor.set(0.5);
     this.number.y = 8;
     this.circleContainer.addChild(this.number);
