@@ -6,18 +6,18 @@ const MIN_TRIANGLE_COUNT = 5;
 const MAX_TRIANGLE_COUNT = 7;
 
 const TRIANGLE_SIZE_MIN = 0.10;
-const TRIANGLE_SIZE_MAX = 0.35;
-const TRIANGLE_SPEED_MIN = 0.0001;
-const TRIANGLE_SPEED_MAX = 0.0002;
+const TRIANGLE_SIZE_MAX = 0.50;
+const TRIANGLE_SPEED_MIN = 0.00015;
+const TRIANGLE_SPEED_MAX = 0.00025;
 
 /**
  * Triangle width & height limits in range from 0 to 1.
  * They are used to prevent triangles from being rendered outside of the object.
  */
-const TRIANGLE_MIN_X = -0.1;
-const TRIANGLE_MAX_X = 1.1;
-const TRIANGLE_MIN_Y = -0.1;
-const TRIANGLE_MAX_Y = 1.1;
+const TRIANGLE_MIN_X = -0.25;
+const TRIANGLE_MAX_X = 1.25;
+const TRIANGLE_MIN_Y = 0.0;
+const TRIANGLE_MAX_Y = 1.4;
 
 const SQRT3_2 = Math.sqrt(3) / 2;
 
