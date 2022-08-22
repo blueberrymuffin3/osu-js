@@ -120,7 +120,7 @@ export class CirclePiece extends Container implements IUpdatable {
 
   // TODO: Should be able to handle non-monotonic updates
   update(timeMs: number): void {
-    this.circle.update(timeMs);
+    this.explode.update(timeMs);
 
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
@@ -181,6 +181,7 @@ export class CirclePiece extends Container implements IUpdatable {
     if (this.ring.visible) this.ring.visible = false;
     if (this.circle.visible) this.circle.visible = false;
     if (this.number.visible) this.number.visible = false;
+    if (this.numberGlow.visible) this.numberGlow.visible = false;
 
     if (this.circleContainer.alpha < 0.01 && this.circleContainer.visible) {
       this.circleContainer.visible = false;
