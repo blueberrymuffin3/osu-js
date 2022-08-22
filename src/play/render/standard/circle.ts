@@ -195,8 +195,18 @@ export class CirclePiece extends Container implements IUpdatable {
   private animateFlashPhase2(timeRelativeMs: number): void {
     const flashOutProgress = timeRelativeMs / FLASH_OUT_TIME;
     const fadeOutProgress = timeRelativeMs / FADE_OUT_TIME;
+    const glowFadeOutProgress = timeRelativeMs / GLOW_FADE_OUT_TIME;
 
     this.flash.alpha = MathUtils.lerpClamped01(flashOutProgress, 1, 0);
+
+    // Glow fades out two times faster (400 ms instead of 800 ms).
+    // https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/MainCirclePiece.cs#L80
+    this.glow.alpha = MathUtils.lerpClamped01(
+      glowFadeOutProgress, 
+      GLOW_DEFAULT_ALPHA, 
+      0
+    );
+
     this.circleContainer.alpha = MathUtils.lerpClamped01(fadeOutProgress, 1, 0);
 
     const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
