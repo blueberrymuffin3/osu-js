@@ -1,15 +1,23 @@
 import { MeshGeometry } from "pixi.js";
 import { MathUtils } from "osu-classes";
 
+// From what i've seen, lazer spawns up to 5-7 triangles per object.
 const MIN_TRIANGLE_COUNT = 5;
-const MAX_TRIANGLE_COUNT = 8;
+const MAX_TRIANGLE_COUNT = 7;
 
 const TRIANGLE_SIZE_MIN = 0.1;
-const TRIANGLE_SIZE_MAX = 0.6;
-const TRIANGLE_X_MIN = 0.2;
-const TRIANGLE_X_MAX = 1 - TRIANGLE_X_MIN;
+const TRIANGLE_SIZE_MAX = 0.5;
 const TRIANGLE_SPEED_MIN = 0.0001;
-const TRIANGLE_SPEED_MAX = 0.00025;
+const TRIANGLE_SPEED_MAX = 0.0003;
+
+/**
+ * Triangle width & height limits in range from 0 to 1.
+ * They are used to prevent triangles from being rendered outside of the object.
+ */
+const TRIANGLE_MIN_X = -0.2;
+const TRIANGLE_MAX_X = 1.2;
+const TRIANGLE_MIN_Y = -0.2;
+const TRIANGLE_MAX_Y = 1.2;
 
 const SQRT3_2 = Math.sqrt(3) / 2;
 
@@ -22,10 +30,14 @@ export class Triangles extends MeshGeometry {
   private lastTimeMs = NaN;
 
   constructor() {
-    const triangleCount = MathUtils.clamp(
-      Math.round(Math.random() * MAX_TRIANGLE_COUNT),
-      MIN_TRIANGLE_COUNT,
-      MAX_TRIANGLE_COUNT
+    const triangleCount = Math.round(
+      MathUtils.map(
+        Math.random(),
+        0,
+        1,
+        MIN_TRIANGLE_COUNT,
+        MAX_TRIANGLE_COUNT
+      )
     );
 
     const vertices = new Float32Array(triangleCount * 6);
@@ -47,19 +59,42 @@ export class Triangles extends MeshGeometry {
 
   public resetTriangles() {
     for (let i = 0; i < this.triangleCount; i++) {
-      const size = MathUtils
-        .lerpClamped01(Math.random(), TRIANGLE_SIZE_MIN, TRIANGLE_SIZE_MAX);
-      const x = MathUtils
-        .lerpClamped01(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
-      const y = MathUtils
-        .lerpClamped01(Math.random(), -size, 1 + size);
-      const speed = MathUtils
-        .lerpClamped01(Math.random(), TRIANGLE_SPEED_MIN, TRIANGLE_SPEED_MAX);
+      const size = MathUtils.map(
+        Math.random(),
+        0,
+        1,
+        TRIANGLE_SIZE_MIN, 
+        TRIANGLE_SIZE_MAX
+      );
 
-      this.trianglePositions[i * 2] = x;
-      this.trianglePositions[i * 2 + 1] = y;
+      const speed = MathUtils.map(
+        Math.random(),
+        0,
+        1,
+        TRIANGLE_SPEED_MIN, 
+        TRIANGLE_SPEED_MAX
+      );
+
+      const x = MathUtils.map(
+        Math.random(),
+        0,
+        1,
+        TRIANGLE_MIN_X + size,
+        TRIANGLE_MAX_X - size
+      );
+
+      const y = MathUtils.map(
+        Math.random(),
+        0, 
+        1,
+        TRIANGLE_MIN_Y + size,
+        TRIANGLE_MAX_Y - size
+      );
+
       this.triangleSizes[i] = size;
       this.triangleSpeeds[i] = speed;
+      this.trianglePositions[i * 2] = x;
+      this.trianglePositions[i * 2 + 1] = y;
     }
 
     this.recalculateVertices();
@@ -91,32 +126,18 @@ export class Triangles extends MeshGeometry {
 
   update(timeMs: number) {
     const deltaMs = timeMs - this.lastTimeMs;
-    const forward = deltaMs >= 0;
+
     this.lastTimeMs = timeMs;
 
-    if (isNaN(deltaMs)) {
-      return;
-    }
+    if (isNaN(deltaMs)) return;
 
     for (let i = 0; i < this.triangleCount; i++) {
       const j = i * 2;
       let x = this.trianglePositions[j + 0];
       let y = this.trianglePositions[j + 1];
-      let size = this.triangleSizes[i];
+
       y -= deltaMs * this.triangleSpeeds[i];
-      if (forward ? y < -size : y > 1 + size) {
-        this.triangleSpeeds[i] = MathUtils.lerpClamped01(
-          Math.random(),
-          TRIANGLE_SPEED_MIN,
-          TRIANGLE_SPEED_MAX
-        );
-        y = forward ? 1 + size : -size;
-        x = MathUtils.lerpClamped01(
-          Math.random(), 
-          TRIANGLE_X_MIN, 
-          TRIANGLE_X_MAX
-        );
-      }
+
       this.trianglePositions[j + 0] = x;
       this.trianglePositions[j + 1] = y;
     }
