@@ -23,7 +23,7 @@ import {
   textureFromFile,
 } from "./util";
 
-const BEATMAP_CACHE_TTL = 3600;
+const BEATMAP_CACHE_TTL = 60 * 60 * 24 * 7; // 1 week
 const CACHE_HEADER_TIMESTAMP = "x-cache-timestamp";
 
 function decodeBeatmap(beatmapString: string): StandardBeatmap {
