@@ -22,7 +22,7 @@ export class ExplodePiece extends Mesh implements IUpdatable {
     this.y = -sprite.height * 0.5;
     this.scale.x = sprite.width;
     this.scale.y = sprite.height;
-    this.alpha = 0.3;
+    this.alpha = 0.2;
     this.tint = color;
     this.blendMode = BLEND_MODES.ADD;
     this.mask = mask;
