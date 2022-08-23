@@ -187,6 +187,12 @@ export class CirclePiece extends Container implements IUpdatable {
     );
     
     if (this.circle.children.length > 0) {
+      /**
+       * TODO: This is not how the game actually does it.
+       * osu! generates separate triangle patterns for CirclePiece and ExplodePiece.
+       * Original triangles inside the circle should be hidden ONLY when the flash starts to fade out.
+       */
+
       // Remove triangle mask once hit object was hit
       this.circle.removeChildren();
       this.triangles.mask = null;
