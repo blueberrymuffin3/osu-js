@@ -15,9 +15,9 @@ import {
   TEXTURE_NUMBER_GLOW,
   TEXTURE_OSU_RING,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_APPROACH_CIRCLE,
-  TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC,
   TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW,
 } from "../../resources/textures";
+import { CircleTriangles } from "./components/circle_triangles";
 import { ExplodePiece } from "./components/explode_piece";
 import { BitmapTextShadowed } from "../common/bitmap_text_shadowed";
 
@@ -38,11 +38,11 @@ const EXPLODED_TRIANGLE_SCALE_INITIAL = 1.1;
 const SCALE_EXIT = 1.5;
 const NUMBER_OFFSET_Y = 8;
 
+const GLOW_FADE_OUT_TIME = 400;
 const FLASH_IN_TIME = 40;
 const FLASH_OUT_TIME = 100;
 const SCALE_TIME = 400;
 const FADE_OUT_TIME = 800;
-const GLOW_FADE_OUT_TIME = 400;
 
 const CIRCLE_MASK = new Graphics()
   .beginFill(0xffffff)
@@ -60,9 +60,9 @@ export class CirclePiece extends Container implements IUpdatable {
   private approachFadeInTime: number;
   
   private circleContainer: Container;
-  private circle: Sprite;
+  private circle: CircleTriangles;
+  private explosion: ExplodePiece;
   private glow: Sprite;
-  private triangles: ExplodePiece;
   private numberGlow: Sprite;
   private number: BitmapTextShadowed;
   private ring: Sprite;
@@ -92,12 +92,22 @@ export class CirclePiece extends Container implements IUpdatable {
     this.circleContainer = new Container();
 
     const circleMask = new Graphics(CIRCLE_MASK);
-    this.circle = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC);
-    this.circle.tint = color;
-    this.circle.anchor.set(0.5);
-    this.triangles = new ExplodePiece(color, this.circle, circleMask);
+    const randomSeed = this.hitObject.startTime;
+
+    this.circle = new CircleTriangles(color, circleMask, randomSeed);
     this.circle.addChild(circleMask);
-    this.circleContainer.addChild(this.circle, this.triangles);
+    this.explosion = new ExplodePiece(color, randomSeed);
+
+    this.explosion.position.set(
+      this.circle.trianglesMesh.x * EXPLODED_TRIANGLE_SCALE_INITIAL,
+      this.circle.trianglesMesh.y * EXPLODED_TRIANGLE_SCALE_INITIAL
+    );
+    this.explosion.scale.set(
+      this.circle.trianglesMesh.scale.x * EXPLODED_TRIANGLE_SCALE_INITIAL,
+      this.circle.trianglesMesh.scale.y * EXPLODED_TRIANGLE_SCALE_INITIAL
+    );
+
+    this.circleContainer.addChild(this.circle, this.explosion);
 
     this.glow = Sprite.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_RING_GLOW);
     this.glow.blendMode = BLEND_MODES.ADD;
@@ -133,24 +143,30 @@ export class CirclePiece extends Container implements IUpdatable {
 
   // TODO: Should be able to handle non-monotonic updates
   update(timeMs: number): void {
-    this.triangles.update(timeMs);
+    // Keep circle & explosion triangles synchronized.
+    this.circle.update(timeMs);
+    this.explosion.update(timeMs);
 
     const timeRelativeMs = timeMs - this.hitObject.startTime;
 
-    // Entering
+    // Before explosion
     if (timeRelativeMs <= 0) {
       return this.animateEntering(timeRelativeMs); 
     }
 
     this.approachContainer.visible = false;
 
-    // Flashing & exploding
-    const flashInProgress = timeRelativeMs / FLASH_IN_TIME;
+    // From the start of the explosion to the very end
+    this.animateExplosion(timeRelativeMs);
 
+    const flashInProgress = timeRelativeMs / FLASH_IN_TIME;
+    
     if (flashInProgress < 1) {
+      // Do this only while the flash fades in.
       return this.animateFlashPhase1(flashInProgress);
     }
 
+    // Do rest of the stuff that was delayed by the flash in time
     return this.animateFlashPhase2(timeRelativeMs);
   }
 
@@ -173,6 +189,27 @@ export class CirclePiece extends Container implements IUpdatable {
     );
   }
 
+  private animateExplosion(timeRelativeMs: number): void {
+    /**
+     * Glow fades out on drawable state update time (equivalent to hit object start time).
+     * While the rest of the transforms are applied on the hit state update time (hit object end time).
+     * Since our object is a circle with the same start and end time, there is no delay between its states.
+     * https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/MainCirclePiece.cs#L79
+     */
+    const glowFadeOutProgress = timeRelativeMs / GLOW_FADE_OUT_TIME;
+
+    this.glow.alpha = MathUtils.lerpClamped01(
+      glowFadeOutProgress, 
+      GLOW_ALPHA_DEFAULT, 
+      0
+    );
+
+    const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
+    const scaleOutFactor = MathUtils.lerp(scaleProgress, 1, SCALE_EXIT);
+
+    this.circleContainer.scale.set(scaleOutFactor);
+  }
+
   private animateFlashPhase1(flashInProgress: number): void {
     this.flash.alpha = MathUtils.lerpClamped01(
       flashInProgress, 
@@ -180,57 +217,20 @@ export class CirclePiece extends Container implements IUpdatable {
       FLASH_IN_ALPHA_EXIT
     );
 
-    this.triangles.alpha = MathUtils.lerpClamped01(
+    this.explosion.alpha = MathUtils.lerpClamped01(
       flashInProgress, 
       0, 
       EXPLODED_TRIANGLE_ALPHA_INITIAL
     );
-    
-    if (this.circle.children.length > 0) {
-      /**
-       * TODO: This is not how the game actually does it.
-       * osu! generates separate triangle patterns for CirclePiece and ExplodePiece.
-       * Original triangles inside the circle should be hidden ONLY when the flash starts to fade out.
-       */
-
-      // Remove triangle mask once hit object was hit
-      this.circle.removeChildren();
-      this.triangles.mask = null;
-
-      // Triangles that appeared after explosion are 1.1 times larger.
-      this.triangles.scale.set(
-        this.triangles.scale.x * EXPLODED_TRIANGLE_SCALE_INITIAL,
-        this.triangles.scale.y * EXPLODED_TRIANGLE_SCALE_INITIAL
-      );
-
-      // Align scaled triangles to center.
-      this.triangles.x *= EXPLODED_TRIANGLE_SCALE_INITIAL;
-      this.triangles.y *= EXPLODED_TRIANGLE_SCALE_INITIAL;
-    }
   }
 
   private animateFlashPhase2(timeRelativeMs: number): void {
     const flashOutProgress = timeRelativeMs / FLASH_OUT_TIME;
     const fadeOutProgress = timeRelativeMs / FADE_OUT_TIME;
-    const glowFadeOutProgress = timeRelativeMs / GLOW_FADE_OUT_TIME;
-
+    
     this.flash.alpha = MathUtils.lerpClamped01(flashOutProgress, 1, 0);
-
-    // Glow fades out two times faster (400 ms instead of 800 ms).
-    // https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/MainCirclePiece.cs#L80
-    this.glow.alpha = MathUtils.lerpClamped01(
-      glowFadeOutProgress, 
-      GLOW_ALPHA_DEFAULT, 
-      0
-    );
-
     this.circleContainer.alpha = MathUtils.lerpClamped01(fadeOutProgress, 1, 0);
-
-    const scaleProgress = Easing.outQuad(timeRelativeMs / SCALE_TIME);
-    const scaleOutFactor = MathUtils.lerpClamped01(scaleProgress, 1, SCALE_EXIT);
-
-    this.circleContainer.scale.set(scaleOutFactor);
-
+    
     // After the flash, we can hide some elements that were behind it.
     this.ring.visible = false;
     this.circle.visible = false;
