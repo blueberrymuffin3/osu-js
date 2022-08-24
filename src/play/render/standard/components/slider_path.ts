@@ -51,16 +51,16 @@ const shader = Shader.from(SDF_LINE_VERT, SDF_LINE_FRAG, uniformGroup);
 export class SliderPathSprite extends Container {
   private points: Vector2[];
   private geometry: Geometry;
-  private overallBounds: Bounds;
-
   private lastRenderState: RenderState | null = null;
   private texture: RenderTexture | null = null;
   private sprite: Sprite = new Sprite();
   private trackColor: number[];
   private borderColor: number[];
 
-  private radius: number;
-  private matricesValid = false;
+  private radius!: number;
+
+  private overallBounds!: Rectangle;
+  private textureBounds!: Rectangle;
 
   public startProgress = 0;
   public endProgress = 1;
@@ -72,22 +72,43 @@ export class SliderPathSprite extends Container {
     this.trackColor = [...utils.hex2rgb(trackColor), 1];
     this.borderColor = [...utils.hex2rgb(borderColor), 1];
 
-    this.overallBounds = this.boundingBox(this.points);
     this.geometry = this.generateGeometry(this.points);
 
     this.addChild(this.sprite);
   }
 
   updateTransform(): void {
+    const mask = new Bounds();
+    const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
+
+    mask.addFrameMatrix(
+      this.worldTransform.clone().invert(),
+      virtualScreenRect.left,
+      virtualScreenRect.top,
+      virtualScreenRect.right,
+      virtualScreenRect.bottom
+    );
+
+    const overallBoundsUnclipped = this.boundingBox(this.points);
+
+    const overallBoundsClipped = new Bounds();
+    overallBoundsClipped.addBoundsMask(overallBoundsUnclipped, mask);
+
+    this.overallBounds = overallBoundsClipped.getRectangle();
+    this.textureBounds = new Rectangle(
+      0,
+      0,
+      this.overallBounds.width,
+      this.overallBounds.height
+    );
+
+    this.sprite.x = this.overallBounds.x - this.points[0].x;
+    this.sprite.y = this.overallBounds.y - this.points[0].x;
+
     super.updateTransform();
-    this.matricesValid = true;
   }
 
   _render(renderer: Renderer): void {
-    if (!this.matricesValid) {
-      return;
-    }
-
     const scaleXY = this.worldTransform.a + this.worldTransform.d;
 
     const renderState: RenderState = {
@@ -112,28 +133,6 @@ export class SliderPathSprite extends Container {
     // TODO: Why is this needed?
     renderer.batch.flush();
 
-    const mask = new Bounds();
-    const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
-
-    mask.addFrameMatrix(
-      this.worldTransform.clone().invert(),
-      virtualScreenRect.left,
-      virtualScreenRect.top,
-      virtualScreenRect.right,
-      virtualScreenRect.bottom
-    );
-
-    const overallBoundsClipped = new Bounds();
-    overallBoundsClipped.addBoundsMask(this.overallBounds, mask)
-
-    const overallBounds = overallBoundsClipped.getRectangle();
-    const textureBounds = new Rectangle(
-      0,
-      0,
-      overallBounds.width,
-      overallBounds.height
-    );
-
     uniformGroup.uniforms.AA = AA_FACTOR / state.resolution;
     uniformGroup.uniforms.range = [state.startProgress, state.endProgress];
     uniformGroup.uniforms.radius = this.radius;
@@ -144,8 +143,8 @@ export class SliderPathSprite extends Container {
 
     if (!this.texture) {
       this.texture = RenderTexture.create({
-        width: textureBounds.width,
-        height: textureBounds.height,
+        width: this.textureBounds.width,
+        height: this.textureBounds.height,
         resolution: state.resolution,
       });
     } else {
@@ -153,16 +152,24 @@ export class SliderPathSprite extends Container {
         this.texture.setResolution(state.resolution);
       }
       if (
-        this.texture.width != textureBounds.width ||
-        this.texture.height != textureBounds.height
+        this.texture.width != this.textureBounds.width ||
+        this.texture.height != this.textureBounds.height
       )
-        this.texture.resize(textureBounds.width, textureBounds.height, true);
+        this.texture.resize(
+          this.textureBounds.width,
+          this.textureBounds.height,
+          true
+        );
     }
 
     if (!this.texture.framebuffer.depthTexture) {
       this.texture.framebuffer.addDepthTexture();
     }
-    renderer.renderTexture.bind(this.texture, overallBounds, textureBounds);
+    renderer.renderTexture.bind(
+      this.texture,
+      this.overallBounds,
+      this.textureBounds
+    );
     renderer.renderTexture.clear();
 
     renderer.geometry.bind(this.geometry, shader);
@@ -171,8 +178,6 @@ export class SliderPathSprite extends Container {
     renderer.renderTexture.bind();
 
     this.sprite.texture = this.texture;
-    this.sprite.x = overallBounds.x - this.points[0].x;
-    this.sprite.y = overallBounds.y - this.points[0].x;
   }
 
   boundingBox(points: Vector2[]) {
