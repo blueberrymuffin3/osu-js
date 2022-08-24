@@ -60,7 +60,9 @@ export class SliderPathSprite extends Container {
 
   private radius!: number;
   private padding!: number;
-  private matricesValid = false;
+
+  private overallBounds!: Rectangle;
+  private textureBounds!: Rectangle;
 
   public startProp = 0;
   public endProp = 1;
@@ -79,15 +81,37 @@ export class SliderPathSprite extends Container {
   }
 
   updateTransform(): void {
+    const mask = new Bounds();
+    const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
+
+    mask.addFrameMatrix(
+      this.worldTransform.clone().invert(),
+      virtualScreenRect.left,
+      virtualScreenRect.top,
+      virtualScreenRect.right,
+      virtualScreenRect.bottom
+    );
+
+    const overallBoundsUnclipped = this.boundingBox(this.points);
+
+    const overallBoundsClipped = new Bounds();
+    overallBoundsClipped.addBoundsMask(overallBoundsUnclipped, mask);
+
+    this.overallBounds = overallBoundsClipped.getRectangle();
+    this.textureBounds = new Rectangle(
+      0,
+      0,
+      this.overallBounds.width,
+      this.overallBounds.height
+    );
+
+    this.sprite.x = this.overallBounds.x - this.points[0].x;
+    this.sprite.y = this.overallBounds.y - this.points[0].x;
+
     super.updateTransform();
-    this.matricesValid = true;
   }
 
   _render(renderer: Renderer): void {
-    if (!this.matricesValid) {
-      return;
-    }
-
     const renderState: RenderState = {
       // prettier-ignore
       resolution: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
@@ -110,29 +134,6 @@ export class SliderPathSprite extends Container {
     // TODO: Why is this needed?
     renderer.batch.flush();
 
-    const mask = new Bounds();
-    const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
-
-    mask.addFrameMatrix(
-      this.worldTransform.clone().invert(),
-      virtualScreenRect.left,
-      virtualScreenRect.top,
-      virtualScreenRect.right,
-      virtualScreenRect.bottom
-    );
-
-    const overallBoundsUnclipped = this.boundingBox(this.points);
-
-    const overallBoundsClipped = new Bounds();
-    overallBoundsClipped.addBoundsMask(overallBoundsUnclipped, mask)
-
-    const overallBounds = overallBoundsClipped.getRectangle();
-    const textureBounds = new Rectangle(
-      0,
-      0,
-      overallBounds.width,
-      overallBounds.height
-    );
     uniformGroup.uniforms.AA = AA_FACTOR / state.resolution;
     uniformGroup.uniforms.range = [state.startProp, state.endProp];
     uniformGroup.uniforms.radius = this.radius;
@@ -143,8 +144,8 @@ export class SliderPathSprite extends Container {
 
     if (!this.texture) {
       this.texture = RenderTexture.create({
-        width: textureBounds.width,
-        height: textureBounds.height,
+        width: this.textureBounds.width,
+        height: this.textureBounds.height,
         resolution: state.resolution,
       });
     } else {
@@ -152,16 +153,24 @@ export class SliderPathSprite extends Container {
         this.texture.setResolution(state.resolution);
       }
       if (
-        this.texture.width != textureBounds.width ||
-        this.texture.height != textureBounds.height
+        this.texture.width != this.textureBounds.width ||
+        this.texture.height != this.textureBounds.height
       )
-        this.texture.resize(textureBounds.width, textureBounds.height, true);
+        this.texture.resize(
+          this.textureBounds.width,
+          this.textureBounds.height,
+          true
+        );
     }
 
     if (!this.texture.framebuffer.depthTexture) {
       this.texture.framebuffer.addDepthTexture();
     }
-    renderer.renderTexture.bind(this.texture, overallBounds, textureBounds);
+    renderer.renderTexture.bind(
+      this.texture,
+      this.overallBounds,
+      this.textureBounds
+    );
     renderer.renderTexture.clear();
 
     renderer.geometry.bind(this.geometry, shader);
@@ -170,8 +179,6 @@ export class SliderPathSprite extends Container {
     renderer.renderTexture.bind();
 
     this.sprite.texture = this.texture;
-    this.sprite.x = overallBounds.x - this.points[0].x;
-    this.sprite.y = overallBounds.y - this.points[0].x;
   }
 
   boundingBox(points: Vector2[]) {
