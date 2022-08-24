@@ -1,5 +1,5 @@
 import { MeshGeometry } from "pixi.js";
-import { MathUtils } from "osu-classes";
+import { MathUtils, FastRandom } from "osu-classes";
 
 // From what i've seen, lazer spawns up to 5-7 triangles per object.
 const MIN_TRIANGLE_COUNT = 5;
@@ -22,17 +22,20 @@ const TRIANGLE_MAX_Y = 1.4;
 const SQRT3_2 = Math.sqrt(3) / 2;
 
 export class Triangles extends MeshGeometry {
+  private lastTimeMs = NaN;
   private triangleCount: number;
   private trianglePositions: Float32Array;
   private triangleSizes: Float32Array;
   private triangleSpeeds: Float32Array;
   private vertices: Float32Array;
-  private lastTimeMs = NaN;
+  private random: FastRandom;
 
-  constructor() {
+  constructor(seed?: number) {
+    const random = new FastRandom(seed ?? Date.now());
+
     const triangleCount = Math.floor(
       MathUtils.map(
-        Math.random(),
+        random.nextDouble(),
         0,
         1,
         MIN_TRIANGLE_COUNT,
@@ -48,19 +51,23 @@ export class Triangles extends MeshGeometry {
 
     super(vertices, undefined, index);
 
-    this.triangleCount = triangleCount;
     this.trianglePositions = new Float32Array(triangleCount * 2);
     this.triangleSizes = new Float32Array(triangleCount);
     this.triangleSpeeds = new Float32Array(triangleCount);
+    this.triangleCount = triangleCount;
     this.vertices = vertices;
+    this.random = random;
 
-    this.resetTriangles();
+    this.resetTriangles(seed);
   }
 
-  public resetTriangles() {
+  public resetTriangles(seed?: number) {
+    if (seed) this.random = new FastRandom(seed);
+
+    // TODO: Alpha of the triangles should be randomized somehow.
     for (let i = 0; i < this.triangleCount; i++) {
       const size = MathUtils.map(
-        Math.random(),
+        this.random.nextDouble(),
         0,
         1,
         TRIANGLE_SIZE_MIN, 
@@ -68,7 +75,7 @@ export class Triangles extends MeshGeometry {
       );
 
       const speed = MathUtils.map(
-        Math.random(),
+        this.random.nextDouble(),
         0,
         1,
         TRIANGLE_SPEED_MIN, 
@@ -76,7 +83,7 @@ export class Triangles extends MeshGeometry {
       );
 
       const x = MathUtils.map(
-        Math.random(),
+        this.random.nextDouble(),
         0,
         1,
         TRIANGLE_MIN_X + size,
@@ -84,7 +91,7 @@ export class Triangles extends MeshGeometry {
       );
 
       const y = MathUtils.map(
-        Math.random(),
+        this.random.nextDouble(),
         0, 
         1,
         TRIANGLE_MIN_Y + size,
