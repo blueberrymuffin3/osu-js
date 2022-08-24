@@ -39,6 +39,8 @@ export class VideoPlayerHTML5 extends Sprite implements IUpdatable {
   }
 
   update(timeMs: number): void {
+    if (this.tint < 1 || this.alpha < 0.01) return;
+
     const targetVideoTime = timeMs / 1000;
 
     if (this.video.paused) {

@@ -10,30 +10,23 @@ import { TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC } from "../../../resources/textu
 import { IUpdatable } from "../../../game/timeline";
 import { Triangles } from "./triangles";
 
-const _MASK = new Graphics();
-_MASK.beginFill(0xffffff);
-_MASK.drawCircle(0, 0, 128);
-_MASK.endFill();
-
-const MASK = _MASK.geometry;
-
 export class CircleTriangles extends Sprite implements IUpdatable {
   private trianglesGeometry: Triangles;
   private trianglesMask: Graphics;
-  private trianglesMesh: Mesh;
+  public trianglesMesh: Mesh;
 
-  constructor(color: number) {
+  constructor(color: number, mask: Graphics, seed?: number) {
     super(Texture.from(TEXTURE_SKIN_DEFAULT_GAMEPLAY_OSU_DISC));
     this.tint = color;
 
     this.anchor.set(0.5);
 
-    this.trianglesGeometry = new Triangles();
-    this.trianglesMask = new Graphics(MASK);
-    this.trianglesMesh = new Mesh(
-      this.trianglesGeometry,
-      new MeshMaterial(Texture.WHITE)
-    );
+    const geometry = new Triangles(seed);
+
+    this.trianglesGeometry = geometry;
+    this.trianglesMask = mask;
+
+    this.trianglesMesh = new Mesh(geometry, new MeshMaterial(Texture.WHITE));
     this.trianglesMesh.x = -this.width * 0.5;
     this.trianglesMesh.y = -this.height * 0.5;
     this.trianglesMesh.scale.x = this.width;

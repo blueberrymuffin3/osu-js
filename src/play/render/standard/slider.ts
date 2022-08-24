@@ -1,4 +1,4 @@
-import { SliderPath, Vector2 } from "osu-classes";
+import { ControlPointInfo, HitObject, SliderPath, Vector2 } from "osu-classes";
 import { Slider, SliderRepeat, SliderTick } from "osu-standard-stable";
 import { BLEND_MODES, Container, Sprite } from "pixi.js";
 import { MathUtils, Easing } from "osu-classes";
@@ -18,17 +18,21 @@ import { SliderTickSprite } from "./components/slider_tick";
 
 const SLIDER_FADE_OUT = 450;
 
+const SLIDER_BODY_SNAKING = true;
 const SLIDER_BODY_FADE_OUT = 40;
 
 const SLIDER_BALL_SCALE_INITIAL = 1;
 const SLIDER_BALL_SCALE_EXIT = 1.2;
-const SLIDER_BALL_DURATION = 450;
-const SLIDER_BALL_FADE_OUT = SLIDER_BALL_DURATION / 4;
+const SLIDER_BALL_FOLLOW_AREA = 2.4;
+const SLIDER_BALL_ANIM_DURATION = 450;
+const SLIDER_BALL_FADE_OUT = SLIDER_BALL_ANIM_DURATION / 4;
 
-const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / 2.4;
-const FOLLOW_CIRCLE_SCALE_FULL = 1.0;
-const FOLLOW_CIRCLE_DURATION = 300;
-const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_DURATION / 2;
+const FOLLOW_CIRCLE_SCALE_INITIAL = 1 / SLIDER_BALL_FOLLOW_AREA;
+const FOLLOW_CIRCLE_SCALE_EXIT = 1;
+const FOLLOW_CIRCLE_PRESS_ANIM_DURATION = 300;
+const FOLLOW_CIRCLE_END_ANIM_DURATION = 300;
+const FOLLOW_CIRCLE_FADE_IN = FOLLOW_CIRCLE_PRESS_ANIM_DURATION / 2;
+const FOLLOW_CIRCLE_FADE_OUT = FOLLOW_CIRCLE_FADE_IN;
 
 const FLOAT_EPSILON = 1e-3;
 
@@ -63,13 +67,15 @@ function sliderAngle(sliderPath: SliderPath, atStart: boolean) {
 export class SliderPiece extends Container implements IUpdatable {
   public static EXIT_ANIMATION_DURATION = Math.max(
     SLIDER_BALL_FADE_OUT,
-    FOLLOW_CIRCLE_DURATION
+    FOLLOW_CIRCLE_END_ANIM_DURATION
   );
 
   private preempt: number;
   private fadeIn: number;
 
-  private hitObject: Slider;
+  private slider: Slider;
+  private controlPoints: ControlPointInfo;
+  private accentColor: number;
 
   private sliderPathSprite: SliderPathSprite;
   private nestedDisplayObjectsTimeline: DisplayObjectTimeline;
@@ -78,19 +84,22 @@ export class SliderPiece extends Container implements IUpdatable {
   private followCircleSprite: Sprite;
 
   public constructor(
-    hitObject: Slider,
+    slider: Slider,
+    controlPoints: ControlPointInfo,
     accentColor: number,
     trackColor: number,
     borderColor: number
   ) {
     super();
 
-    this.hitObject = hitObject;
-    this.preempt = hitObject.timePreempt;
-    this.fadeIn = hitObject.timeFadeIn;
+    this.slider = slider;
+    this.preempt = slider.timePreempt;
+    this.fadeIn = slider.timeFadeIn;
+    this.controlPoints = controlPoints;
+    this.accentColor = accentColor;
 
     this.sliderPathSprite = new SliderPathSprite(
-      hitObject,
+      slider,
       trackColor,
       borderColor
     );
@@ -101,49 +110,14 @@ export class SliderPiece extends Container implements IUpdatable {
 
     const nestedDisplayObjects: TimelineElement<DOTimelineInstance>[] = [];
 
-    for (const nestedHitObject of hitObject.nestedHitObjects) {
-      if (nestedHitObject instanceof SliderTick) {
-        const startTime =
-          nestedHitObject.startTime - nestedHitObject.timePreempt;
-        const endTime = nestedHitObject.startTime;
+    for (const nestedHitObject of slider.nestedHitObjects) {
+      const created = this.createNestedObject(nestedHitObject);
 
-        nestedDisplayObjects.push({
-          startTimeMs: startTime,
-          endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
-          build: () => {
-            const sprite = new SliderTickSprite(
-              accentColor,
-              startTime,
-              endTime,
-              nestedHitObject.scale / 2
-            );
-            sprite.position.copyFrom(
-              nestedHitObject.startPosition.subtract(hitObject.startPosition)
-            );
-            return sprite;
-          },
-        });
-      } else if (nestedHitObject instanceof SliderRepeat) {
-        const angle = sliderAngle(
-          hitObject.path,
-          nestedHitObject.repeatIndex % 2 !== 0
-        );
-        nestedDisplayObjects.push({
-          startTimeMs: nestedHitObject.startTime - nestedHitObject.timePreempt,
-          endTimeMs:
-            nestedHitObject.startTime +
-            SliderReverseArrowSprite.EXIT_ANIMATION_DURATION,
-          build: () => {
-            const sprite = new SliderReverseArrowSprite(nestedHitObject);
-            sprite.position.copyFrom(
-              nestedHitObject.startPosition.subtract(hitObject.startPosition)
-            );
-            sprite.angle = angle;
-            return sprite;
-          },
-        });
-      }
+      if (!created) continue;
+
+      nestedDisplayObjects.push(created);
     }
+
     this.nestedDisplayObjectsTimeline = new DisplayObjectTimeline(
       nestedDisplayObjects
     );
@@ -155,7 +129,7 @@ export class SliderPiece extends Container implements IUpdatable {
 
     this.follower = new Container();
     this.follower.visible = false;
-    this.follower.scale.set(this.hitObject.scale / 2);
+    this.follower.scale.set(this.slider.scale / 2);
     this.follower.addChild(this.sliderBallSprite, this.followCircleSprite);
 
     this.addChild(
@@ -168,74 +142,188 @@ export class SliderPiece extends Container implements IUpdatable {
   update(timeMs: number) {
     this.nestedDisplayObjectsTimeline.update(timeMs);
 
-    const timeRelativeMs = timeMs - this.hitObject.startTime;
+    const timeRelativeMs = timeMs - this.slider.startTime;
 
     const enterTime = timeRelativeMs + this.preempt;
-    const exitTime = timeRelativeMs - this.hitObject.duration;
+    const exitTime = timeRelativeMs - this.slider.duration;
 
-    this.alpha =
-      MathUtils.lerpClamped01(enterTime / this.fadeIn, 0, 1) *
-      MathUtils.lerpClamped01(exitTime / SLIDER_FADE_OUT, 1, 0);
-
-    this.sliderPathSprite.alpha = MathUtils.lerpClamped01(
-      exitTime / SLIDER_BODY_FADE_OUT,
-      1,
-      0
+    const totalProgress = MathUtils.clamp01(
+      timeRelativeMs / this.slider.duration
     );
-    this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
 
-    const sliderProgress = MathUtils.clamp01(
-      timeRelativeMs / this.hitObject.duration
+    const spanProgress = this.slider.path.progressAt(
+      totalProgress,
+      this.slider.spans
     );
-    const sliderProportion = this.hitObject.path.progressAt(
-      sliderProgress,
-      this.hitObject.spans
+    
+    this.updateAlpha(enterTime, exitTime);
+    this.updateProgress(totalProgress, spanProgress, enterTime);
+    this.updateFollower(timeRelativeMs, spanProgress, exitTime);
+  }
+
+  private updateAlpha(enterTime: number, exitTime: number): void {
+    const fadeInProgress = enterTime / this.fadeIn;
+    const alphaFadeIn = MathUtils.lerpClamped01(fadeInProgress, 0, 1);
+
+    const fadeOutProgress = exitTime / SLIDER_FADE_OUT;
+    const alphaFadeOut = MathUtils.lerpClamped01(fadeOutProgress, 1, 0);
+
+    this.alpha = alphaFadeIn * alphaFadeOut;
+    
+    const pathFadeOutProgress = MathUtils.clamp01(
+      exitTime / SLIDER_BODY_FADE_OUT
     );
-    const finalSpan = sliderProgress > 1 - 1 / this.hitObject.spans;
 
-    const sliderActive = timeRelativeMs >= 0;
-    this.follower.visible = sliderActive;
-    if (sliderActive) {
-      this.follower.position.copyFrom(
-        this.hitObject.path.positionAt(sliderProportion)
-      );
+    this.sliderPathSprite.alpha = MathUtils.lerp(pathFadeOutProgress, 1, 0);
+  }
 
-      this.sliderBallSprite.alpha =
-        1 - Easing.outQuint(exitTime / SLIDER_BALL_FADE_OUT);
-      const sliderBallScaleFactor = Easing.outQuint(
-        exitTime / SLIDER_BALL_DURATION
-      );
-      this.sliderBallSprite.scale.set(
-        MathUtils.lerpClamped01(
-          sliderBallScaleFactor,
-          SLIDER_BALL_SCALE_INITIAL,
-          SLIDER_BALL_SCALE_EXIT
-        )
-      );
+  private updateProgress(
+    totalProgress: number,
+    spanProgress: number,
+    enterTime: number
+  ): void {
+    // https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/SnakingSliderBody.cs#L79
 
-      this.followCircleSprite.alpha =
-        Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-        (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_FADE_OUT));
-      const followCircleScaleFactor =
-        Easing.outQuint(timeRelativeMs / FOLLOW_CIRCLE_DURATION) *
-        (1 - Easing.outQuint(exitTime / FOLLOW_CIRCLE_DURATION));
-      this.followCircleSprite.scale.set(
-        MathUtils.lerpClamped01(
-          followCircleScaleFactor,
-          FOLLOW_CIRCLE_SCALE_INITIAL,
-          FOLLOW_CIRCLE_SCALE_FULL
-        )
-      );
-    }
+    let startProgress = 0;
+    let endProgress = 1;
 
-    if (finalSpan) {
-      if (this.hitObject.spans % 2 == 0) {
-        this.sliderPathSprite.startProp = 0;
-        this.sliderPathSprite.endProp = sliderProportion;
+    if (totalProgress > 1 - 1 / this.slider.spans) { 
+      if (this.slider.spans % 2 == 0) {
+        endProgress = SLIDER_BODY_SNAKING ? spanProgress : 1;
       } else {
-        this.sliderPathSprite.startProp = sliderProportion;
-        this.sliderPathSprite.endProp = 1;
+        startProgress = SLIDER_BODY_SNAKING ? spanProgress : 0;
       }
+    } else if (SLIDER_BODY_SNAKING) {
+      endProgress = MathUtils.clamp01(3 * enterTime / this.preempt);
     }
+
+    this.sliderPathSprite.startProgress = startProgress;
+    this.sliderPathSprite.endProgress = endProgress;
+  }
+
+  private updateFollower(
+    timeRelativeMs: number, 
+    spanProgress: number, 
+    exitTime: number
+  ): void {
+    const isSliderActive = timeRelativeMs >= 0;
+
+    this.follower.visible = isSliderActive;
+
+    if (!isSliderActive) return;
+    
+    const currentPosition = this.slider.path.positionAt(spanProgress);
+
+    this.follower.position.copyFrom(currentPosition);
+
+    const ballFadeOutProgress = exitTime / SLIDER_BALL_FADE_OUT;
+    const ballAnimProgress = exitTime / SLIDER_BALL_ANIM_DURATION;
+
+    const sliderBallScaleFactor = Easing.outQuad(ballAnimProgress);
+  
+    this.sliderBallSprite.alpha = 1 - Easing.outQuad(ballFadeOutProgress);
+
+    this.sliderBallSprite.scale.set(
+      MathUtils.lerpClamped01(
+        sliderBallScaleFactor,
+        SLIDER_BALL_SCALE_INITIAL,
+        SLIDER_BALL_SCALE_EXIT
+      )
+    );
+
+    // TODO: Maybe these all variables should be renamed to something better?
+    // https://github.com/ppy/osu/blob/master/osu.Game.Rulesets.Osu/Skinning/Default/DefaultFollowCircle.cs#L33
+    const circlePressProgress = timeRelativeMs / FOLLOW_CIRCLE_PRESS_ANIM_DURATION;
+    const circleEndProgress = exitTime / FOLLOW_CIRCLE_END_ANIM_DURATION;
+    const circleFadeOutProgress = exitTime / FOLLOW_CIRCLE_FADE_OUT;
+
+    const circleScaleIn = Easing.outQuint(circlePressProgress);
+    const circleScaleOut = Easing.outQuint(circleEndProgress);
+    const circleFadeOut = Easing.outQuint(circleFadeOutProgress);
+
+    this.followCircleSprite.alpha = circleScaleIn * (1 - circleFadeOut);
+
+    let followCircleScaleFactor = 1;
+    
+    if (this.followCircleSprite.alpha > FLOAT_EPSILON) {
+      followCircleScaleFactor = circleScaleIn * (1 - circleScaleOut);
+    }
+  
+    this.followCircleSprite.scale.set(
+      MathUtils.lerpClamped01(
+        followCircleScaleFactor,
+        FOLLOW_CIRCLE_SCALE_INITIAL,
+        FOLLOW_CIRCLE_SCALE_EXIT
+      )
+    );
+  }
+
+  private createNestedObject(
+    nestedHitObject: HitObject
+  ): TimelineElement<DOTimelineInstance> | null {
+    if (nestedHitObject instanceof SliderTick) {
+      return this.createSliderTick(nestedHitObject);
+    }
+
+    if (nestedHitObject instanceof SliderRepeat) {
+      return this.createSliderRepeat(nestedHitObject);
+    }
+
+    return null;
+  }
+
+  private createSliderTick(
+    tick: SliderTick
+  ): TimelineElement<SliderTickSprite> {
+    const startTime = tick.startTime - tick.timePreempt;
+    const endTime = tick.startTime;
+
+    return {
+      startTimeMs: startTime,
+      endTimeMs: endTime + SliderTickSprite.EXIT_ANIMATION_DURATION,
+      build: () => {
+        const sprite = new SliderTickSprite(
+          this.accentColor,
+          startTime,
+          endTime,
+          tick.scale / 2
+        );
+
+        sprite.position.copyFrom(
+          tick.startPosition.subtract(this.slider.startPosition)
+        );
+
+        return sprite;
+      },
+    };
+  }
+
+  private createSliderRepeat(
+    repeat: SliderRepeat
+  ): TimelineElement<SliderReverseArrowSprite> {
+    return {
+      startTimeMs: repeat.startTime - repeat.timePreempt,
+      endTimeMs: repeat.startTime + 
+        SliderReverseArrowSprite.EXIT_ANIMATION_DURATION,
+      build: () => {
+        const sprite = new SliderReverseArrowSprite(
+          repeat, 
+          this.controlPoints
+        );
+
+        const angle = sliderAngle(
+          this.slider.path, 
+          repeat.repeatIndex % 2 !== 0
+        );
+
+        sprite.position.copyFrom(
+          repeat.startPosition.subtract(this.slider.startPosition)
+        );
+
+        sprite.angle = angle;
+
+        return sprite;
+      },
+    };
   }
 }

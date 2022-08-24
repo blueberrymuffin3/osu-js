@@ -1,62 +1,114 @@
 import { MeshGeometry } from "pixi.js";
-import { MathUtils } from "osu-classes";
+import { MathUtils, FastRandom } from "osu-classes";
 
-const TRIANGLE_COUNT = 10;
+// From what i've seen, lazer spawns up to 5-7 triangles per object.
+const MIN_TRIANGLE_COUNT = 5;
+const MAX_TRIANGLE_COUNT = 7;
 
-const TRIANGLE_SIZE_MIN = 0.2;
-const TRIANGLE_SIZE_MAX = 0.4;
-const TRIANGLE_X_MIN = 0.2;
-const TRIANGLE_X_MAX = 1 - TRIANGLE_X_MIN;
-const TRIANGLE_SPEED_MIN = 0.0001;
-const TRIANGLE_SPEED_MAX = 0.0002;
+const TRIANGLE_SIZE_MIN = 0.10;
+const TRIANGLE_SIZE_MAX = 0.50;
+const TRIANGLE_SPEED_MIN = 0.00015;
+const TRIANGLE_SPEED_MAX = 0.00025;
+
+/**
+ * Triangle width & height limits in range from 0 to 1.
+ * They are used to prevent triangles from being rendered outside of the object.
+ */
+const TRIANGLE_MIN_X = -0.25;
+const TRIANGLE_MAX_X = 1.25;
+const TRIANGLE_MIN_Y = 0.0;
+const TRIANGLE_MAX_Y = 1.4;
 
 const SQRT3_2 = Math.sqrt(3) / 2;
 
 export class Triangles extends MeshGeometry {
+  private lastTimeMs = NaN;
+  private triangleCount: number;
   private trianglePositions: Float32Array;
   private triangleSizes: Float32Array;
   private triangleSpeeds: Float32Array;
   private vertices: Float32Array;
-  private lastTimeMs = NaN;
+  private random: FastRandom;
 
-  constructor() {
-    const vertices = new Float32Array(TRIANGLE_COUNT * 6);
-    const index = new Uint16Array(TRIANGLE_COUNT * 3);
+  constructor(seed?: number) {
+    const random = new FastRandom(seed ?? Date.now());
+
+    const triangleCount = Math.floor(
+      MathUtils.map(
+        random.nextDouble(),
+        0,
+        1,
+        MIN_TRIANGLE_COUNT,
+        MAX_TRIANGLE_COUNT
+      )
+    );
+
+    const vertices = new Float32Array(triangleCount * 6);
+    const index = new Uint16Array(triangleCount * 3);
     for (let i = 0; i < index.length; i++) {
       index[i] = i;
     }
 
     super(vertices, undefined, index);
-    this.trianglePositions = new Float32Array(TRIANGLE_COUNT * 2);
-    this.triangleSizes = new Float32Array(TRIANGLE_COUNT);
-    this.triangleSpeeds = new Float32Array(TRIANGLE_COUNT);
-    this.vertices = vertices;
 
-    this.resetTriangles();
+    this.trianglePositions = new Float32Array(triangleCount * 2);
+    this.triangleSizes = new Float32Array(triangleCount);
+    this.triangleSpeeds = new Float32Array(triangleCount);
+    this.triangleCount = triangleCount;
+    this.vertices = vertices;
+    this.random = random;
+
+    this.resetTriangles(seed);
   }
 
-  public resetTriangles() {
-    for (let i = 0; i < TRIANGLE_COUNT; i++) {
-      const size = MathUtils
-        .lerpClamped01(Math.random(), TRIANGLE_SIZE_MIN, TRIANGLE_SIZE_MAX);
-      const x = MathUtils
-        .lerpClamped01(Math.random(), TRIANGLE_X_MIN, TRIANGLE_X_MAX);
-      const y = MathUtils
-        .lerpClamped01(Math.random(), -size, 1 + size);
-      const speed = MathUtils
-        .lerpClamped01(Math.random(), TRIANGLE_SPEED_MIN, TRIANGLE_SPEED_MAX);
+  public resetTriangles(seed?: number) {
+    if (seed) this.random = new FastRandom(seed);
 
-      this.trianglePositions[i * 2] = x;
-      this.trianglePositions[i * 2 + 1] = y;
+    // TODO: Alpha of the triangles should be randomized somehow.
+    for (let i = 0; i < this.triangleCount; i++) {
+      const size = MathUtils.map(
+        this.random.nextDouble(),
+        0,
+        1,
+        TRIANGLE_SIZE_MIN, 
+        TRIANGLE_SIZE_MAX
+      );
+
+      const speed = MathUtils.map(
+        this.random.nextDouble(),
+        0,
+        1,
+        TRIANGLE_SPEED_MIN, 
+        TRIANGLE_SPEED_MAX
+      );
+
+      const x = MathUtils.map(
+        this.random.nextDouble(),
+        0,
+        1,
+        TRIANGLE_MIN_X + size,
+        TRIANGLE_MAX_X - size
+      );
+
+      const y = MathUtils.map(
+        this.random.nextDouble(),
+        0, 
+        1,
+        TRIANGLE_MIN_Y + size,
+        TRIANGLE_MAX_Y - size
+      );
+
       this.triangleSizes[i] = size;
       this.triangleSpeeds[i] = speed;
+      this.trianglePositions[i * 2] = x;
+      this.trianglePositions[i * 2 + 1] = y;
     }
 
     this.recalculateVertices();
   }
 
   private recalculateVertices() {
-    for (let i = 0; i < TRIANGLE_COUNT; i++) {
+    for (let i = 0; i < this.triangleCount; i++) {
       const j = i * 2;
       const x = this.trianglePositions[j + 0];
       const y = this.trianglePositions[j + 1];
@@ -81,32 +133,18 @@ export class Triangles extends MeshGeometry {
 
   update(timeMs: number) {
     const deltaMs = timeMs - this.lastTimeMs;
-    const forward = deltaMs >= 0;
+
     this.lastTimeMs = timeMs;
 
-    if (isNaN(deltaMs)) {
-      return;
-    }
+    if (isNaN(deltaMs)) return;
 
-    for (let i = 0; i < TRIANGLE_COUNT; i++) {
+    for (let i = 0; i < this.triangleCount; i++) {
       const j = i * 2;
       let x = this.trianglePositions[j + 0];
       let y = this.trianglePositions[j + 1];
-      let size = this.triangleSizes[i];
+
       y -= deltaMs * this.triangleSpeeds[i];
-      if (forward ? y < -size : y > 1 + size) {
-        this.triangleSpeeds[i] = MathUtils.lerpClamped01(
-          Math.random(),
-          TRIANGLE_SPEED_MIN,
-          TRIANGLE_SPEED_MAX
-        );
-        y = forward ? 1 + size : -size;
-        x = MathUtils.lerpClamped01(
-          Math.random(), 
-          TRIANGLE_X_MIN, 
-          TRIANGLE_X_MAX
-        );
-      }
+
       this.trianglePositions[j + 0] = x;
       this.trianglePositions[j + 1] = y;
     }

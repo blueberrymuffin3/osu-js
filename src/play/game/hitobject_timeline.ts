@@ -1,4 +1,4 @@
-import { BeatmapColorSection, Color4 } from "osu-classes";
+import { BeatmapColorSection, Color4, ControlPointInfo } from "osu-classes";
 import { Circle, Slider, StandardBeatmap, StandardHitObject } from "osu-standard-stable";
 import { OSU_DEFAULT_COMBO_COLORS, OSU_DEFAULT_SLIDER_BORDER_COLOR } from "../constants";
 import { CirclePiece } from "../render/standard/circle";
@@ -35,6 +35,7 @@ function getBeatmapColors(colors: BeatmapColorSection): IBeatmapColors {
 
 function generateTimelineElement(
   hitObject: StandardHitObject,
+  controlPoints: ControlPointInfo,
   colors: IBeatmapColors,
 ): TimelineElement<DOTimelineInstance>[] {
   // Use combo index with offset to get combo color after all combo skips. 
@@ -67,7 +68,14 @@ function generateTimelineElement(
         startTimeMs: hitObject.startTime - hitObject.timePreempt,
         endTimeMs: hitObject.endTime + SliderPiece.EXIT_ANIMATION_DURATION,
         build() {
-          const object = new SliderPiece(hitObject, accentColor, trackColor, borderColor);
+          const object = new SliderPiece(
+            hitObject,
+            controlPoints, 
+            accentColor, 
+            trackColor, 
+            borderColor
+          );
+
           object.x = hitObject.stackedStartPosition.x;
           object.y = hitObject.stackedStartPosition.y;
 
@@ -83,10 +91,12 @@ function generateTimelineElement(
 
 export class HitObjectTimeline extends DisplayObjectTimeline {
   public constructor(beatmap: StandardBeatmap) {
-    const beatmapColors = getBeatmapColors(beatmap.colors);
+    const { colors, hitObjects, controlPoints } = beatmap;
+    
+    const beatmapColors = getBeatmapColors(colors);
 
-    const timelineElements = beatmap.hitObjects.flatMap((hitObject) => {   
-      return generateTimelineElement(hitObject, beatmapColors);
+    const timelineElements = hitObjects.flatMap((hitObject) => {
+      return generateTimelineElement(hitObject, controlPoints, beatmapColors);
     });
 
     super(timelineElements);
